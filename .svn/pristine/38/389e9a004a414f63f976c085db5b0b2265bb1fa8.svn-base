@@ -1,0 +1,191 @@
+@extends('layouts.admin')
+@section('styles')
+@endsection
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+<script src="{{ asset('app-assets/js/scripts/currency.min.js') }}"></script>
+<script src="{{ asset('app-assets/vendors/js/extensions/sweetalert2.all.min.js') }}"></script>
+@endpush
+
+
+
+@section('content')
+<div class="card">
+    <div class="card-header  mt-1 mb-1">
+        <h6 class="card-title">
+            <a href="{{ route("admin.pricelist.index") }}" class="breadcrumbs__item">Order Management </a>
+            <a href="{{ route("admin.pricelist.index") }}" class="breadcrumbs__item">{{ trans('cruds.pricelist.title') }} </a>
+            <a href="#" class="breadcrumbs__item ">Edit</a></h6>
+    </div>
+
+    <hr>
+    <br>
+    <div class="card-body">
+        <form action="{{ route("admin.pricelist.update", [$pricelist->id]) }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="col-md-3">
+
+                            <div class="mb-1">
+                                <label class="form-label" for="effective_date">{{ trans('cruds.pricelist.fields.effective_date') }}</label>
+                                <input type="text" id="effective_date" name="effective_date" class="form-control flatpickr-basic-custom flatpickr-input active" value="{{ old('effective_date', isset($pricelist) ? $pricelist->effective_date : '') }}" required>
+                                {{-- Hideen --}}
+                                <input type="hidden" id="id" name="id" value="{{$pricelist->id}}">
+                                <input type="hidden" id="created_by" name="created_by" value="{{auth()->user()->id}}">
+                                <input type="hidden" id="updated_by" name="updated_by" value="{{auth()->user()->id}}">
+
+                                @if($errors->has('effective_date'))
+                                <em class="invalid-feedback">
+                                    {{ $errors->first('effective_date') }}
+                                </em>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-1">
+                                <label class="form-label" for="price_list_name">{{ trans('cruds.pricelist.fields.price_list_name') }}</label>
+                                <input type="text" id="purpose_date" name="purpose_date" class="form-control" hidden value="{{ now()->format ('Y-m-d') }}" required>
+                                <select name="price_list_name" id="price_list_name" class="form-control select2" required>
+                                    <option value="{{$pricelist->price_list_name}}"> {{$pricelist->customer->party_name}}</option>
+                                    @foreach($customers as $row)
+                                    @if ($pricelist->price_list_name !=$row->id)
+                                    <option value="{{$row->customer_party_code}}"> {{$row->party_name}}</option>
+                                    @endif
+                                    @endforeach
+                                </select>
+                                <div class="invalid-feedback">{{ trans('cruds.pricelist.fields.price_list_name') }} {{ trans('global.required') }}</div>
+
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-1">
+                                <label class="form-label" for="description">{{ trans('cruds.pricelist.fields.description') }}</label>
+                                <input type="text" id="description" name="description_header" class="form-control" value="{{ old('description', isset($pricelist) ? $pricelist->description : '') }}" required>
+                                @if($errors->has('description'))
+                                <em class="invalid-feedback">
+                                    {{ $errors->first('description') }}
+                                </em>
+                                @endif
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="row">
+
+                        <div class="col-md-3">
+
+                            <label class="form-label" for="currency">{{ trans('cruds.pricelist.fields.currency') }}</label>
+                            <select name="currency" id="currency" class="form-control select2" required>
+                                @foreach($currency as $row)
+                                <option value="{{$row->id}}" {{ $pricelist->currency == $row->id ? 'selected' : '' }}> {{$row->currency_code}} - {{$row->currency_name}} </option>
+                                @endforeach
+                            </select>
+
+                        </div>
+                        <div class="col-md-6">
+
+                            <label class="form-label" for="location_id">{{ trans('cruds.pricelist.fields.location_id') }}</label>
+                            <input type="number" hidden id="created_by" name="created_by" value="{{ auth()->user()->id }}" class="form-control">
+                            <input type="number" id="location_id" name="location_id" class="form-control" value="{{ old('location_id', isset($pricelist) ? $pricelist->location_id : '') }}" required>
+                            @if($errors->has('location_id'))
+                            <em class="invalid-feedback">
+                                {{ $errors->first('location_id') }}
+                            </em>
+                            @endif
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            </br>
+            <div class="row mb-4">
+                <div class="box box-default overflow-auto">
+                    <div class="box-body" style="height: 350px;">
+                        <table class="table table-responsive" id="tab_logic">
+                            <thead>
+                                <th scope="col">Line ID</th>
+                                <th scope="col">Product</th>
+                                <th scope="col">Item Description</th>
+                                <th class="text-end" scope="col">Price</th>
+                                <th class="text-center" scope="col">Dis(%)</th>
+                                <th scope="col">Packing Type</th>
+                                <th scope="col">From</th>
+                                <th scope="col">To</th>
+                                <th scope="col"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="pricelist_container">
+                                @foreach ( $list as $key => $list_detail)
+                                <tr class="tr_input" data-entry-id="{{ $list_detail->id }}">
+                                    <td class="rownumber" width="5%">
+                                        {{ $key+1 }}
+                                    </td>
+                                    <td width="30%">
+                                        <input type="text" readonly class="form-control search_list" placeholder="Type here ..." id="search_item_code_{{ $key+1}}" value="{{ $list_detail->item_list->item_code }}" name="item_code[]" autocomplete="off" required>
+                                        <span class="help-block search_item_code_empty_1 glyphicon" style="display: none;"> No Results Found </span>
+                                        <input type="hidden" class="search_item_code_id" id="search_item_code_id_{{ $key+1}}" value="{{ $list_detail->inventory_item_id }}" name="inventory_item_id[]" autocomplete="off">
+                                        <input type="hidden" id="id" value='{{$list_detail->id}}' name="lineId[]" autocomplete="off"></td>
+                                    </td>
+                                    <td width="15%">
+                                        <input type="text" readonly class="form-control user_item_description" value="{{$list_detail->item_list->description}}" id="user_item_description_{{ $key+1}}" name="user_item_description[]" readonly>
+                                        <span id="user_item_description_empty1"></span>
+                                    </td>
+                                    <td width="15%">
+                                        <input type="number" class="form-control unit_prices_list text-end" id="unit_prices_list_{{ $key+1}}" name="unit_prices[]" autocomplete="off" value="{{ $list_detail->unit_price }}">
+                                        <input type="hidden" id="prices_list_{{ $key+1}}" name="prices_list[]">
+                                    </td>
+                                    <td width="5%">
+                                        <input type="number" class="form-control discount" id="discount_{{ $key+1}}" name="discount[]" value="{{ $list_detail->discount }}" autocomplete="off">
+                                        <input type="hidden" class="form-control uom" id="uom_{{ $key+1}}" name="uom[]" value="{{ $list_detail->uom }}">
+                                    </td>
+                                    <td width="10%">
+                                        <select class="form-control packing_type" id="packing_type_{{ $key+1}}" name="packing_type[]" autocomplete="off">
+                                            @if ($list_detail->packing_type == '1')
+                                            <option value="1" selected>Pallet</option>
+                                            <option value="2">Roll</option>
+                                            @elseif ($list_detail->packing_type == '2')
+                                            <option value="1">Pallet</option>
+                                            <option value="2" selected>Roll</option>
+                                            @endif
+                                        </select>
+                                    </td>
+                                    <td width="5%">
+                                        <input type="date" class="form-control effective_from" id="effective_from_{{ $key+1}}" value="{{ $list_detail->effective_from }}" name="effective_from[]">
+                                    </td>
+                                    <td width="10%">
+                                        <input type="date" name="effective_to[]" id="effective_to_{{ $key+1}}" class="form-control effective_to" value="{{ $list_detail->effective_to }}">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-ligth btn-sm " disabled>X</button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="9">
+                                        <button type="button" class="btn btn-light add_pricelist btn-sm" id="add_pricelist"><i data-feather='plus'></i> Add Rows</button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+            <div class="d-flex justify-content-between mt-1 mb-1">
+                <button class="btn btn-warning" type="reset"><i data-feather='refresh-ccw'></i> Reset</button>
+                <button class="btn btn-primary btn-submit" type="submit"><i data-feather='save'></i> {{ trans('global.save') }}</button>
+            </div>
+        </form>
+    </div>
+
+</div>
+@endsection

@@ -1,0 +1,83 @@
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class ItemMaster extends Model
+{
+    use SoftDeletes;
+
+    public $table = 'bm_mtl_system_item';
+
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
+    protected $fillable = [
+        'inventory_item_id',
+        'mapping_item',
+        'category_code',
+        'organization_id',
+        'attribute1',
+        'created_by',
+        'status_id',
+        'updated_by',
+        'item_code',
+        'description',
+        'height',
+        'volume',
+        'min_o_qty',
+        'weight',
+        'type_code',
+        'buyer_id',
+        'purchasing_item_flag',
+        'inventory_item_flag',
+        'planner_code',
+        'item_brand',
+        'primary_uom_code',
+        'item_note',
+        'item_cost',
+        'attribute2',
+        'make_buy_code',
+        'min_o_qty',
+        'receiving_inventory',
+        'shipping_inventory',
+        'packing_quantity',
+        'preprocessing_time',
+        'processing_time',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+	public function getKeyName(){
+		return "inventory_item_id";
+	}
+    public function category()
+    {
+        return $this->hasone(Category::class, 'category_code', 'category_code');
+    }
+    public function user()
+    {
+        return $this->hasone(User::class, 'id', 'created_by');
+    }
+    public function buyer()
+    {
+        return $this->hasone(User::class, 'id', 'buyer_id');
+    }
+	public function QuotationDetail()
+    {
+        return $this->hasmany(QuotationDetail::class, 'inventory_item_id', 'inventory_item_id');
+    }
+    public function itemstatuses()
+    {
+        return $this->hasone(ItemStatuses::class, 'stts_code', 'status_id');
+    }
+    public function makeorbuy()
+    {
+        return $this->hasone(MakeOrbuy::class, 'make_or_buy_code', 'make_buy_code');
+    }
+}

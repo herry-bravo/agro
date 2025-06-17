@@ -1,0 +1,148 @@
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class WorkOrder extends Model
+{
+    use HasFactory;
+    use SoftDeletes;
+
+    public $table = 'bm_wie_work_orders';
+
+    protected $dates = [
+        'work_definition_as_of_date',
+        'planned_start_date',
+        'planned_completion_date',
+        'actual_start_date',
+        'actual_completion_date',
+        'released_date',
+        'closed_date',
+        'canceled_date',
+        'need_by_date',
+        'pjc_expenditure_item_date',
+        'creation_date',
+        'last_update_date',
+        'last_update_login',
+        'attribute_date1',
+        'attribute_date2',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
+    protected $fillable = [
+        'id',
+        'work_order_id',
+        'object_version_float',
+        'organization_id',
+        'work_order_number',
+        'work_method_id',
+        'work_order_type',
+        'work_order_sub_type',
+        'inventory_item_id',
+        'item_revision',
+        'item_version',
+        'item_structure_name',
+        'transform_from_item_id',
+        'work_definition_as_of_date',
+        'work_definition_id',
+        'work_definition_version_id',
+        'work_order_priority',
+        'work_order_status_id',
+        'scheduling_method',
+        'planned_start_quantity',
+        'nettable_supply_qty_override',
+        'uom_code',
+        'primary_product_quantity',
+        'primary_product_uom_code',
+        'firm_planned_flag',
+        'planned_start_date',
+        'planned_completion_date',
+        'actual_start_date',
+        'actual_completion_date',
+        'released_date',
+        'closed_date',
+        'canceled_date',
+        'canceled_reason',
+        'need_by_date',
+        'status_change_reason',
+        'completed_quantity',
+        'scrapped_quantity',
+        'rejected_quantity',
+        'overcompl_tolerance_type',
+        'overcompl_tolerance_value',
+        'supply_type',
+        'compl_subinventory_code',
+        'compl_locator_id',
+        'serial_tracking_flag',
+        'back_to_back_flag',
+        'orchestration_code',
+        'interface_source_code',
+        'sco_supply_order_id',
+        'contract_mfg_flag',
+        'cm_po_header_id',
+        'cm_po_line_id',
+        'cm_po_line_loc_id',
+        'order_less_flag',
+        'source_system_type',
+        'source_system_id',
+        'source_header_ref',
+        'source_header_ref_id',
+        'source_line_ref',
+        'source_line_ref_id',
+        'mnt_forecast_id',
+        'pjc_context_category',
+        'pjc_project_id',
+        'pjc_project_float',
+        'pjc_task_id',
+        'pjc_task_float',
+        'pjc_expenditure_type_id',
+        'pjc_expenditure_item_date',
+        'pjc_organization_id',
+        'pjc_billable_flag',
+        'pjc_capitalizable_flag',
+        'pjc_work_type_id',
+        'pjc_contract_id',
+        'pjc_contract_line_id',
+        'pjc_funding_allocation_id',
+        'pjc_reserved_attribute1',
+        'pjc_reserved_attribute2',
+        'iot_sync_status',
+        'preassign_lot_flag',
+        'resequence_flag',
+        'created_by',
+        'creation_date',
+        'last_updated_by',
+        'last_update_date',
+        'last_update_login',
+        'attribute_category',
+        'attribute_char1',
+        'attribute_char2',
+        'attribute_float1',
+        'attribute_float2',
+        'attribute_float10',
+        'attribute_date1',
+        'attribute_date2',
+        'attribute_datetime1',
+        'attribute_datetime5',
+        'request_id',
+        'job_definition_name',
+        'job_definition_package',
+        'created_at',
+        'updated_at'
+    ];
+
+    public function bom()
+    {
+        return $this->hasOne(Bom::class,'parent_inventory_it','inventory_item_id');
+    }
+
+    public function wo_detail()
+    {
+        return $this->hasMany(WorkOrderDetail::class,'id');
+    }
+}

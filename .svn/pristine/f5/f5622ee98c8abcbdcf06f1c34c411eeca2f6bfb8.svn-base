@@ -1,0 +1,243 @@
+@extends('layouts.admin')
+@section('styles')
+<link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/jquery-ui.css') }}">
+@endsection
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+<script src="{{ asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
+@endpush
+@section('breadcrumbs')
+<a href="{{route('admin.work-order.index')}}" class="breadcrumbs__item">{{ trans('cruds.bom.manufacture') }}</a>
+<a href="{{route('admin.work-order.index')}}" class="breadcrumbs__item">{{ trans('cruds.workorder.title') }} {{ trans('global.list') }}</a>
+<a href="#" class="breadcrumbs__item active">{{ trans('cruds.workorder.fields.edit') }}</a>
+@endsection
+
+@section('content')
+@if ($errors->any())
+<div class="alert alert-danger">
+    @foreach ($errors->all() as $error)
+    {{ $error }}
+    @endforeach
+</div>
+@endif
+<section id="multiple-column-form">
+    <div class="row">
+        <div class="col-12">
+            <form action="{{ route('admin.work-order.update',[$wo->id]) }}" method="POST" enctype="multipart/form-data" novalidate>
+                @csrf
+                @method('PUT')
+                {{ csrf_field() }}
+                <div class="card">
+                    <div class="card-header" style="height: 40px">
+                        <div class="row col-12">
+                            <div class="col-md-8 mt-1">Edit Work Order</div>
+                            <div class="col-md-4">
+                                {{-- <button type="submit"name='action' value="product_move" class="btn btn-outline-primary " style="width: 100%"><i data-feather='inbox'></i> Product Move</button> --}}
+                                <div class="btn-group rounded-pill" role="group" aria-label="Basic example" style="width: 100%">
+                                    <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#wipCompletion"><i data-feather='briefcase'></i>  WIP Completion</button>
+                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#productMove"><i data-feather='archive'></i>  Product Move</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="card-body mt-2">
+                        <div class="row mb-2">
+                            <div class="col-md-1">
+                                <b><p class="text-end">Product :<p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" name="parent_inventory_item_id" class="form-control" readonly value="{{$wo->bom->parent_item}} - {{$wo->bom->parent_description}}" autocomplete="off" required>
+                                <input type="hidden" name="h_inventory_item_id" class="form-control" readonly value="{{$wo->inventory_item_id}}" autocomplete="off" required>
+                            </div>
+                            <div class="col-md-1"></div>
+                            <div class="col-md-1">
+                                <b><p class="text-end">Date :</p></b>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text" id="datepicker-1" name="need_by_date" value="{{$wo->need_by_date->format('d-M-Y')}}" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-1">
+                                <b><p class="text-end">Quantity :<p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" name="planned_start_quantity" class="form-control" value="{{$wo->planned_start_quantity}}" required>
+                            </div>
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-1">
+                                <b><p class="text-end">PM :</p></b>
+                            </div>
+                            <div class="col-md-5">
+                                {{-- <input type="text"   class="form-control datepicker" id="" autocomplete="off" required> --}}
+                                <select id="pm" name="pm" class="form-control select2 filter_WorkOrder">
+                                    @foreach ($pm as $key => $pm )
+                                        @if ($wo->job_definition_name == $pm->unit_id)
+                                            <option selected value="{{$pm->unit_id}}">{{$pm->name}}</option>
+                                        @else
+                                            <option value="{{$pm->unit_id}}">{{$pm->name}}</option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                                <input type="hidden"  id="created_by" name="created_by" value="{{ auth()->user()->id }}" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-1">
+                                <b><p class="text-end">Work Order Number:<p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" name="work_order_number" class="form-control" readonly value="{{$wo->work_order_number}}" autocomplete="off" required>
+                                <input type="hidden" name="work_order_id" class="form-control" readonly value="{{$wo->work_order_id}}" autocomplete="off" required>
+                                <input type="hidden" name="compl_subinventory_code" class="form-control" readonly value="{{$wo->compl_subinventory_code}}" autocomplete="off" required>
+                                <input type="hidden" name="id" class="form-control" readonly value="{{$wo->id}}" autocomplete="off" required>
+                            </div>
+                            <div class="col-md-1"></div>
+                            <div class="col-md-1">
+                                <b><p class="text-end">Source :</p></b>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text" name="source_line_ref" value="{{$wo->source_line_ref}}" class="form-control datepicker" id="" autocomplete="off" required>
+                            </div>
+                        </div>
+                    <!-- /.box-body -->
+                    </div>
+                {{-- </div>
+
+                <div class="card"> --}}
+                    <div class="card-header">
+                        <nav>
+                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                <button class="nav-link active" id="nav-component-tab" data-bs-toggle="tab" data-bs-target="#nav-component" type="button" role="tab" aria-controls="nav-component" aria-selected="true">
+                                    <span class="bs-stepper-box">
+                                        <i data-feather="tool" class="font-medium-3"></i>
+                                    </span>
+                                    Component
+                                </button>
+                                <button class="nav-link" id="nav-micellaneous-tab" data-bs-toggle="tab" data-bs-target="#nav-micellaneous" type="button" role="tab" aria-controls="nav-micellaneous" aria-selected="false">
+                                    <span class="bs-stepper-box">
+                                        <i data-feather="shuffle" class="font-medium-3"></i>
+                                    </span>
+                                    Micellaneous
+                                </button>
+                            </div>
+                        </nav>
+                    </div>
+                    <hr>
+                    <div class="card-body">
+                        <div >
+                            <div class="tab-content" id="nav-tabContent" >
+                                {{-- Tab Component --}}
+                                <div class="tab-pane fade show active" id="nav-component" role="tabpanel" aria-labelledby="nav-component-tab">
+                                    <table class="table">
+                                        <thead>
+                                            {{-- <th scope="col">Sequence</th> --}}
+                                            <th class="text-center" scope="col">Item</th>
+                                            <th class="text-center" scope="col">Description</th>
+                                            <th class="text-center" scope="col">UOM</th>
+                                            <th class="text-center" scope="col">To Consume</th>
+                                            <th class="text-center" scope="col">Supply Subinventory</th>
+                                            <th scope="col"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody  class="workOrder_container">
+                                            @foreach ($wo_detail as $key => $row)
+                                            <tr class="tr_input1">
+                                                <td width="20%">{{$row->bomChild->child_item ?? $row->item_list->item_code}}
+                                                    <input type="hidden" name="inventory_item_id[]" class="form-control" value="{{$row->inventory_item_id}}" required>
+                                                    <input type="hidden" name="id_detail[]" class="form-control" value="{{$row->id}}" required>
+                                                    <input type="hidden" name="sub_category[]" id="sub_category_{{$key+1}}" class="form-control" value="{{$row->id}}" required>
+                                                    <input type="hidden" name="type_code[]" id="type_code_{{$key+1}}" class="form-control" value="{{$row->id}}" required>
+                                                </td>
+                                                <td width="35%">{{$row->bomChild->child_description ?? $row->item_list->description}}</td>
+                                                <td width="10%">{{$row->uom_code ?? ''}}
+                                                    <input type="hidden" name="uom_code[]" class="form-control" value="{{$row->uom_code }}" required>
+                                                    <input type="hidden" name="wo_operation_material_id[]" class="form-control" value="{{$row->wo_operation_material_id }}" required>
+                                                </td>
+                                                <td width="25%">
+                                                    <input type="number" name="quantity[]" class="form-control" value="{{$row->quantity}}" required readonly>
+                                                    <input type="hidden" name="quantity_per_product[]" class="form-control" value="{{$row->quantity_per_product}}" required>
+                                                    <input type="hidden" name="produced_quantity[]" class="form-control" value="{{$row->produced_quantity}}" required>
+                                                </td>
+                                                <td width="15%">
+                                                    <input type="text" class="form-control search_subinventoryto" name="subinventory_to[]" id="subinventoryto_{{$key+1}}" value="{{$row->supply_subinventory}}" autocomplete="off">
+                                                    <input type="hidden" class="form-control subinvto_'+index+'" name="supply_subinventory[]" id="subinvto_{{$key+1}}" value="{{$row->supply_subinventory}}" autocomplete="off">
+                                                </td>
+                                                <td width="5%">
+                                                    <button type="button" class="btn btn-danger" style="position: inherit;">&times;</button>
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot >
+                                            <tr >
+                                                <td><input type="hidden" name="revision[]" class="form-control " id="rev_1"  autocomplete="off">
+                                                    <button type="button" class="btn btn-outline-success add_workOrder btn-sm" style="font-size: 12px;"><i data-feather='plus'></i> Add Rows</button></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table><br>
+
+                                </div>
+
+                                {{-- Tab Misscellaneous --}}
+                                <div class="tab-pane fade" id="nav-micellaneous" role="tabpanel" aria-labelledby="nav-micellaneous-tab">
+                                    <table class="table table-striped tableFixHead">
+                                        <thead>
+                                            <th scope="col">Micellaneous</th>
+                                            <th scope="col">Work Center</th>
+                                            <th scope="col">Item</th>
+                                            <th scope="col">Schedule Started Date</th>
+                                            <th scope="col">Expected Duration</th>
+                                            <th scope="col">Real Durtion</th>
+                                            <th scope="col"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bomMicellaneous_container">
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                            <td colspan="2">
+                                                <button type="button" class="btn btn-outline-success add_bomComponent btn-sm" style="font-size: 12px;"><i data-feather='plus'></i> Add Rows</button>
+                                            </td>
+                                            <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="d-flex justify-content-between ">
+                            <button type="button" class="btn btn-danger pull-left" data-bs-toggle="modal" data-bs-target="#cancel">Cancel Work Order</button>
+                            <button type="submit" name='action' value="save" class="btn btn-primary pull-right "><i class="fa fa-plus"></i> Add</button>
+                        </div>
+
+                    </div>
+                    <!-- /.box-body -->
+
+                </div>
+
+                <!-- Modal WIP Completion Example Start-->
+                @include('admin.workOrder.wipCompletion')
+
+                <!-- END Modal Example Start-->
+
+
+                <!-- Modal Cancel -->
+                @include('admin.workOrder.cancel')
+                <!-- END Modal Cancel-->
+
+            </form>
+        </div>
+
+        <!-- Modal Product Move Example Start-->
+        @include('admin.workOrder.productMove')
+        <!-- END Modal Example Start-->
+</section>
+<!-- /.content -->
+@endsection

@@ -1,0 +1,182 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\MassDestroyQuotationRequest;
+use App\Http\Requests\StoreQuotationRequest;
+use App\Http\Requests\UpdateQuotationRequest;
+use App\QuotationDetail;
+use App\CurrencyGlobal;
+use App\UomConversion;
+use App\PurchaseOrder;
+use App\Vendor;
+use App\ItemMaster;
+use App\Uom;
+use App\Quotation;
+use Session;
+use Gate;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class QuotationController extends Controller
+{
+    public function index()
+    {
+        abort_if(Gate::denies('quotation_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        $quotation = Quotation::where('type_lookup_code', 2)->get();
+        return view('admin.quotation.index', compact('quotation'));
+    }
+
+    public function create()
+    {
+        abort_if(Gate::denies('quotation_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        $uom = Uom::all();
+        $item = ItemMaster::all();
+        $vendor = Vendor::all();
+        $currency=CurrencyGlobal::all();
+        return view('admin.quotation.createQuotation', compact('item','vendor','uom','currency'));
+    }
+
+    public function store(StoreQuotationRequest $request)
+    {
+        $header_id = Quotation::latest()->first();
+        $head = Quotation::findorNew($request->id);
+        $head->po_head_id = $header_id->id+1;
+        $head->segment1=$request->segment1;
+        $head->status=$request->status;
+        $head->organization_id=$request->organization_id;
+        $head->created_by=$request->created_by;
+        $head->vendor_id=$request->vendor_id;
+        $head->type_lookup_code=$request->type_lookup_code;
+        $head->vendor_site_id=$request->vendor_site_id;
+        $head->effective_date=$request->effective_date;
+        $head->currency_code=$request->currency_code;
+		try {
+			\DB::beginTransaction();
+			$head->save();
+			$id = $head->id;
+            foreach($request->inventory_item_id as $key =>$inventory_item_id){
+                    $item = QuotationDetail::where(['inventory_item_id'=>$request->inventory_item_id[$key],'po_header_id'=>$id])->first();
+                    if($item){
+                        return back()->with('error', 'Duplicate Entry Of Item');
+                    }else{
+                    $data = array(
+                        'po_header_id'=>$id,
+                        'line_id'=>$key+1,
+                        'inventory_item_id'=>$request->inventory_item_id [$key],
+                        'item_description'=>$request->description_item [$key],
+                        'po_uom_code'=>$request->po_uom_code [$key],
+                        'line_type_id'=>$request->type_lookup_code,
+                        'organization_id'=>$request->organization_id,
+                        'unit_price'=>$request->unit_price [$key],
+                        'start_date'=>$request->start_date [$key],
+                        'end_date'=>$request->end_date[$key],
+                        'created_at'=>date('Y-m-d H:i:s'),
+                        'updated_at'=>date('Y-m-d H:i:s'),
+                        );
+                    QuotationDetail::create($data);
+                    }
+			}
+			\DB::commit();
+			}catch (Throwable $e){
+				\DB::rollback();
+			}
+       return redirect()->route('admin.quotation.index');
+    }
+
+    public function edit(Quotation $quotation)
+    {
+        abort_if(Gate::denies('order_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+		$vendor = Vendor::all();
+        $uomCon = UomConversion::All();
+		$quotationDetail=quotationDetail::where('po_header_id', '=',$quotation->id)->whereNull('deleted_at')->get();
+        return view('admin.quotation.edit', compact('quotation','vendor','quotationDetail','uomCon'));
+    }
+
+    public function update(Request $request, QuotationDetail $quotationDetail, Quotation $quotation)
+    {
+        $head = Quotation::find($request->id);
+        $head->segment1=$request->segment1;
+        $head->status=$request->status;
+        $head->organization_id=$request->organization_id;
+        $head->created_by=$request->created_by;
+        $head->vendor_id=$request->vendor_id;
+        $head->type_lookup_code=$request->type_lookup_code;
+        $head->vendor_site_id=$request->vendor_site_id;
+        $head->effective_date=$request->effective_date;
+        $head->currency_code=$request->currency_code;
+        // dd($head);
+        try {
+			\DB::beginTransaction();
+			$head->save();
+			count($request->inventory_item_id);
+            foreach($request->inventory_item_id as $key =>$inventory_item_id){
+
+				if(empty($request->lineId[$key])){
+                    $item = QuotationDetail::where(['inventory_item_id'=>$request->inventory_item_id[$key],'po_header_id'=>$request->id])->first();
+                    if($item){
+                        return back()->with('error', 'Duplicate Entry Of Item');
+                    }else{
+                        $data = array(
+                                'po_header_id'=>$request->id,
+                                'line_id'=>QuotationDetail::where('po_header_id',$request->id)->get()->count()+1 ,
+                                'inventory_item_id'=>$request->inventory_item_id[$key],
+                                'item_description'=>$request->description_item[$key],
+                                'line_type_id'=>$request->type_lookup_code,
+                                'po_uom_code'=>$request->po_uom_code [$key],
+                                'unit_price'=>$request->unit_price [$key],
+                                'start_date'=>$request->start_date [$key],
+                                'end_date'=>$request->end_date [$key],
+                                'created_at'=>date('Y-m-d H:i:s'),
+                                'updated_at'=>date('Y-m-d H:i:s')
+                        );
+                        QuotationDetail::create($data);
+                    }
+                }else{
+                    $data = QuotationDetail::find($request->lineId[$key]);
+                    $data->po_header_id= $request->id;
+                    $data->line_id = $key+1;
+                    $data->inventory_item_id = $request->inventory_item_id[$key];
+                    $data->po_uom_code = $request->po_uom_code [$key];
+                    $data->unit_price = $request->unit_price[$key];
+                    $data->start_date = $request->start_date[$key];
+                    $data->end_date = $request->end_date[$key];
+                    $data->created_at=date('Y-m-d H:i:s');
+                    $data->updated_at=date('Y-m-d H:i:s');
+                    $data->save();
+                };
+			}
+			\DB::commit();
+			}catch (Throwable $e){
+				\DB::rollback();
+			}
+
+            return redirect()->route('admin.quotation.index');
+    }
+
+    public function show(quotation $quotation)
+    {
+        abort_if(Gate::denies('order_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $quotationDetail = quotationDetail::All();
+        $ItemMaster = ItemMaster::All();
+        $vendor = Vendor::all();
+        return view('admin.quotation.show', compact('quotation','vendor','quotationDetail','ItemMaster'));
+    }
+
+   public function destroy(quotation $quotation)
+    {
+        abort_if(Gate::denies('order_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $quotation->delete();
+        return back();
+    }
+
+    public function massDestroy(MassDestroyOrderRequest $request)
+    {
+        Order::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
+    }
+}

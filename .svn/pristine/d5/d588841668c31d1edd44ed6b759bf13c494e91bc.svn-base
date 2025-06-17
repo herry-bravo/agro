@@ -1,0 +1,71 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateBmOrderLinesAllTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('bm_order_lines_all', function (Blueprint $table) {
+            $table->increments('id');
+            $table->integer('header_id');
+            $table->integer('line_id');
+            $table->integer('line_number');
+            $table->float('split_line_id');
+            $table->integer('inventory_item_id');
+            $table->string('user_description_item');
+            $table->date('promise_date');
+            $table->date('request_date');
+            $table->float('unit_list_price');
+            $table->float('unit_selling_price');
+            $table->date('schedule_ship_date');
+            $table->string('order_quantity_uom');
+            $table->float('pricing_quantity');
+            $table->float('shipped_quantity');
+            $table->float('ordered_quantity');
+            $table->float('fulfilled_quantity');
+            $table->float('shipping_quantity');
+            $table->float('shipping_quantity_uom');
+            $table->float('cancelled_quantity');
+            $table->string('price_list_id');
+            $table->date('pricing_date');
+            $table->string('pricing_context');
+            $table->string('pricing_attribute1');
+            $table->integer('item_identifier_type');
+            $table->integer('shipping_interfaced_flag');
+            $table->integer('split_from_line_id');
+            $table->integer('ship_set_id');
+            $table->integer('split_by');
+            $table->float('unit_selling_percent');
+            $table->float('unit_percent_base_price');
+            $table->date('fulfillment_date');
+            $table->string('invoice_interface_status_code');
+            $table->float('invoiced_quantity');
+            $table->string('tax_code');
+			$table->string('flow_status_code',30)->nullable();
+            $table->dateTime('created_at');
+            $table->dateTime('updated_at');
+            $table->dateTime('deleted_at');
+
+
+
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('bm_order_lines_all');
+    }
+}

@@ -1,0 +1,238 @@
+@extends('layouts.admin')
+@section('styles')
+@endsection
+@section('content')
+    <div class="card">
+
+        <div class="card-header">
+            <h6 class="card-title mb-2 mt-2">
+                <a href="" class="breadcrumbs__item">{{ trans('cruds.physic.fields.inv') }}</a>
+                <a href="{{ route('admin.item-master.index') }}" class="breadcrumbs__item">
+                    {{ trans('cruds.itemMaster.title_singular') }}</a>
+                <a href="{{ route('admin.gallery.index') }}" class="breadcrumbs__item">Gallery Items</a>
+            </h6>
+        </div>
+        <hr>
+
+        <div class="row row-cols-md-3">
+            <div class="col-sm-4 filters-group-wrap">
+                <div class="filters-group">
+                    <p class="filter-label">Filter :</p>
+                    <div class="btn-group filter-options">
+                        @foreach ($category as $cat)
+                        <button class="btn btn-outline-primary" data-group="{{$cat->category_code}}">{{$cat->category_code}}</button>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-4 filters-group-wrap">
+                <fieldset class="filters-group">
+                    <p class="filter-label">Sort :</p>
+                    <div class="btn-group sort-options">
+                        <label class="btn active">
+                            <input type="radio" name="sort-value" value="dom" checked /> Default
+                        </label>
+                        <label class="btn">
+                            <input type="radio" name="sort-value" value="title" /> Title
+                        </label> 
+                        <label class="btn">
+                            <input type="radio" name="sort-value" value="date-created" /> Date Created
+                        </label>
+                    </div>
+                </fieldset>
+            </div>
+            <div class="col-sm-4">
+                <div class="filters-group">
+                    <label for="filters-search-input" class="filter-label">Search :</label>
+                    <input class="textfield filter__search js-shuffle-search form-control" id="basicInput" type="text"
+                        id="filters-search-input" />
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div id="grid" class="row row-cols-1 row-cols-md-6 mb-2 my-shuffle-container">
+                @foreach ($model as $mod)
+                <figure class="picture-item" data-groups='["{{$mod->category_code}}"]'
+                    data-date-created="{{\Carbon\Carbon::parse( $mod->created_at )->toDayDateTimeString()}}" data-title="{{$mod->description}}">
+                    <div class="picture-item__inner">
+                        <div class="aspect">
+                            <div class="aspect__inner">
+                                <img src="{{url($mod->img_path)}}" width="200px;" style="border-top-left-radius: 2rem; border-top-right-radius: 2rem;"
+                                    srcset="{{url($mod->img_path)}}"
+                                    alt="{{$mod->description}}" />
+                            </div>
+                        </div>
+                        <div class="picture-item__details">
+                            <figcaption class="picture-item__title"><b><a href="@if($mod->img_original_path==null) {{url('thumbnails/default.png')}} @else {{url($mod->img_original_path)}}@endif"
+                                    target="_blank" style="padding-left: 1rem; width: 200px; font-size: 16px;" rel="noopener">{{$mod->item_code}}</a></b></figcaption>
+                            <p class="picture-item__tags hidden@xs" style="width: 200px; padding-left: 1rem; padding-right: 1rem;">{{$mod->description}}</p>
+                        </div>
+                    </div>
+                </figure>    
+                @endforeach
+                <div class="col-1@sm col-1@xs my-sizer-element"></div>
+            </div>
+        </div>
+    </div>
+    </div>
+@endsection
+@push('script')
+    <script src="{{ asset('app-assets/js/scripts/shuffle.min.js') }}"></script>
+    <script>
+        var Shuffle = window.Shuffle;
+
+        class Demo {
+            constructor(element) {
+                this.element = element;
+                this.shuffle = new Shuffle(element, {
+                    itemSelector: '.picture-item',
+                    sizer: element.querySelector('.my-sizer-element'),
+                });
+
+                // Log events.
+                this.addShuffleEventListeners();
+                this._activeFilters = [];
+                this.addFilterButtons();
+                this.addSorting();
+                this.addSearchFilter();
+            }
+
+            /**
+             * Shuffle uses the CustomEvent constructor to dispatch events. You can listen
+             * for them like you normally would (with jQuery for example).
+             */
+            addShuffleEventListeners() {
+                this.shuffle.on(Shuffle.EventType.LAYOUT, (data) => {
+                    console.log('layout. data:', data);
+                });
+                this.shuffle.on(Shuffle.EventType.REMOVED, (data) => {
+                    console.log('removed. data:', data);
+                });
+            }
+
+            addFilterButtons() {
+                const options = document.querySelector('.filter-options');
+                if (!options) {
+                    return;
+                }
+
+                const filterButtons = Array.from(options.children);
+                const onClick = this._handleFilterClick.bind(this);
+                filterButtons.forEach((button) => {
+                    button.addEventListener('click', onClick, false);
+                });
+            }
+
+            _handleFilterClick(evt) {
+                const btn = evt.currentTarget;
+                const isActive = btn.classList.contains('active');
+                const btnGroup = btn.getAttribute('data-group');
+
+                this._removeActiveClassFromChildren(btn.parentNode);
+
+                let filterGroup;
+                if (isActive) {
+                    btn.classList.remove('active');
+                    filterGroup = Shuffle.ALL_ITEMS;
+                } else {
+                    btn.classList.add('active');
+                    filterGroup = btnGroup;
+                }
+
+                this.shuffle.filter(filterGroup);
+            }
+
+            _removeActiveClassFromChildren(parent) {
+                const {
+                    children
+                } = parent;
+                for (let i = children.length - 1; i >= 0; i--) {
+                    children[i].classList.remove('active');
+                }
+            }
+
+            addSorting() {
+                const buttonGroup = document.querySelector('.sort-options');
+                if (!buttonGroup) {
+                    return;
+                }
+                buttonGroup.addEventListener('change', this._handleSortChange.bind(this));
+            }
+
+            _handleSortChange(evt) {
+                // Add and remove `active` class from buttons.
+                const buttons = Array.from(evt.currentTarget.children);
+                buttons.forEach((button) => {
+                    if (button.querySelector('input').value === evt.target.value) {
+                        button.classList.add('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
+                });
+
+                // Create the sort options to give to Shuffle.
+                const {
+                    value
+                } = evt.target;
+                let options = {};
+
+                function sortByDate(element) {
+                    return element.getAttribute('data-created');
+                }
+
+                function sortByTitle(element) {
+                    return element.getAttribute('data-title').toLowerCase();
+                }
+
+                if (value === 'date-created') {
+                    options = {
+                        reverse: true,
+                        by: sortByDate,
+                    };
+                } else if (value === 'title') {
+                    options = {
+                        by: sortByTitle,
+                    };
+                }
+                this.shuffle.sort(options);
+            }
+
+            // Advanced filtering
+            addSearchFilter() {
+                const searchInput = document.querySelector('.js-shuffle-search');
+                if (!searchInput) {
+                    return;
+                }
+                searchInput.addEventListener('keyup', this._handleSearchKeyup.bind(this));
+            }
+
+            /**
+             * Filter the shuffle instance by items with a title that matches the search input.
+             * @param {Event} evt Event object.
+             */
+            _handleSearchKeyup(evt) {
+                const searchText = evt.target.value.toLowerCase();
+                this.shuffle.filter((element, shuffle) => {
+                    // If there is a current filter applied, ignore elements that don't match it.
+                    if (shuffle.group !== Shuffle.ALL_ITEMS) {
+                        // Get the item's groups.
+                        const groups = JSON.parse(element.getAttribute('data-groups'));
+                        const isElementInCurrentGroup = groups.indexOf(shuffle.group) !== -1;
+                        // Only search elements in the current group
+                        if (!isElementInCurrentGroup) {
+                            return false;
+                        }
+                    }
+                    const titleElement = element.querySelector('.picture-item__title');
+                    const titleText = titleElement.textContent.toLowerCase().trim();
+                    return titleText.indexOf(searchText) !== -1;
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.demo = new Demo(document.getElementById('grid'));
+        });
+    </script>
+@endpush

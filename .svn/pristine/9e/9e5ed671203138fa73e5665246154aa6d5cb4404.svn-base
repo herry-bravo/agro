@@ -1,0 +1,445 @@
+@extends('layouts.admin')
+@section('content')
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+<script src="{{asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
+@endpush
+
+@section('content')
+<div class="card">
+    <div class="card-header mt-50 mb-50">
+        <h6 class="card-title">
+            <a href="{{ route("admin.prodplan.index") }}" class="breadcrumbs__item">{{ trans('cruds.planning.manufacture') }} </a>
+            <a href="{{ route("admin.prodplan.index") }}" class="breadcrumbs__item">{{ trans('cruds.planning.title') }} </a>
+        </h6>
+        <form action="{{ route('admin.work-order.store') }}" method="POST" enctype="multipart/form-data" class="form-horizontal" novalidate>
+            {{ csrf_field() }}
+            <div class="d-flex justify-content-center bd-highlight inline">
+                <div class="p-25 mt-50 bd-highlight " style="margin-top: 0.5%;font-weight: bold;">
+                    Planning :
+                </div>
+                <div class="p-50 bd-highlight">
+                    <input type="text" id="datepicker" name="planning_date" class="form-control text-center flatpickr-basic" value=" {{date('d-M-Y')}}" required>
+                </div>
+                <div class="p-25 bd-highlight">
+                    <button type='submit' class="btn btn-info " Value='auto' name="action" autocomplete="off"> Import</button>
+                </div>
+            </div>
+        </form>
+        @can('price_list_create')
+        <div class="row">
+            <div class="col-lg-12">
+                <a class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orderData">
+                    <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus me-50 font-small-4">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg></span>
+                    {{ trans('global.add') }} {{ trans('cruds.planning.title') }}
+
+
+                </a>
+                {{-- <button type="button" style="margin-top: 8%;"  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orderData"> {{ trans('global.add') }} {{ trans('cruds.planning.title') }} </button> --}}
+            </div>
+        </div>
+        @endcan
+    </div>
+
+    <div class="card-body">
+        <table id="planning" class=" table table-bordered table-striped w-100">
+            <thead>
+                <tr>
+                    <th>
+                        {{ trans('cruds.planning.fields.no') }}
+                    </th>
+                    <th>
+                        {{ trans('cruds.planning.fields.plan_date') }}
+                    </th>
+                    <th>
+                        {{ trans('cruds.planning.fields.order_num') }}
+                    </th>
+                    <th>
+                        {{ trans('cruds.planning.fields.po_num') }}
+                    </th>
+                    <th>
+                        {{ trans('cruds.planning.fields.customer') }}
+                    </th>
+                    <th>
+                        {{ trans('cruds.planning.fields.item') }}
+                    </th>
+                    <th>
+                        {{ trans('cruds.planning.fields.gsm') }}
+                    </th>
+                    <th>
+                        {{ trans('cruds.planning.fields.width') }}
+                    </th>
+                    <th>
+                        {{ trans('cruds.planning.fields.qty') }}
+                    </th>
+                    <th>
+                        {{ trans('cruds.planning.fields.opration') }}
+                    </th>
+                    <th>
+                        {{ trans('cruds.planning.fields.complate_date') }}
+                    </th>
+                    <th>
+                        {{ trans('global.status') }}
+                    </th>
+                    <th>
+                        {{ trans('global.action') }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        @include('admin.productionPlanning.detail')
+    </div>
+
+    <!-- Modal Cancel -->
+    @include('admin.productionPlanning.orderData')
+    @include('admin.productionPlanning.open')
+
+    <!-- END Modal Cancel-->
+</div>
+@endsection
+
+@push('script')
+<script>
+    $(document).on('click', '#detPlanning', function() {
+        $('#table_008').DataTable().destroy();
+        var value = $(this).data('sonumber');
+        var linegroup = $(this).data('linegroup');
+
+        var tableDt = $('#table_008').DataTable({
+            "bServerSide": true
+            , ajax: {
+                url: '{{url("search/plnDet") }}'
+                , type: "POST"
+                , headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+                , data: function(d) {
+                    d.sonum = value;
+                    d.linegroup = linegroup;
+                    return d
+                }
+            }
+
+            , info: false
+            , paging: false
+            , displayLength: 10
+            , searching: false
+            , columns: [{
+                    data: 'order_number'
+                    , className: "text-center"
+                }
+                , {
+                    data: 'order_number'
+                }, {
+                    data: 'item'
+                }, {
+                    data: 'gsm'
+                    , class: "text-end"
+                }, {
+                    data: 'size'
+                    , class: "text-end"
+                }, {
+                    data: 'qty'
+                    , class: "text-end"
+                }
+            ]
+        })
+    });
+
+    $(document).ready(function() {
+        var table = $('#planning').DataTable({
+            "bServerSide": true
+            , ajax: {
+                url: '{{url("search/planning-report") }}'
+                , type: "POST"
+                , headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+                , data: function(d) {
+                    // d.vendor = $('#vendor_id').val();
+                    // d.min = $("#min").val();
+                    // d.max = $("#max").val();
+                    // d.rev = $("#rev").val();
+                    return d
+                }
+            }
+            , responsive: false
+            , scrollX: true
+            , searching: true
+            , dom: '<"card-header border-bottom"<"head-label"><"dt-action-buttons text-end">>\
+                    <"d-flex justify-content-between row mt-1"<"col-sm-12 col-md-6"Bl><"col-sm-12 col-md-2"f><"col-sm-12 col-md-2"p>t>'
+            , displayLength: 20
+            , "lengthMenu": [
+                [10, 25, 50, -1]
+                , [10, 25, 50, "All"]
+            ]
+            , buttons: [{
+                    extend: 'print'
+                    , text: feather.icons['printer'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Print'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'csv'
+                    , text: feather.icons['file-text'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Csv'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'excel'
+                    , text: feather.icons['file'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Excel'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'pdf'
+                    , text: feather.icons['clipboard'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Pdf'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'copy'
+                    , text: feather.icons['copy'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Copy'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'colvis'
+                    , text: feather.icons['eye'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Colvis'
+                    , className: ''
+                }
+                // , {
+                //     text: feather.icons['filter'].toSvg({
+                //         class: 'font-small-4 me-50 '
+                //     }) + 'Filter'
+                //     , className: 'btn-warning'
+                //     , action: function(e, node, config) {
+                //         $('#modalFilter').modal('show')
+                //     }
+                // , }
+            , ]
+            , columnDefs: [{
+                render: function(data, type, row, index) {
+                    content = `
+                        @can('price_list_edit')
+                        <a class="" href="prodplan/${row.prod_planning_id}/edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1l1-4l9.5-9.5z"/></g></svg> </a>
+                        <a id="detPlanning" data-sonumber="${row.order_number}" data-linegroup="${row.line_number}" data-bs-toggle="modal" data-bs-target="#demoModal"  style="font-size:11px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m12 16l4-4l-4-4m-4 4h8"/></g></svg>
+                         </a>
+                        @endcan
+                        `;
+                    return content;
+                }
+                , targets: [12]
+                , class: "text-center"
+            }]
+            , columns: [{
+                    data: 'id'
+                    , className: "text-center"
+                }
+                , {
+                    data: 'planning_schedule'
+                    , class: "text-end"
+                }, {
+                    data: 'order_number'
+                }, {
+                    data: 'customer_po_number'
+                }, {
+                    data: 'customer_code'
+                }, {
+                    data: 'item_code'
+                , }, {
+                    data: 'attribute_number_gsm'
+                    , class: 'text-end'
+                }, {
+                    data: 'attribute_number_w'
+                    , class: "text-end"
+                }, {
+                    data: 'ordered_quantity'
+                    , class: "text-end"
+                }, {
+                    data: 'operation_unit'
+                    , class: "text-center"
+                }, {
+                    data: 'completed_schedule'
+                    , class: "text-end"
+                }, {
+                    data: 'status'
+                    , class: "text-center"
+                }
+            ]
+            , language: {
+                paginate: {
+                    // remove previous & next text from pagination
+                    previous: '&nbsp;'
+                    , next: '&nbsp;'
+                }
+            }
+        })
+
+        var table = $('#order-summary').DataTable({
+            "bServerSide": true
+            , ajax: {
+                url: '{{url("search/order-summary") }}'
+                , type: "POST"
+                , headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+                , data: function(d) {
+                    return d
+                }
+            }
+            , responsive: false
+            , searching: true
+            , dom: '<"card-header border-bottom"<"head-label"><"dt-action-buttons text-end">>\
+                    <"d-flex justify-content-between row mt-1"<"col-sm-12 col-md-6"Bl><"col-sm-12 col-md-2"f><"col-sm-12 col-md-2"p>t>'
+            , displayLength: 10
+            , "lengthMenu": [
+                [10, 25, 50, -1]
+                , [10, 25, 50, "All"]
+            ]
+            , buttons: [{
+                    extend: 'print'
+                    , text: feather.icons['printer'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Print'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'csv'
+                    , text: feather.icons['file-text'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Csv'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'excel'
+                    , text: feather.icons['file'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Excel'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'pdf'
+                    , text: feather.icons['clipboard'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Pdf'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'copy'
+                    , text: feather.icons['copy'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Copy'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'colvis'
+                    , text: feather.icons['eye'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Colvis'
+                    , className: ''
+                }, 
+                // {
+                //     text: feather.icons['filter'].toSvg({
+                //         class: 'font-small-4 me-50 '
+                //     }) + 'Filter'
+                //     , className: 'btn-warning'
+                //     , action: function(e, node, config) {
+                //         $('#modalFilter').modal('show')
+                //     }
+                // , }
+                {
+                    text: feather.icons['refresh-cw'].toSvg({
+                        class: 'font-small-4 me-50 '
+                    }) + 'Refresh'
+                    , className: 'btn-secondary'
+                    , action: function(e, node, config) {
+                        var dtable = $('#order-summary').DataTable();
+                        dtable.ajax.reload();
+                    }
+                , }
+            , ]
+            , columns: [{
+                    data: 'id'
+                    , className: "text-center"
+                }
+                , {
+                    data: 'order_number'
+                }, {
+                    data: 'customer_name'
+                }, {
+                    data: 'cust_po_number'
+                }, {
+                    data: 'schedule_ship_date'
+                }, {
+                    data: 'item_code'
+                }, {
+                    data: 'gsm'
+                }, {
+                    data: 'width'
+                }, {
+                    data: 'ordered_quantity'
+                    , class: 'text-end'
+                }, {
+                    data: 'opration'
+                }, {
+                    data: 'roll'
+                }
+            ]
+            , language: {
+                paginate: {
+                    // remove previous & next text from pagination
+                    previous: '&nbsp;'
+                    , next: '&nbsp;'
+                }
+            }
+        })
+
+    });
+
+</script>
+@endpush

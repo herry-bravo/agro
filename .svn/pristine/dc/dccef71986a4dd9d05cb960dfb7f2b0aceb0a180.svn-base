@@ -1,0 +1,209 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\ArCustomerTrx;
+use App\Terms;
+use App\Currency;
+use App\Customer;
+use App\Site;
+use App\CurrencyGlobal;
+use App\GlHeader;
+use App\GlLines;
+use App\ArCustomerTrxLines;
+use App\ArReceivableApplications;
+use DB;
+
+class CreditNoteController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        //
+        $cust = ArCustomerTrx::where('bill_template_name','Credit Note')->get();
+        return view('admin.creditNote.index',compact('cust'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        //
+        $terms = Terms::where('term_category','PAYMENT')->get();
+        $currency = CurrencyGlobal::where('currency_status', 1)->get();
+        $customer = Customer::All();
+        $site = Site::where('site_type','=','Shipto')->get();
+        return view('admin.creditNote.create',compact('customer','terms','currency','site'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        //
+
+        switch ($request->input('action')) {
+            case 'save':
+                try {
+                    \DB::beginTransaction();
+                        $id_cust_head = DB::table('bm_ra_customer_trx_all')->get()->last();
+                        $id_cust_head = ($id_cust_head->customer_trx_id ?? 0)+1;
+                        $trx_number = str_pad($id_cust_head,6,"0",STR_PAD_LEFT);
+
+                        $cust = ArCustomerTrx::where('customer_trx_id',$request->ar_id)->first();
+                    
+                        $cust_head = array(
+                            'customer_trx_id'=>$id_cust_head,
+                            'trx_number'=>$trx_number,
+                            'bill_template_name'=>'Credit Note',
+                            'trx_date'=>$cust->trx_date,
+                            'bill_to_customer_id'=>$cust->bill_to_customer_id,
+                            'ship_to_customer_id'=>$cust->ship_to_customer_id,
+                            'term_id'=>$cust->term_id,
+                            'delivery_method_code'=>$cust->delivery_method_code,
+                            'invoice_currency_code'=>$cust->invoice_currency_code,
+                            'attribute1' => $cust->attribute1,
+                            'attribute2' => $cust->attribute2,
+                            'created_by'=> auth()->user()->id,
+                            'org_id'=>$cust->org_id,
+                            'exchange_date'=>$cust->exchange_date,
+                            'exchange_rate'=>$cust->exchange_rate,
+                            'status_trx'=>0,
+                            'created_at'=>date('Y-m-d H:i:s'),
+                            'updated_at'=>date('Y-m-d H:i:s'),
+                        );
+                        ArCustomerTrx::create($cust_head);
+                        // dd($cust_head);
+
+                        $id_ar_head =  DB::table('bm_ar_receivable_applications_all')->get()->last();
+                        $head = ArReceivableApplications::where('customer_trx_id',$request->ar_id)->first();
+                        $ar_head = array(
+                            'receivable_application_id'=>$id_ar_head->receivable_application_id+1,
+                            'amount_applied'=>$head->amount_applied,
+                            'gl_date'=>$head->gl_date,
+                            'attribute1'=>$head->attribute1,
+                            'application_rule'=>'Credit Note',
+                            'customer_trx_id'=>$id_cust_head,
+                            'freight_applied'=>$head->freight_applied,
+                            'status'=>$head->status,
+                            'tax_code'=>$head->tax_code,
+                            'tax_applied'=>$head->tax_applied,
+                            'created_by'=>$head->created_by,
+                            'org_id'=>$head->org_id,
+                            'creation_date'=>date('Y-m-d H:i:s'),
+                            'created_at'=>date('Y-m-d H:i:s'),
+                            'updated_at'=>date('Y-m-d H:i:s'),
+                        );
+                        // dd($ar_head);
+                        ArReceivableApplications::create($ar_head);
+
+                        $id_cust_line = DB::table('bm_ra_customer_trx_lines_all')->get()->last();
+                        $id_cust_line = ($id_cust_line->customer_trx_line_id ?? 0)+1;
+
+                        $ar_data = ArCustomerTrxLines::where('customer_trx_id',$request->ar_id)->get();
+                        foreach ($ar_data as $key => $ar_data){
+                            $data = array(
+                                'customer_trx_line_id'=>$id_cust_line,
+                                'customer_trx_id'=>$id_cust_head,
+                                'line_number'=>$key+1,
+                                'sales_order_line'=>$ar_data->sales_order_line,
+                                'inventory_item_id'=>$ar_data->inventory_item_id,
+                                'description'=>$ar_data->description,
+                                'quantity_ordered'=>$ar_data->quantity_ordered,
+                                'quantity_invoiced'=>$ar_data->quantity_invoiced,
+                                'unit_selling_price'=>$ar_data->unit_selling_price,
+                                'sales_order'=>$ar_data->sales_order,
+                                'amount_due_original'=>$ar_data->amount_due_original,
+                                'tax_rate'=>$ar_data->tax_rate,
+                                'sales_tax_id'=>$ar_data->sales_tax_id,
+                                'uom_code'=>$ar_data->uom_code,
+                                'created_by'=>auth()->user()->id,
+                                'creation_date'=>date('Y-m-d H:i:s'),
+                                'updated_at'=>date('Y-m-d H:i:s')
+                            );
+                            ArCustomerTrxLines::create($data);
+                        }
+
+                        $id = DB::table('bm_ra_customer_trx_all')->get()->last();
+                        $id = $id->id;
+                    \DB::commit();
+                }catch (Throwable $e){
+                    \DB::rollback();
+                }
+
+                return redirect()->route('admin.credit-note.edit',$id)->with('success', 'Data Stored');
+            break;
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+        $cust = ArCustomerTrx::find($id);
+        $line = ArCustomerTrxLines::where('customer_trx_id',$cust->customer_trx_id)->get();
+        $data = ArCustomerTrxLines::where('customer_trx_id',$cust->customer_trx_id)->first();
+
+        $ar = ArReceivableApplications::where('customer_trx_id',$cust->customer_trx_id)->first();
+        // dd($ar);
+        $terms = Terms::where('term_category','PAYMENT')->get();
+        $currency = CurrencyGlobal::where('currency_status', 1)->get();
+        $payment = \App\ApPayment::where('invoice_id','=',$id)->first();
+        $ba = \App\BankAccount::all();
+        $journal = \App\Category::orderBy('id','desc')->where('account_type','Bank & Cash')->get();
+        $acc = \App\AccountCode::all();
+        return view('admin.creditNote.edit',compact('cust','terms','currency','line','data','ba','journal','payment','ar','acc'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        //
+    }
+}

@@ -1,0 +1,168 @@
+<?php
+
+namespace App\Http\Controllers\admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\InvOnhandFgOstd;
+use App\OperationUnit;
+
+class OutstandingFGController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        //
+        $data = InvOnhandFgOstd::where('status',0)->get(); //will by range date
+
+        // Testing
+        // $query = [120,170,155];
+        // $result = [];
+        // for ($i=0; $i < count($query); $i++){
+        //     $width = $query[$i];
+        //     for($j=$i+1; $j < count($query); $j++){
+        //         $width += $query[$j];
+        //         if($width >= 200 && $width <= 300){
+        //             $result = ['w_total'=>$width];
+        //             dd($result);
+        //         } else if ($width > 300) {
+        //             $width = $query[$i];
+        //         }
+        //     }
+        // }
+        foreach ($data as $key => $data){
+            $result =[];
+            $query = InvOnhandFgOstd::where('attribute_int1',Null)
+                                    ->where('status',0)->get(); // where in range data , sorting by date, item, gsm
+
+            for ($i=0; $i < count($query); $i++){
+                $width = $query[$i]->attribute_number_w;
+                $detail = [$query[$i]->fg_ostd_is];
+
+                for($j=$i+1; $j < count($query); $j++){
+                    $pm = OperationUnit::where('range_gsm_min','<=',$query[$i]->attribute_number_gsm)->where('range_gsm_max','>=',$query[$i]->attribute_number_gsm)->get(); //get capacity
+                    if($query[$j]->inventory_item_id == $query[$i]->inventory_item_id && $query[$j]->attribute_number_gsm == $query[$i]->attribute_number_gsm){  //get same item & gsm
+                        $width += $query[$j]->attribute_number_w;
+                        // dd($width);
+                        // foreach ($pm as $pm){
+                            $array = array(
+                                'gsm_min'=>$query[$i]->attribute_number_gsm,
+                                'gsm_max'=>$query[$i]->attribute_number_gsm,
+                                'width'=>$width,
+                            );
+
+                            $data = $this->getOperation($array);
+
+                            if($width >= $data['min'] && $width <= $data['max']){
+                                $detail[] = $query[$j]->fg_ostd_is;
+                                $result = ['id'=>$detail,'w_total'=>$width,'operation'=>$data['operation']];
+                                break;
+                            }elseif($width > 300){
+                                $width = $query[$i]->attribute_number_w;
+                            }
+                        // }
+                    }
+                }
+                dd($result);
+            }
+
+        }
+    }
+
+    public function getOperation($array){
+        $pm = OperationUnit::where('range_gsm_min','<=',$array['gsm_min'])
+                            ->where('range_gsm_max','>=',$array['gsm_max'])
+                            ->where('range_capacity_min','<=',$array['width'])
+                            ->where('range_capacity_max','>=',$array['width'])
+                            ->first();
+        $data = array(
+            'operation' => $pm->short_name ?? '',
+            'min' => $pm->range_capacity_min ?? 0,
+            'max' => $pm->range_capacity_max ?? 0
+        );
+        // dd($data);
+        return $data;
+
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        //
+        $data = InvOnhandFgOstd::where('status',0)->get(); //will by range date
+
+        foreach ($data as $key => $data){
+            $query = InvOnhandFgOstd::where('attribute_int1',Null)
+                                    ->where('status',0)->get(); // where in range data
+
+            for ($i=0; $i < count($query); $i++){
+                $width = $query[$i]->attribute_number_w;
+                dd($width);
+            }
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        //
+    }
+}

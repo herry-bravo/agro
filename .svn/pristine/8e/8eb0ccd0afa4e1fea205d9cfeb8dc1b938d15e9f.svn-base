@@ -1,0 +1,76 @@
+<?php
+
+
+use App\Http\Controllers\Api\GalaxyApiController;
+use App\Http\Controllers\Api\PurchaseRequisitionApiController;
+use App\Http\Controllers\Api\DeliveriesApiController;
+use App\Http\Controllers\Api\VendorApiController;
+use App\Http\Controllers\Api\AllocationApiController;
+use App\Http\Controllers\Api\TransferController;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+
+
+Route::post('/login', 'Api\LoginController@login');
+Route::post('/logout', 'Api\LoginController@logout');
+//Route::post('register', [UserController::class, 'register']);
+
+// SALES 09-09-22
+Route::get('customer', [GalaxyApiController::class, 'customer']);
+Route::get('pricelist', [GalaxyApiController::class, 'pricelist']);
+Route::get('salesorder', [GalaxyApiController::class, 'salesorder']);
+Route::get('shipping', [GalaxyApiController::class, 'shipping']);
+Route::get('delivery', [DeliveriesApiController::class, 'delivery']);
+Route::get('delivery/{detail}', [DeliveriesApiController::class, 'deliveryDetail']);
+// SALES
+
+//PURCHASE ORDER 10-09-22
+Route::get('quotationdetail', [GalaxyApiController::class, 'quotationdetail']);
+Route::get('purchaseorder', [GalaxyApiController::class, 'purchaseorder']);
+Route::get('vendor', [VendorApiController::class, 'vendor']);
+Route::get('itemmaster', [GalaxyApiController::class, 'itemmaster']);
+Route::get('uom', [GalaxyApiController::class, 'uom']);
+Route::get('quotation', [GalaxyApiController::class, 'quotation']);
+
+Route::get('purchaserequisition', [PurchaseRequisitionApiController::class, 'purchaserequisition']);
+Route::get('purchaserequisition/{detail}', [PurchaseRequisitionApiController::class, 'purchaserequisitionDetail']);
+Route::post('app/{id}', 'Api\PurchaseRequisitionApiController@purchaseorderReqApproval');
+Route::post('rjc/{id}', 'Api\PurchaseRequisitionApiController@purchaseorderReqRejected');
+
+Route::get('allocation', 'Api\AllocationApiController@search');
+Route::post('allocation/downloaded', 'Api\AllocationApiController@update');
+Route::post('allocation/sync', 'Api\AllocationApiController@sync');
+
+Route::get('transfer', [TransferController::class, 'transfer']);
+Route::get('searchtransfer', [TransferController::class, 'searchtransfer']);
+// Route::post('searchtransfer', 'Api\TransferController@searchtransfer');
+
+
+Route::get('trxstatuses', [GalaxyApiController::class, 'trxstatuses']);
+Route::get('autocreate', [GalaxyApiController::class, 'autocreate']);
+Route::get('currencyglobal', [GalaxyApiController::class, 'currencyglobal']);
+Route::get('purchaseorderdet', [GalaxyApiController::class, 'purchaseorderdet']);
+Route::get('terms', [GalaxyApiController::class, 'terms']);
+Route::get('tax', [GalaxyApiController::class, 'tax']);
+Route::get('poagent', [GalaxyApiController::class, 'poagent']);
+Route::get('rcvheader', [GalaxyApiController::class, 'rcvheader']);
+Route::get('rcvdetail', [GalaxyApiController::class, 'rcvdetail']);
+Route::get('grn', [GalaxyApiController::class, 'grn']);
+Route::get('onhand', [GalaxyApiController::class, 'onhand']);
+Route::get('materialtxns', [GalaxyApiController::class, 'materialtxns']);
+//PURCHASE ORDER
+
+// MANUFACTURING 10-09-22
+Route::get('bom', [GalaxyApiController::class, 'bom']);
+Route::get('workorder', [GalaxyApiController::class, 'workorder']);
+Route::get('workorderdetail', [GalaxyApiController::class, 'workorderdetail']);
+// MANUFACTURING
+
+Route::middleware('auth:sanctum')->group(function(){
+    // return $request->user();
+    // Route::apiResource('pegawai', PegawaiController::class);
+
+});
+
+
+// Route::get('user', [UserController::class, 'fetch']);

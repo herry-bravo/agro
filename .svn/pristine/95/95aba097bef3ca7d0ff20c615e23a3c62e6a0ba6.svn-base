@@ -1,0 +1,333 @@
+@extends('layouts.admin')
+@section('content')
+@push('script')
+    <script src="{{ asset('app-assets/vendors/js/extensions/sweetalert2.all.min.js') }}"></script>
+@endpush
+@can('order_create')
+@endcan
+<div class="card">
+    <div class="card-header">
+        <h4 class="card-title mb-2">{{ trans('cruds.requisition.title_singular') }} {{ trans('global.list') }}</h4>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class=" table  table-striped datatable " id="report-pr">
+                <thead>
+                    <tr style="text-align: center;">
+                        <th width="10">
+                            No
+                        </th>
+
+                        <th>
+                            {{ trans('cruds.requisition.fields.number') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.requisition.fields.cost_center') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.requisition.fields.item') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.requisition.fields.quantity') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.requisition.fields.status') }}
+                        </th>
+                        <th class="text-center">
+                            {{ trans('cruds.requisition.fields.approve') }}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!-- Modal Example Start-->
+<div class="modal fade" id="demoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title text-white" id="exampleModalLongTitle">Split Line</h4>
+                <div class="modal-header bg-transparent">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2 col-12">
+                            <div class="mb-1">
+                                <label class="col-sm-0 control-label" for="number">Line</label>
+                                <input class="form-control" name="req_line_id">
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-12">
+                            <div class="mb-1">
+                                <label class="col-sm-0 control-label" for="site">Items</label>
+                                <input class="form-control" name="item">
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-12">
+                            <div class="mb-1">
+                                <label class="col-sm-0 control-label" for="site">Quantity</label>
+                                <input class="form-control" name="split_quantity">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-secondary" name='action' value="add_lines" data-dismiss="modal"><i data-feather='plus'></i>{{ trans('global.add') }}</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END Modal Example Start-->
+@endsection
+@push('script')
+<script>
+    $(document).ready(function() {
+        $.fn.dataTable.ext.errMode = 'none';
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        const table = $('#report-pr').DataTable({
+            "bServerSide": true
+            , ajax: {
+                url: '{{url("search/req-report") }}'
+                , type: "POST"
+                , headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+                , data: function(d) {
+                    return d
+                }
+            }
+            , responsive: true
+            , searching: false
+            , dom: '<"card-header border-bottom"<"head-label"><"dt-action-buttons text-end">><"d-flex justify-content-between align-items-center mx-0 row"<"col-sm-12 col-md-8"Bl><"col-sm-12 col-md-4"f>>t<"d-flex justify-content-between mx-0 row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>'
+            , displayLength: 10
+            , "lengthMenu": [
+                [10, 25, 50, -1]
+                , [10, 25, 50, "All"]
+            ]
+            , buttons: [{
+                    extend: 'print'
+                    , text: feather.icons['printer'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Print'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'csv'
+                    , text: feather.icons['file-text'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Csv'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'excel'
+                    , text: feather.icons['file'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Excel'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'pdf'
+                    , text: feather.icons['clipboard'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Pdf'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'copy'
+                    , text: feather.icons['copy'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Copy'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'colvis'
+                    , text: feather.icons['eye'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Colvis'
+                    , className: ''
+                }, {
+                    text: feather.icons['filter'].toSvg({
+                        class: 'font-small-4 me-50 '
+                    }) + 'Filter'
+                    , className: 'btn-warning'
+                    , action: function(e, node, config) {
+                        $('#modalFilter').modal('show')
+                    }
+                , }
+            , ]
+            , columnDefs: [{
+                    render: function(data, type, row, index) {
+                        var info = table.page.info();
+                        return index.row + info.start + 1;
+                    }
+                    , targets: [0]
+                }, {
+                    render: function(data, type, row, index) {
+
+                        if ((row.usrmgr === row.login && row.app_lvl === row.userstatus && row.purchase_status === '1') || (row.app_lvl === row.userstatus && row.userstatus >= '2' && row.purchase_status === '1')) {
+                            app = ` <form action="app/${row.id}"  method="POST" style="display: inline-block;">
+                                        @csrf
+                                        @method('PUT')
+                                    <input type="hidden" name="authorized_status" value="2">
+                                    <input type="hidden" name="app_lvl" value="${row.app_lvl}">
+                                    <input type="hidden" name="notes" value="Approve Purchasing Manager">
+                                    <button type="submit" class="btn btn-sm btn-info pull-left" name='action' value="${row.userstatus}-approve">{{ trans('global.approve') }}</button>
+                                </form>
+                                <form action="app/${row.id}"  method="POST" style="display: inline-block;">
+                                        @csrf
+                                        @method('PUT')
+                                    <input type="hidden" name="authorized_status" value="13">
+                                    <input type="hidden" name="app_lvl" value="${row.app_lvl}">
+                                    <input type="hidden" name="notes" value="Approve Purchasing Manager">
+                                    <button type="submit" class="btn btn-sm btn-danger pull-left" name='action' value="${row.userstatus}-reject">reject</button>
+                                </form>`;
+                        } else {
+                            app = ``;
+                        }
+                        return  app;
+                    }
+                    , targets: [6]
+                }
+            ]
+            , columns: [{
+                    data: 'id'
+                    , className: "text-center"
+                }
+                , {
+                    data: 'pr_number'
+                    , className: "text-center"
+                }, {
+                    data: 'cost_center'
+                    , className: "text-center"
+                }, {
+                    data: 'item'
+                    , className: ""
+                }, {
+                    data: 'qty'
+                    , className: "text-right"
+                }, {
+                    data: 'status'
+                    , className: "text-center"
+                }
+            ]
+            , drawCallback: function(e, response) {
+                $(".btn-update").click(function(event) {
+                    var id = $(this).data('index');
+                    var token = $("meta[name='csrf-token']").attr("content");
+                    swal.fire({
+                        title: "Submit " + id + " ?"
+                        , type: "question"
+                        , showCancelButton: true
+                        , focusCancel: true
+                        , dangerMode: true
+                        , closeOnClickOutside: false
+                    }).then((confirm) => {
+                        if (confirm.value) {
+                            $.ajax({
+                                    url: '{{ url("admin/app") }}/' + id
+                                    , method: "PATCH"
+                                    , dataType: "JSON"
+                                    , headers: {
+                                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                    }
+                                    , data: {
+                                        "id": id
+                                        , "app_lvl": 3
+                                    , }
+                                , })
+                                .done(function(resp) {
+                                    console.log(resp);
+                                    if (resp.success) {
+                                        swal.fire("Info", resp.message, "success");
+                                        table.ajax.reload();
+                                    } else {
+                                        swal.fire("Warning", resp.message, "warning");
+                                    }
+                                })
+                                .fail(function() {
+                                    swal.fire("Warning", 'Unable to process request at this moment', "warning");
+                                });
+                        } else {
+                            event.preventDefault();
+                            return false;
+                        }
+                    });
+                })
+                $(".btn-delete").click(function(event) {
+                    var index = $(this).data('index');
+                    var token = $("meta[name='csrf-token']").attr("content");
+                    swal.fire({
+                            title: "Delete " + index + " ?"
+                            , type: "question"
+                            , showCancelButton: true
+                            , focusCancel: true
+                            , dangerMode: true
+                            , closeOnClickOutside: false
+                        })
+                        .then((confirm) => {
+                            if (confirm.value) {
+                                $.ajax({
+                                        url: '{{ url("admin/purchase-requisition") }}/' + index
+                                        , method: "DELETE"
+                                        , dataType: "JSON"
+                                        , headers: {
+                                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                        }
+                                        , data: {
+                                            "id": index
+                                        , }
+                                    , })
+                                    .done(function(resp) {
+                                        console.log(resp);
+                                        if (resp.success) {
+                                            swal.fire("Info", resp.message, "success");
+                                            table.ajax.reload();
+                                        } else {
+                                            swal.fire("Warning", resp.message, "warning");
+                                        }
+                                    })
+                                    .fail(function() {
+                                        swal.fire("Warning", 'Unable to process request at this moment', "warning");
+                                    });
+                            } else {
+                                event.preventDefault();
+                                return false;
+                            }
+                        });
+                })
+
+            }
+        })
+    });
+
+</script>
+@endpush

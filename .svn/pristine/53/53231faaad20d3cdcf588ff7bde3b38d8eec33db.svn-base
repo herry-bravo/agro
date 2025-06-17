@@ -1,0 +1,24 @@
+<?php
+
+
+return [
+    // Dashboard Main
+    'title.sales' => 'Penjualan Masuk',
+    'title.shipment' => 'Pengiriman',
+    'title.finishg' => 'Stok Barang Jadi',
+    'title.mtrls' => 'Stock Bahan Baku',
+
+
+    // Dashboard Chard
+    'chart.title' => 'Report Laba',
+    'chart.earning' => 'Pendapatan',
+    'chart.expense' => 'Pengeluaran',
+    'chart.budget' => 'Tambah Budget',
+
+    // Notifikasi
+    'notif.title' => 'Notifikasi',
+    'notif.new' => 'Baru',
+    'notif.old' => 'Lama',
+    'notif.readall' => 'Tandai Semua Sudah di Baca',
+
+];

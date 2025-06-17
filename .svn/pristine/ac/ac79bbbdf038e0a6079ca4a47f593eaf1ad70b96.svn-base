@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Http\Controllers\admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use PDF;
+
+class apController extends Controller
+{
+    public function index(Request $request){
+        $voucher_from = $request->voucher_from;
+        $voucher_to = $request->voucher_to;
+        $payment = \App\ApPayment::whereBetween('attribute1',[$voucher_from,$voucher_to])->where('deleted_at',NULL)->get();
+
+        $data_arr = array();
+        foreach($payment as $key => $value)
+        {
+            $qry[$key] = $value->id;
+            $qry1[$key]= 1;
+        }
+
+        if(empty($qry)){
+            return back()->with('error', 'Field (From / To) is required | Or Purchase dont Exist');
+        }
+        $pdf = PDF::loadview('admin.stdReports.apReport',compact('payment'))->setPaper('A4');
+        return $pdf->stream('AP Report'.$voucher_from.'-'.$voucher_to.'.pdf');
+    }
+}

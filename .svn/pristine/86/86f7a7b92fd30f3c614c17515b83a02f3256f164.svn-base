@@ -1,0 +1,60 @@
+<?php
+
+namespace App\Http\Livewire;
+
+use Illuminate\Database\Eloquent\Builder;
+use LaravelViews\Views\GridView;
+use App\ItemMaster;
+use App\Filters\GalleryTypeFilter;
+use App\Actions\GalleryAction;
+use App\Actions\ItemEditAction;
+use Livewire\WithPagination;
+
+class ItemsGridView extends GridView
+{
+    use WithPagination;
+
+    protected $model = ItemMaster::class;
+
+    public $searchBy = ['item_code', 'description'];
+
+    public $maxCols = 8;
+
+    public function repository(): Builder
+    {
+        return ItemMaster::where ('type_code','=','SPR');
+    }
+
+    public function card($item)
+    {
+        return [
+            'image' =>isset($item->img_path)? asset($item->img_path):'https://uxwing.com/wp-content/themes/uxwing/download/video-photography-multimedia/photo-gallery-icon.svg',
+            'title' => $item->item_code,
+            'item_code' =>$item->item_code,
+            'description' =>$item->description,
+        ];
+    }
+
+    // protected function filters()
+    //     {
+    //         return [
+    //             new GalleryTypeFilter,
+
+    //         ];
+    //     }
+
+    // protected function actionsByRow()
+    //     {
+    //         return [
+    //             new ItemEditAction,
+    //         ];
+    //     }
+
+    // protected function bulkActions()
+    //     {
+    //         return [
+    //             new GalleryAction,
+    //         ];
+    //     }
+}
+

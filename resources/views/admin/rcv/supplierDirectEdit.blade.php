@@ -1,0 +1,353 @@
+@extends('layouts.admin')
+@section('styles')
+<link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/jquery-ui.css') }}">
+@endsection
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+<script src="{{ asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
+@endpush
+@section('breadcrumbs')
+
+<a href="{{ route('admin.rcv.index') }}" class="breadcrumbs__item">Purchase Order</a>
+<a href="{{ route('admin.rcv.index') }}" class="breadcrumbs__item">Receive</a>
+<a href="" class="breadcrumbs__item active">Supplier Direct Edit</a>
+
+@endsection
+@section('content')
+<section id="multiple-column-form">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-2"></h4>
+                </div>
+
+                <div class="card-body">
+                    <form action="{{ route("admin.rcv.update", [$rcv->id]) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        @method('PUT')
+                        <div class="row">
+
+                            <div class="col-md-3 col-12">
+                                <div class="mb-1">
+                                    <label class="col-sm-0 control-label" for="number">{{ trans('cruds.rcv.fields.supplier') }}</label>
+                                    <select id="supplier" name="vendor_id" class="form-control select2 filter">
+                                        @foreach ($vendor as $key => $row)
+                                            @if($row->vendor_id == $rcv->vendor_id)
+                                                <option value="{{$row->vendor_id}}" selected>{{$row->vendor_name}}</option>
+                                            @else
+                                                <option value="{{$row->vendor_id}}">{{$row->vendor_name}}</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-12">
+                                <div class="mb-1">
+                                    <label class="col-sm-0 control-label" for="site">Container No.</label>
+                                    <input type="text" id="transaction_date" value="{{$rcv->num_of_containers}}" name="num_of_containers" class="form-control">
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-12">
+                                <div class="mb-1">
+                                    <label class="col-sm-0 control-label" for="number">{{ trans('cruds.rcv.fields.packingslip') }}</label>
+                                    <input type="text" class="form-control" value="{{$rcv->packing_slip}}" name="packing_slip" autocomplete="off" required>
+                                    <input type="hidden" class="form-control" value="{{$rcv->id}}" name="id" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-2 col-12">
+                                <div class="mb-1">
+                                    <label class="col-sm-0 control-label" for="number">{{ trans('cruds.rcv.fields.grn') }}</label>
+                                    <input type="text" class="form-control" value="{{$rcv->receipt_num ??''}}" readonly value="" name="receipt_num" autocomplete="off" maxlength="10" required>
+                                    <input type="hidden" class="form-control" name="segment1" value="" autocomplete="off" maxlength="10" required>
+                                    <input type="hidden" id="agent_id" name="agent_id" value="{{auth()->user()->id?? ''}}">
+                                    <input type="hidden" id="updated_by" name="updated_by" value="{{auth()->user()->id?? ''}}">
+                                    <input type="hidden" id="ship_to_location" value='SH-982221229' name="ship_to_location">
+                                    <input type="hidden" id="bill_to_location" value='BL-982221229' name="bill_to_location">
+                                    <input type="hidden" id="type_lookup_code" value='1' name="type_lookup_code">
+                                    <input type="hidden" id="source" value='1' name="source">
+                                    <input type="hidden" id="currency" value='IDR' name="currency_code">
+                                    <input type="hidden" id="rate_date" value='<?php echo date('Y-m-d'); ?>' name="rate_date">
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-1">
+                                    <label class="col-sm-0 control-label" for="site">{{ trans('cruds.autocreate.fields.org') }}</label></br>
+                                    <div class="form-check form-switch form-check-primary">
+                                        @if($rcv->organization_id == 222)
+                                            <input type="checkbox" class="form-check-input" name="organization_id" id="customSwitch10" value="{{$rcv->organization_id}}" checked="true">
+                                        @else
+                                            <input type="checkbox" class="form-check-input" name="organization_id" id="customSwitch10" value="{{$rcv->organization_id}}">
+                                        @endif
+                                        <label class="form-check-label" for="customSwitch10">
+                                            <span class="switch-icon-left"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg></span>
+                                            <span class="switch-icon-right"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div><br>
+                        <div class="row mt-2">
+                            <div class="box box-default">
+                                <div class="card-header">
+                                    <nav>
+                                        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                            <button class="nav-link active" id="nav-sales-tab" data-bs-toggle="tab" data-bs-target="#nav-sales" type="button" role="tab" aria-controls="nav-sales" aria-selected="true">
+                                                <span class="bs-stepper-box">
+                                                    <i data-feather="package" class="font-medium-3"></i>
+                                                </span>
+                                                Product
+                                            </button>
+                                            <button class="nav-link" id="nav-priceList-tab" data-bs-toggle="tab" data-bs-target="#nav-priceList" type="button" role="tab" aria-controls="nav-priceList" aria-selected="false">
+                                                <span class="bs-stepper-box">
+                                                    <i data-feather="cloud-drizzle" class="font-medium-3"></i>
+                                                </span>
+                                                Detail
+                                            </button>
+                                        </div>
+                                    </nav>
+                                </div>
+                                <hr>
+                                <div class="card-body">
+                                    <div class="tab-content" id="nav-tabContent">
+                                        {{-- Tab product --}}
+                                        <div class="tab-pane fade show active" id="nav-sales" role="tabpanel" aria-labelledby="nav-sales-tab">
+                                            <div class="box-body scrollx tableFixHead" style="height: 380px;overflow: scroll;">
+                                                <table id="rcv_direct" class="table table-fixed table-borderless">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Product</th>
+                                                            <th class='float-center text-center'>	&nbsp; Category	&nbsp;</th>
+                                                            <th class='float-center text-center'>Sub Inventory</th>
+                                                            <th class='float-center text-center'>UOM</th>
+                                                            <th class='float-center text-center'>Receive Qty</th>
+                                                            <th class='float-center text-center'>Quantity</th>
+                                                            <th class='float-center text-center'>Price</th>
+                                                            <th class='float-center text-center'>Subtotal</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="rcv_container">
+                                                        @php $subtotal =0; $total=0; @endphp
+                                                        @foreach ($rcv_detail as $key => $row )
+                                                        <tr class="tr_input">
+                                                            <td width="30%">
+                                                                <input type="text" class="form-control search_item_code" value="{{$row->itemmaster->item_code}} - {{$row->itemmaster->description}}" name="item_code[]" id="searchitem_{{$key+1}}" autocomplete="off" required><span class="help-block search_item_code_empty" style="display: none;" required>No Results Found ..</span>
+                                                                <input type="hidden" class="search_inventory_item_id" id="id_{{$key+1}}" value="{{$row->item_id}}" name="inventory_item_id[]" autocomplete="off">
+                                                                <input type="hidden" class="form-control" id="description_{{$key+1}}" value="{{$row->itemmaster->description}}" name="description_item[]" autocomplete="off">
+                                                                {{-- <input type="hidden" class="form-control" id="category_{{$key+1}}" value="{{$row->itemmaster->attribute2}}" name="category[]" autocomplete="off"> --}}
+                                                                <input type="hidden" class="" id="" value="{{$row->id}}" name="shipment_line_id[]" autocomplete="off">
+                                                            </td>
+                                                            <td width="5%">
+                                                                <input type="text" class="form-control search_subcategory_code" placeholder="Type here ..." value="{{$row->itemmaster->attribute2}}" name="category[]" id="category_{{$key+1}}" autocomplete="off" required>
+                                                                <input type="hidden" class="form-control  id_cc" placeholder="Type here ..." name="id_cc" autocomplete="off" required>
+                                                            </td>
+                                                            <td width="10%">
+                                                                <input type="text" name="subinventory[]" class="form-control search_subinventory" value="{{$row->to_subinventory}}" id="subinvfrom_{{$key+1}}" autocomplete="off">
+                                                            </td>
+                                                            <td width="5%">
+                                                                <input type="text" class="form-control search_uom_conversion" name="pr_uom_code[]" value="{{$row->uom_code}}" id="uom_{{$key+1}}" autocomplete="off">
+                                                                <span class="help-block search_uom_code_empty glyphicon" style="display: none;"> No Results Found </span>
+                                                            </td>
+                                                            <td width="10%">
+                                                                <input type="text" class="form-control purchase_quantity float-end text-end"  value="{{$row->quantity_received}}" name="quantity[]" id="qtyRcv_{{$key+1}}" autocomplete="off" required>
+                                                            </td>
+                                                            <td width="10%">
+                                                                <input type="text" class="form-control purchase_quantity float-end text-end" readonly value="{{number_format($row->quantity_accepted,2)}}" name="quantity[]" id="qty_{{$key+1}}" autocomplete="off" required>
+                                                            </td>
+                                                            <td width="15%">
+                                                                <input type="text" class="form-control purchase_quantity float-end text-end recount_po" value="{{$row->shipment_unit_price}}"  name="shipment_unit_price[]" id="price_{{$key+1}}" autocomplete="off" required>
+                                                            </td>
+                                                            @php $subtotal = $row->quantity_accepted * $row->shipment_unit_price @endphp
+                                                            <td width="15%">
+                                                                <input type="text" name="subinventory[]" class="form-control text-end"readonly value="{{number_format($subtotal)}}" id="subtotal1_{{$key+1}}" autocomplete="off">
+                                                                <input type="hidden" name="subinventory[]" class="form-control grandSub text-end"readonly value="{{$subtotal}}" id="subtotal_{{$key+1}}" autocomplete="off">
+                                                            </td>
+                                                        </tr>
+                                                        @php $total +=$subtotal; @endphp
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                        {{-- Tab lain -lain --}}
+                                        <div class="tab-pane fade" id="nav-priceList" role="tabpanel" aria-labelledby="nav-priceList-tab">
+                                            <div class="box-body scrollx" style="height: 380px;overflow: scroll;">
+
+                                                <table class="table table-striped tableFixHead" id="tab_logic">
+                                                    <thead>
+                                                        <tr>
+                                                            <th class="text-center" scope="col">% Water</th>
+                                                            <th class="text-center" scope="col">% Gross</th>
+                                                            <th class="text-center" scope="col">% Gross Tolerance</th>
+                                                            <th class="text-center" scope="col">% Supplier Tolerance</th>
+                                                            <th class="text-center" scope="col">% BM Tolerance</th>
+                                                            <th class="text-center" scope="col">% Prohibitive</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="rcv_detail_container">
+                                                        @foreach ($rcv_detail as $key => $row )
+                                                        <tr class="tr_input1">
+                                                            <td><input type="number" class="form-control " id="attribute_integer1_{{$key+1}}" value="{{$row->attribute_integer1 ?? 0}}" name="attribute_integer1[]" autocomplete="off" required ></td>
+                                                            <td> <input type="number" id="attribute1_{{$key+1}}" name="attribute1[]" value="{{$row->attribute1 ?? 0}}" class="form-control " ></td>
+                                                            <td> <input type="number" id="attribute2_{{$key+1}}" name="attribute2[]" value="{{$row->attribute2 ?? 0}}" class="form-control " ></td>
+                                                            <td> <input type="number" id="attribute_integer2_{{$key+1}}" name="attribute_integer2[]" value="{{$row->attribute_integer2 ?? 0}}" class="form-control " ></td>
+                                                            <td> <input type="number" id="transfer_percentage_{{$key+1}}" name="transfer_percentage[]" value="{{$row->transfer_percentage ?? 0}}" class="form-control " ></td>
+                                                            <td><input type="number" id="attribute_integer3_{{$key+1}}" name="attribute_integer3[]" value="{{$row->attribute_integer3 ?? 0}}" class="form-control "></td>
+                                                            <td width="3px"> <button type="button" class="btn  btn-sm  btn-secondary remove_tr_sales" >&times;</button></td>
+                                                        </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.box-body -->
+
+                        <div class="row mt-1">
+                            <div class="col-md-3 col-12">
+                                <div class="mb-1">
+                                    <label class="form-label">Tax ( % )</label><br>
+                                    @php
+                                    $rate=0;
+                                    @endphp
+                                    @php
+                                    if (isset($detail->tax->tax_rate)){
+                                        $rate=$detail->tax->tax_rate;
+                                    }
+                                    @endphp
+                                    <select name="tax_id" id="tax_id" class="form-control select2" required>
+                                        <option value="{{$detail->tax->tax_rate ?? 0}}">{{$detail->tax_name?? ''}}</option>
+                                        @foreach($tax as $rw)
+                                            @isset($detail->tax_name)
+                                                @if($detail->tax_name!=$rw->tax_code)
+                                                    <option value="{{ $rw->tax_rate }}">{{ $rw->tax_name }}</option>
+                                                @endif
+                                            @endisset
+                                            @empty($detail->tax_name)
+                                                <option value="{{ $rw->tax_rate }}">{{ $rw->tax_name }}</option>
+                                            @endempty
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            @php $tax = $total * $rate; @endphp
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label">Tax ( Amount )</label><br>
+                                    <label class="form-control tax text-end">{{number_format($tax, 2, ',', '.') }} </label>
+                                    <input type="hidden" class="form-control tax text-end" value="{{$tax}}" readonly="" id="pajak" name="purchase_total">
+                                </div>
+                            </div>
+                            <div class=" col-md-5">
+                                <div class="form-group">
+                                    <label class="form-label">Purchase Total</label>
+                                    <label class="form-control calculate  text-end">{{number_format($total+$tax, 2, ',', '.') }} </label>
+                                    <input type="hidden" class="form-control calculate text-end" value="{{$total+$tax}}" readonly name="purchase_total">
+                                </div>
+                            </div>
+                        </div>
+                    <div class="d-flex justify-content-between">
+                        <div></div>
+                        <button class="btn btn-primary btn-submit" type="submit"><i data-feather='save'></i>
+                            {{ trans('global.save') }}</button>
+                    </div>
+                </div>
+                </br>
+            </div>
+            </br>
+        </div>
+
+
+        </form>
+        <!-- /.box-body -->
+    </div>
+    </div>
+
+</section>
+<!-- /.content -->
+@endsection
+@push('script')
+<script>
+     $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            , }
+        });
+    $(document).ready(function() {
+
+        $(document).on('input', '.recount_po', function () {
+            var index = $('#rcv_direct tbody tr').length; //row count
+
+            var qty = $("#qty_" + index).val();
+            qty = qty.replace(/\,/g,'');
+            var price = $("#price_" + index).val();
+            var subtotal_add = parseInt(qty) * parseInt(price);
+
+            $("#subtotal1_" + index).val(subtotal_add.toLocaleString({ symbol: '', decimal: ',', separator: '' }));
+            $("#subtotal_" + index).val(subtotal_add);
+
+            total();
+        });
+
+        $(document).on('change', '#tax_id', function (e) {
+            total();
+        });
+
+        var subtotal = [];
+        function total() {
+            var subtotals = document.getElementsByClassName("grandSub");
+
+            for (var i = 0; i < subtotals.length; ++i) {
+                var b = subtotals[i].getAttribute("id");
+                var split_id = b.split('_');
+                var index = Number(split_id[1]);
+
+                var data = $("#subtotal_" + index).val();
+                // var tax =$('#pajak_'+index).val();
+                var pajak = 0;
+                var total = 0;
+
+                subtotal.push({
+                    data: data,
+                    // tax: tax
+                });
+            }
+
+            for (var i = 0; i < subtotal.length; ++i) {
+                // pajak += parseInt(subtotal[i].tax);
+                total += parseInt(subtotal[i].data);
+            }
+            subtotal = [];
+            pajak = $("#tax_id").val();
+
+            pajak = parseFloat(pajak);
+            total = parseFloat(total);
+
+            pajak = total * pajak;
+            total = total + pajak;
+
+
+            $(".calculate").val(total);
+            $(".tax").val(pajak);
+
+            total = total.toLocaleString({ symbol: '', decimal: ',', separator: '' });
+            pajak = pajak.toLocaleString({ symbol: '', decimal: ',', separator: '' });
+            $(".calculate").text(total);
+            $(".tax").text(pajak);
+        }
+    });
+
+</script>
+@endpush

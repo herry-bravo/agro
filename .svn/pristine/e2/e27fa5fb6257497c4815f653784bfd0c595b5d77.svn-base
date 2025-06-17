@@ -1,0 +1,470 @@
+@extends('layouts.admin')
+@section('content')
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
+@endpush
+<div class="card">
+    <div class="card-header m-1">
+        <h6 class="card-title">
+            <a href="" class="breadcrumbs__item">{{ trans('cruds.quotation.po') }} </a>
+            <a href="{{ route("admin.rcv.index") }}" class="breadcrumbs__item">{{ trans('cruds.rcv.title') }} </a>
+        </h6>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <fieldset>
+                    <div class="input-group">
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i data-feather='plus'></i> {{ trans('cruds.rcv.title_singular') }}
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end">
+                            <a class="dropdown-item" href="{{ route("admin.rcvdirect") }}">
+                                {{ trans('cruds.rcv.fields.other') }}
+                            </a>
+                            <a class="dropdown-item" href="{{ route("admin.rcv.create") }}">
+                                {{ trans('cruds.rcv.fields.suplierreceive') }}
+                            </a>
+                            <a class="dropdown-item" href="{{ route('admin.rcvcustomer.create') }}">
+                                {{ trans('cruds.rcv.fields.customerreceive') }}
+                            </a>
+                            <div role="separator" class="dropdown-divider"></div>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+
+    </div>
+    <div class="card-body">
+        <table id="report-rcv" class=" table datatable-Order w-100">
+            <thead>
+                <tr>
+                    <th style="text-align: left;">
+                        No
+                    </th>
+                    <th>
+                        {{ trans('cruds.rcv.fields.type') }}
+                    </th>
+                    <th>
+                        Order
+                    </th>
+                    <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ trans('cruds.autocreate.fields.vendor') }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    </th>
+                    <th>
+                        Site
+                    </th>
+                    <th>
+                        {{ trans('cruds.vendor.fields.country') }}
+                    </th>
+                    <th>
+                        {{ trans('cruds.rcv.fields.product') }}
+                    </th>
+                    <th>
+                        Category
+                    </th>
+                    <th>
+                        Packing
+                    </th>
+                    <th class="text-center">
+                        {{ trans('cruds.rcv.fields.aju') }}
+                    </th>
+                    <th>
+                        {{ trans('cruds.rcv.fields.curr') }}
+                    </th>
+                    <th class="text-end">
+                        {{ trans('cruds.rcv.fields.price') }}
+                    </th>
+                    <th class="text-end">
+                        {{ trans('cruds.rcv.fields.qty') }}
+                    </th>
+                    <th class="text-end">
+                        UOM
+                    </th>
+                    <th class="text-end">
+                        RQTY
+                    </th>
+                    <th class="text-end">
+                        AQTY
+                    </th>
+                    <th class="text-end">
+                        {{ trans('cruds.rcv.fields.conv') }}
+                    </th>
+                    <th>
+                        Date
+                    </th>
+                    <th style="text-align: center;">
+                        {{ trans('cruds.rcv.fields.grnno') }}
+                    </th>
+                    <th style="text-align: center;">
+                        {{ trans('cruds.rcv.fields.comments') }}
+                    </th>
+                    <th style="text-align: center;">
+                        {{ trans('cruds.rcv.fields.action') }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Example Start-->
+<form target="_blank">
+    <div class="modal fade" id="demoModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered  modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title text-black">Choose Labels Layout</Label></h4>
+                    <button type="button" class="close border-0" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">X</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="padding: 0rem 0rem;">
+                    <div class="box-body">
+                        <div class="card-body">
+                            </br>
+                            <div class="row">
+                                <div class="col-md-6 col-12">
+                                    <div class="mb-1">
+                                        <label class="col-sm-0 control-label" for="number">{{ trans('cruds.itemMaster.fields.item_code') }}</label>
+                                        <input type="text" class="form-control " name="item" id="item-label" autocomplete="off" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-12">
+                                    <div class="mb-1">
+                                        <label class="col-sm-0 control-label" for="site">{{ trans('cruds.itemMaster.fields.attribute') }}</label>
+                                        <input type="text" id="grn" name="grn" class="form-control datepicker" value="" required>
+                                    </div>
+                                </div>
+                            </div>
+                            </br>
+                            <div class="row">
+                                <label class="col-sm-0 control-label">Format </label></br>
+                                <div class="col-md-10 col-12">
+                                    <div class="col-sm-10">
+                                        <div class="form-check format-label">
+                                            <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios1" value="option1" checked>
+                                            <label class="form-check-label" for="gridRadios1">
+                                                3.8 x 7.5 cm
+                                            </label>
+                                        </div>
+                                        <div class="form-check format-label">
+                                            <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios2" value="option2">
+                                            <label class="form-check-label" for="gridRadios2">
+                                                2 x 3 cm
+                                            </label>
+                                        </div>
+                                        <div class="form-check  format-label">
+                                            <input class="form-check-input" type="radio" name="gridRadios" id="gridRadios3" value="option3">
+                                            <label class="form-check-label" for="gridRadios3">
+                                                3.5 x 7.5 cm
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 col-12">
+                                    <div class="mb-1">
+                                        <label class="col-sm-0 control-label" for="number">Counter</label>
+                                        <input type="number" class="form-control " name="counter" id="item-label" autocomplete="off" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" formaction="rcv/show" data-bs-dismiss="modal" class="btn btn-primary">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<!-- END Modal Example Start-->
+
+<!-- Start Modal GRN -->
+<form action="#">
+    <div class="modal fade" id="modalFilter" tabindex="-1" role="dialog" aria-labelledby="demoModalLabel" aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title text-white" id="exampleModalLongTitle">Filter</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card-body">
+                        <div class="row mt-1">
+                            <div class="col-md-6 col-12">
+                                <label class="col-sm-0 control-label" for="number">{{ trans('cruds.autocreate.fields.vendor') }}</label>
+                                <select name="vendor_id" id="vendor_id" class="form-control select">
+                                    <option value="" selected></option>
+                                    @foreach($vendor as $id => $row)
+                                    <option value="{{ $row->vendor_id }}">{{ $row->vendor_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <label class="col-sm-0 control-label" for="number">{{ trans('cruds.rcv.fields.rev') }}</label>
+                                <input type="input" class="form-control" id="rev" name="transaction_datefrom" placeholder="GRN, Aju, Notes" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="row mt-1">
+                            <div class="col-md-6 col-12">
+                                <div class="mb-1">
+                                    <label class="col-sm-0 control-label" for="number">{{ trans('cruds.rcv.fields.transactiondate') }}</label>
+                                    <input type="date" class="form-control search_supplier_name" id="min" name="transaction_datefrom" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <div class="mb-1">
+                                    <label class="col-sm-0 control-label" for="rate">{{ trans('cruds.rcv.fields.orderto') }}</label>
+                                    <input type="date" class="form-control search_supplier_name" id="max" name="transaction_dateto" autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="reset" id="btnReset" class="btn btn-warning" name="Reset">Reset</button>
+                        <button type="button" id="rcv_filter" class="btn btn-primary rcv_filter" name="action">View</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<!-- END  Modal GRN -->
+
+<!-- Start Modal Set -->
+<form action="{{ route("admin.rcvdirect-edit") }}" method="GET" enctype="multipart/form-data">
+    @csrf
+    <div class="modal fade" id="modalSet" tabindex="-1" role="dialog" aria-labelledby="demoModalLabel" aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title text-white" id="exampleModalLongTitle">Filter</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card-body">
+                        <div class="row mt-1">
+                            <div class="col-md-12 col-12">
+                                <label class="col-sm-0 control-label" for="number">{{ trans('cruds.rcv.fields.grnno') }}</label>
+                                <select name="grn" id="grn" class="form-control select2" required>
+                                    <option selected></option>
+                                    @foreach($grn as $id => $row)
+                                    <option value="{{ $row->receipt_num }}">{{ $row->receipt_num }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="  " id="rcv_filter" class="btn btn-primary" name="action">View</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END  Modal Set -->
+</form>
+@endsection
+@push('script')
+<script>
+    $(function() {
+        $("#btnReset").bind("click", function() {
+            $("#vendor_id")[0].selectedIndex = 0;
+        });
+    });
+    $(document).ready(function() {
+        $.fn.dataTable.ext.errMode = 'none';
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+        vendor = $("#vendor_id").val();
+        min = $("#min").val();
+        max = $("#max").val();
+        rev = $("#rev").val();
+
+        const table = $('#report-rcv').DataTable({
+            "bServerSide": true
+            , ajax: {
+                url: '{{url("search/rcv-report") }}'
+                , type: "POST"
+                , headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+                , data: function(d) {
+                    d.vendor = $('#vendor_id').val();
+                    d.min = $("#min").val();
+                    d.max = $("#max").val();
+                    d.rev = $("#rev").val();
+                    return d
+                }
+            }
+            , responsive: false
+            , scrollX: true
+            , searching: true
+            , dom: '<"card-header border-bottom"<"head-label"><"dt-action-buttons text-end">>\
+                    <"d-flex justify-content-between mx-0 row"\
+                        <"d-flex justify-content-between mx-0 mt-2 row"\
+                        <"col-sm-12 col-md-5"Bl><"col-sm-12 col-md-2"f><"col-sm-12 col-md-4 text-end"><"col-sm-12 col-md-1"p>\
+                        >t>'
+            , displayLength: 25
+            , "lengthMenu": [
+                [10, 25, 50, -1]
+                , [10, 25, 50, "All"]
+            ]
+            , buttons: [{
+                    extend: 'print'
+                    , text: feather.icons['printer'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Print'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'excel'
+                    , text: feather.icons['file'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Excel'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'colvis'
+                    , text: feather.icons['eye'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Colvis'
+                    , className: ''
+                }, {
+                    text: feather.icons['filter'].toSvg({
+                        class: 'font-small-4 me-50 '
+                    }) + 'Filter'
+                    , className: 'btn-warning'
+                    , action: function(e, node, config) {
+                        $('#modalFilter').modal('show')
+                    }
+                , }
+                , {
+                    text: feather.icons['edit'].toSvg({
+                        class: 'font-small-4 me-50 '
+                    }) + 'Set'
+                    , className: 'btn-secondary'
+                    , action: function(e, node, config) {
+                        $('#modalSet').modal('show')
+                    }
+                , }
+            , ]
+            , columnDefs: [{
+                    render: function(data, type, row, index) {
+                        var info = table.page.info();
+                        return index.row + info.start + 1;
+                    }
+                    , targets: [0]
+                }
+                , {
+                    render: function(data, type, row, index) {
+                        content = `<a class="btn btn-sm " id="print-label" data-bs-toggle="modal" data-item="${row.item_code}" data-grn="${row.grn}" data-bs-target="#demoModal"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer-fill" viewBox="0 0 16 16">
+                                    <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
+                                    <path d="M0 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-1v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2H2a2 2 0 0 1-2-2V7zm2.5 1a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                                    </svg> Print </a>`;
+                        return content;
+                    }
+                    , targets: [20]
+                }
+            ]
+            , columns: [{
+                    data: 'id'
+                    , className: "text-center"
+                }
+                , {
+                    data: 'transaction_type'
+                }, {
+                    data: 'PO'
+                }, {
+                    data: 'vendor_name'
+                }, {
+                    data: 'vendor_site'
+                }, {
+                    data: 'country'
+                }, {
+                    data: 'item_code'
+                }, {
+                    data: 'sub_category'
+                }, {
+                    data: 'packing_slip'
+                }, {
+                    data: 'aju_number'
+                }, {
+                    data: 'currency'
+                    , className: "text-center"
+                }, {
+                    data: 'unit_price'
+                    , className: "text-end"
+                }, {
+                    data: 'po_quantity'
+                    , className: "text-end"
+                }, {
+                    data: 'uom'
+                    , className: "text-end"
+                }, {
+                    data: 'quantity_received'
+                    , className: "text-end"
+                }, {
+                    data: 'quantity_accepted'
+                    , className: "text-end"
+                }, {
+                    data: 'conv_qty'
+                    , className: "text-end"
+                }, {
+                    data: 'gl_date'
+                    , className: "text-center"
+                }, {
+                    data: 'grn'
+                }, {
+                    data: 'comments'
+                }, {
+                    data: 'transaction_type'
+                }
+            ]
+            , language: {
+                paginate: {
+                    // remove previous & next text from pagination
+                    previous: ''
+                    , next: ''
+                }
+            }
+        })
+
+        $(document).on('click', '.rcv_filter', function() {
+            var vendor = $("#vendor_id").val();
+            var min = $("#min").val();
+            var max = $("#max").val();
+            var rev = $("#rev").val();
+            console.log(rev);
+            $('#modalFilter').modal('hide');
+            $('#report-rcv').DataTable().ajax.reload()
+        });
+
+        $(document).on('click', '#print-label', function() {
+            var item = $(this).data('item');
+            var grn = $(this).data('grn');
+            $('#item-label').val(item);
+            $('#grn').val(grn);
+        })
+
+    });
+
+</script>
+@endpush

@@ -1,0 +1,6 @@
+<?php return array (
+  'items-grid-view' => 'App\\Http\\Livewire\\ItemsGridView',
+  'operation-unit-view' => 'App\\Http\\Livewire\\OperationUnitView',
+  'physical-inventory-view' => 'App\\Http\\Livewire\\PhysicalInventoryView',
+  'users-table-view' => 'App\\Http\\Livewire\\UsersTableView',
+);

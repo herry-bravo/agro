@@ -1,0 +1,127 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Gate;
+use Symfony\Component\HttpFoundation\Response;
+use App\DeliveryDetail;
+use App\DeliveryHeader;
+use App\ArReceivableApplications;
+use App\ArCustomerTrx;
+use App\ArCustomerTrxLines;
+use DB;
+
+class ArAutoController extends Controller
+{
+
+    public function index()
+    {
+        $delivery = DeliveryHeader::leftjoin('bm_ra_customer_trx_all','bm_ra_customer_trx_all.attribute1','=','bm_wsh_new_deliveries.delivery_id')
+                                    ->select('bm_wsh_new_deliveries.*')
+                                    ->where('bm_wsh_new_deliveries.status_code',12)
+                                    ->where('bm_wsh_new_deliveries.lvl',12)
+                                    ->where('bm_ra_customer_trx_all.attribute1',NULL)
+                                    ->get();
+        // dd($delivery);
+        // $detail = DeliveryDetail::whereIn('delivery_detail_id',$delivery)->get();
+        return view('admin.arAuto.index',compact('delivery'));
+    }
+
+    public function store(Request $request)
+    {
+        try {
+			\DB::beginTransaction();
+                foreach($request->lines as $key =>$head){
+
+                    $head=DeliveryHeader::where('delivery_id',$request->lines[$key])->first();
+                    $id_cust_head = DB::table('bm_ra_customer_trx_all')->get()->last();
+                    $id_cust_head = $id_cust_head->customer_trx_id +1;
+                    $trx_number = str_pad($id_cust_head,6,"0",STR_PAD_LEFT);
+                    // dd($trx_number);
+                    $cust_head = array(
+                        'customer_trx_id'=>$id_cust_head,
+                        'trx_number'=>$trx_number,
+                        'bill_template_name'=>'Receivable',
+                        'trx_date'=>date('Y-m-d'),
+                        'bill_to_customer_id'=>$head->sold_to_party_id,
+                        'ship_to_customer_id'=>$head->ship_to_party_id,
+                        'term_id'=>$head->freight_terms_code,
+                        'delivery_method_code'=>$head->ship_method_code,
+                        'invoice_currency_code'=>$head->currency_code,
+                        'attribute1' => $head->delivery_id,
+                        'attribute2' => $head->packing_slip_number,
+                        'created_by'=>$request->created_by,
+                        'org_id'=>$head->organization_id,
+                        'exchange_date'=>$head->detail->conversion_date,
+                        'exchange_rate'=>$head->detail->conversion_rate,
+                        'status_trx'=>0,
+                        'created_at'=>date('Y-m-d H:i:s'),
+                        'updated_at'=>date('Y-m-d H:i:s'),
+                    );
+                    ArCustomerTrx::create($cust_head);
+
+                    $subtotal =0;
+                    $detail = DeliveryDetail::where('delivery_detail_id',$request->lines[$key])->get();
+
+
+                    foreach($detail as $key => $line){
+                        $line = DeliveryDetail::find($line->id);
+                        $id_cust_line = DB::table('bm_ra_customer_trx_lines_all')->get()->last();
+                        $sales = \App\SalesOrderDetail::where(['header_id'=>$line->source_header_id,'split_line_id'=>$line->source_line_id])->first();
+                        $cust_line = array(
+                            'customer_trx_line_id'=>$id_cust_line->customer_trx_line_id+1,
+                            'customer_trx_id'=>$id_cust_head,
+                            'line_number'=>$key+1,
+                            'sales_order_line'=>$line->source_line_id,
+                            'inventory_item_id'=>$line->inventory_item_id,
+                            'description'=>$line->item_description,
+                            'quantity_ordered'=>$line->requested_quantity,
+                            'quantity_invoiced'=>$line->delivered_quantity,
+                            'unit_selling_price'=>$line->unit_price,
+                            'sales_order'=>$line->sales_order_number,
+                            'amount_due_original'=>$line->delivered_quantity * $line->unit_price,
+                            'tax_rate'=>$sales->tax->tax_rate,
+                            'sales_tax_id'=>$sales->tax_code,
+                            'uom_code'=>$line->requested_quantity_uom,
+                            'created_by'=>$request->created_by,
+                            'creation_date'=>date('Y-m-d H:i:s'),
+                            'updated_at'=>date('Y-m-d H:i:s')
+                        );
+                        $subtotal += $line->delivered_quantity * $line->unit_price;
+                        ArCustomerTrxLines::create($cust_line);
+                    }
+
+                    $total = $subtotal * $sales->tax->tax_rate;
+                    $total = $subtotal + $total;
+
+                    $id_ar_head =  DB::table('bm_ar_receivable_applications_all')->get()->last();
+                    $ar_head = array(
+                        'receivable_application_id'=>$id_ar_head->receivable_application_id+1,
+                        'amount_applied'=>$total,
+                        'gl_date'=>$head->accepted_date,
+                        'attribute1'=>$trx_number,
+                        'application_rule'=>'Receivable',
+                        'customer_trx_id'=>$id_cust_head+1,
+                        'freight_applied'=>$head->freight_terms_code,
+                        'status'=>0,
+                        'tax_code'=>$sales->tax_code,
+                        'tax_applied'=>$sales->tax->tax_rate,
+                        'created_by'=>$request->created_by,
+                        'org_id'=>$head->organization_id,
+                        'creation_date'=>date('Y-m-d H:i:s'),
+                        'created_at'=>date('Y-m-d H:i:s'),
+                        'updated_at'=>date('Y-m-d H:i:s'),
+                    );
+                    // dd($ar_head);
+                    ArReceivableApplications::create($ar_head);
+                }
+			\DB::commit();
+			}catch (Throwable $e){
+				\DB::rollback();
+			}
+		return back()->with('success','Your data has been Added');
+    }
+}

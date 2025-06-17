@@ -1,0 +1,275 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Gate;
+use Symfony\Component\HttpFoundation\Response;
+use App\DeliveryDetail;
+use App\DeliveryHeader;
+use App\ArReceivableApplications;
+use App\ArCustomerTrx;
+use App\ArCustomerTrxLines;
+use DB;
+
+class ArAutoController extends Controller
+{
+
+    public function index()
+    {
+        $delivery = DeliveryHeader::leftjoin('bm_ra_customer_trx_all','bm_ra_customer_trx_all.attribute1','=','bm_wsh_new_deliveries.delivery_id')
+                                    ->select('bm_wsh_new_deliveries.*')
+                                    ->where('bm_wsh_new_deliveries.status_code',12)
+                                    ->where('bm_wsh_new_deliveries.lvl',12)
+                                    ->where('bm_ra_customer_trx_all.attribute1',NULL)
+                                    ->get();
+        $tax = \App\Tax::where('type_tax_use','Sales')->get();
+        // $detail = DeliveryDetail::whereIn('delivery_detail_id',$delivery)->get();
+        return view('admin.arAuto.index',compact('delivery','tax'));
+    }
+
+    public function store(Request $request)
+    {
+        try {
+			\DB::beginTransaction();
+            // dd($request->lines);
+                foreach($request->lines as $key =>$head){
+
+                    $head=DeliveryHeader::where('delivery_id',$request->lines[$key])->first();
+
+                    $cust_head = array(
+                        'customer_trx_id'=>'',
+                        'trx_number'=>'',
+                        'bill_template_name'=>'Receivable',
+                        'trx_date'=>date('Y-m-d'),
+                        'bill_to_customer_id'=>$head->sold_to_party_id,
+                        'ship_to_customer_id'=>$head->ship_to_party_id,
+                        'term_id'=>\App\Terms::where('id',$head->freight_terms_code)->first()->term_code,
+                        'delivery_method_code'=>$head->ship_method_code,
+                        'invoice_currency_code'=>$head->currency_code,
+                        'attribute1' => $head->delivery_id,
+                        'attribute2' => $head->packing_slip_number,
+                        'created_by'=>$request->created_by,
+                        'org_id'=>$head->organization_id,
+                        'exchange_date'=>$head->detail->conversion_date,
+                        'exchange_rate'=>$head->detail->conversion_rate,
+                        'status_trx'=>0,
+                        'created_at'=>date('Y-m-d H:i:s'),
+                        'updated_at'=>date('Y-m-d H:i:s'),
+                    );
+
+                    $tax_code = \App\Tax::where(['tax_rate'=>$request->tax_rate,'type_tax_use'=>'Sales'])->first()->tax_code;
+
+                    $id_cust_head = DB::table('bm_ra_customer_trx_all')->get()->last();
+                    $id_cust_head = isset($id_cust_head->customer_trx_id)? $id_cust_head->customer_trx_id+1 :1;
+                    $trx_number = "INV".str_pad($id_cust_head,8,"0",STR_PAD_LEFT);
+
+                    $cust_head['customer_trx_id'] =$id_cust_head;
+                    $cust_head['trx_number'] =$trx_number;
+                    ArCustomerTrx::create($cust_head);
+
+                    $amount =0;
+                    $tax_amount =0;
+                    $detail = DeliveryDetail::where('delivery_detail_id',$request->lines[$key])->get();
+
+                    // Looping for sales local account
+                    $line_number = 1;
+                    foreach($detail as $key => $line){
+                        // $id_cust_line = DB::table('bm_ra_customer_trx_lines_all')->get()->last();
+                        $sales = \App\SalesOrderDetail::where(['header_id'=>$line->source_header_id,'split_line_id'=>$line->source_line_id])->first();
+
+                        //get Account
+                        $tax_account = $sales->tax->tax_account;
+                        $tax_account_des = $sales->tax->acc->description;
+                        $ar_account = $line->ItemMaster->category->receivable_account_code;
+                        $ar_account_des = $line->ItemMaster->category->accReceivable->description;
+
+                        //Total
+                        $subtotal = $line->delivered_quantity * $line->unit_price;
+                        $tax = $sales->tax->tax_rate * $subtotal;
+                        $total = $subtotal+$tax;
+
+                        $sales_local = array(
+                            'customer_trx_line_id'=>isset(DB::table('bm_ra_customer_trx_lines_all')->get()->last()->customer_trx_line_id)? DB::table('bm_ra_customer_trx_lines_all')->get()->last()->customer_trx_line_id+1 :1,
+                            'customer_trx_id'=>$id_cust_head,
+                            'line_number'=>$line_number,
+                            'line_type'=>False,
+                            'org_id'=>$head->organization_id,
+                            'code_combinations'=>$line->ItemMaster->category->attribute1,
+                            'sales_order_line'=>$line->source_line_id,
+                            'inventory_item_id'=>$line->inventory_item_id,
+                            'description'=>$line->item_description,
+                            'quantity_ordered'=>$line->requested_quantity,
+                            'quantity_invoiced'=>$line->delivered_quantity,
+                            'unit_selling_price'=>$line->unit_price,
+                            'sales_order'=>$line->sales_order_number,
+                            'taxable_amount'=>$tax,
+                            'amount_due_original'=>$subtotal,
+                            'gross_extended_amount'=>$subtotal,
+                            'amount_includes_tax_flag'=>$total,
+                            'frt_ed_amount'=>0,
+                            'frt_uned_amount'=>$subtotal,
+                            'tax_rate'=>$sales->tax->tax_rate,
+                            'sales_tax_id'=>$sales->tax_code,
+                            'uom_code'=>$line->requested_quantity_uom,
+                            'created_by'=>$request->created_by,
+                            'creation_date'=>date('Y-m-d H:i:s'),
+                            'updated_at'=>date('Y-m-d H:i:s')
+                        );
+                        $tax_amount += $tax;
+                        $amount += $total;
+                        $line_number++;
+                        ArCustomerTrxLines::create($sales_local);
+                    }
+
+                    // Ar TAx Account
+                    $tax_acc = array(
+                        'customer_trx_line_id'=>isset(DB::table('bm_ra_customer_trx_lines_all')->get()->last()->customer_trx_line_id)? DB::table('bm_ra_customer_trx_lines_all')->get()->last()->customer_trx_line_id+1 :1,
+                        'customer_trx_id'=>$id_cust_head,
+                        'line_number'=>$line_number,
+                        'line_type'=>TRUE,
+                        'org_id'=>$head->organization_id,
+                        'code_combinations'=>$tax_account,
+                        'description'=>$tax_account_des,
+                        'gross_extended_amount'=>$tax_amount,
+                        'amount_due_original'=>$tax_amount,
+                        'frt_ed_amount'=>0,
+                        'frt_uned_amount'=>$tax_amount,
+                        'created_by'=>$request->created_by,
+                        'creation_date'=>date('Y-m-d H:i:s'),
+                        'updated_at'=>date('Y-m-d H:i:s')
+                    );
+                    ArCustomerTrxLines::create($tax_acc);
+
+                    if($request->options == 2){
+                        $tax_amount_dp = floatval($request->dp_amount) *$request->tax_rate;
+                        $total_dp = $tax_amount_dp + $request->dp_amount;
+
+                        $dp_item = \App\ItemMaster::where('item_code', 'LIKE', 'Down Payment')->first();
+
+                        $dp_lines = array(
+                            'customer_trx_line_id'=>isset(DB::table('bm_ra_customer_trx_lines_all')->get()->last()->customer_trx_line_id)? DB::table('bm_ra_customer_trx_lines_all')->get()->last()->customer_trx_line_id+1 :1,
+                            'customer_trx_id'=>$id_cust_head,
+                            'line_number'=>$line_number,
+                            'line_type'=>3,
+                            'org_id'=>$head->organization_id,
+                            'code_combinations'=>11010200,
+                            'inventory_item_id'=>$dp_item->inventory_item_id,
+                            'description'=>$dp_item->description,
+                            'quantity_ordered'=>1,
+                            'quantity_invoiced'=>1,
+                            'unit_selling_price'=>$request->dp_amount,
+                            'taxable_amount'=>$tax_amount_dp,
+                            'amount_due_original'=>$request->dp_amount,
+                            'gross_extended_amount'=>$request->dp_amount,
+                            'amount_includes_tax_flag'=>$total_dp,
+                            'frt_ed_amount'=>$total_dp,
+                            'frt_uned_amount'=>0,
+                            'tax_rate'=>$request->tax_rate,
+                            'sales_tax_id'=>$tax_code,
+                            'created_by'=>$request->created_by,
+                            'creation_date'=>date('Y-m-d H:i:s'),
+                            'updated_at'=>date('Y-m-d H:i:s')
+                        );
+                        ArCustomerTrxLines::create($dp_lines);
+                    }
+
+                    // AR Account
+                    $ar_acc = array(
+                        'customer_trx_line_id'=>isset(DB::table('bm_ra_customer_trx_lines_all')->get()->last()->customer_trx_line_id)? DB::table('bm_ra_customer_trx_lines_all')->get()->last()->customer_trx_line_id+1 :1,
+                        'customer_trx_id'=>$id_cust_head,
+                        'line_number'=>$line_number+1,
+                        'line_type'=>TRUE,
+                        'org_id'=>$head->organization_id,
+                        'code_combinations'=>$ar_account,
+                        'description'=>$ar_account_des,
+                        'gross_extended_amount'=>$amount - ($total_dp ?? 0),
+                        'amount_due_original'=>$amount - ($total_dp ?? 0),
+                        'frt_ed_amount'=>$amount - ($total_dp ?? 0),
+                        'frt_uned_amount'=>0,
+                        'created_by'=>$request->created_by,
+                        'creation_date'=>date('Y-m-d H:i:s'),
+                        'updated_at'=>date('Y-m-d H:i:s')
+                    );
+                    ArCustomerTrxLines::create($ar_acc);
+
+                    // COGS dan Inventory Account
+                    foreach($detail as $key => $line){
+                        // $id_cust_line = DB::table('bm_ra_customer_trx_lines_all')->get()->last();
+                        $line_number = $line_number+1;
+                        if ($line->ItemMaster->category_code == 'FG_ALL' || $line->ItemMaster->category_code == 'FG_LCL'){
+
+                            $sales = \App\SalesOrderDetail::where(['header_id'=>$line->source_header_id,'split_line_id'=>$line->source_line_id])->first();
+
+                            $inv_amount =$line->ItemMaster->item_cost *  $line->delivered_quantity;
+                            // Inventory
+                            $ar_inv = array(
+                                'customer_trx_line_id'=>isset(DB::table('bm_ra_customer_trx_lines_all')->get()->last()->customer_trx_line_id)? DB::table('bm_ra_customer_trx_lines_all')->get()->last()->customer_trx_line_id+1 :1,
+                                'customer_trx_id'=>$id_cust_head,
+                                'line_number'=>$line_number+1,
+                                'line_type'=>TRUE,
+                                'org_id'=>$head->organization_id,
+                                'code_combinations'=>$line->ItemMaster->category->inventory_account_code,
+                                'description'=>$line->ItemMaster->category->inventory->description." - ".$line->item_description,
+                                'gross_extended_amount'=>$inv_amount,
+                                'amount_due_original'=>$inv_amount,
+                                'frt_ed_amount'=>0,
+                                'frt_uned_amount'=>$inv_amount,
+                                'created_by'=>$request->created_by,
+                                'creation_date'=>date('Y-m-d H:i:s'),
+                                'updated_at'=>date('Y-m-d H:i:s')
+                            );
+                            ArCustomerTrxLines::create($ar_inv);
+
+                            // COGS
+                            $ar_cogs = array(
+                                'customer_trx_line_id'=>isset(DB::table('bm_ra_customer_trx_lines_all')->get()->last()->customer_trx_line_id)? DB::table('bm_ra_customer_trx_lines_all')->get()->last()->customer_trx_line_id+1 :1,
+                                'customer_trx_id'=>$id_cust_head,
+                                'line_number'=>$line_number+2,
+                                'line_type'=>TRUE,
+                                'org_id'=>$head->organization_id,
+                                'code_combinations'=>$line->ItemMaster->category->consumption_account_code,
+                                'description'=>$line->ItemMaster->category->cogs->description." - ".$line->item_description,
+                                'gross_extended_amount'=>$inv_amount,
+                                'amount_due_original'=>$inv_amount,
+                                'frt_ed_amount'=>$inv_amount,
+                                'frt_uned_amount'=>0,
+                                'created_by'=>$request->created_by,
+                                'creation_date'=>date('Y-m-d H:i:s'),
+                                'updated_at'=>date('Y-m-d H:i:s')
+                            );
+                            ArCustomerTrxLines::create($ar_cogs);
+                        }
+                        $line_number++;
+                    }
+
+
+                    $id_ar_head =  DB::table('bm_ar_receivable_applications_all')->get()->last();
+                    $ar_head = array(
+                        'receivable_application_id'=>isset($id_ar_head->receivable_application_id)?$id_ar_head->receivable_application_id+1:1,
+                        'amount_applied'=>$amount - ($total_dp ?? 0),
+                        'gl_date'=>$head->accepted_date,
+                        'attribute1'=>$trx_number,
+                        'application_rule'=>'Receivable',
+                        'customer_trx_id'=>$id_cust_head,
+                        'freight_applied'=>\App\Terms::where('id',$head->freight_terms_code)->first()->term_code,
+                        'status'=>0,
+                        'tax_code'=>$sales->tax_code,
+                        'tax_applied'=>$tax_amount,
+                        'created_by'=>$request->created_by,
+                        'org_id'=>$head->organization_id,
+                        'creation_date'=>date('Y-m-d H:i:s'),
+                        'created_at'=>date('Y-m-d H:i:s'),
+                        'updated_at'=>date('Y-m-d H:i:s'),
+                    );
+                    ArReceivableApplications::create($ar_head);
+                }
+			\DB::commit();
+			}catch (Throwable $e){
+				\DB::rollback();
+			}
+		return back()->with('success','Your data has been Added');
+    }
+}

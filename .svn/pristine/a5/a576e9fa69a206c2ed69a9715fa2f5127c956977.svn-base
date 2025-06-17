@@ -1,0 +1,33 @@
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class AccountCode extends Model
+{
+    use SoftDeletes;
+
+    public $table = 'bm_acc_all_id';
+
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
+    protected $fillable = [
+        'id',
+        'parent_code',
+        'account_code',
+        'description',
+        'type',
+        'level',
+        'account_group',
+        'org_id',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+}

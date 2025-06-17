@@ -1,0 +1,85 @@
+<?php
+
+namespace App;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+
+class GLHeader extends Model
+{
+    use SoftDeletes,Notifiable;
+
+    public $table='bm_gl_je_headers';
+
+    protected $dates=[
+        'default_effective_date',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
+    protected$fillable=[
+        'id',
+        'je_header_id',
+        'last_updated_by',
+        'ledger_id',
+        'je_category',
+        'je_source',
+        'period_name',
+        'name',
+        'currency_code',
+        'status',
+        'accrual_rev_flag',
+        'actual_flag',
+        'conversion_flag',
+        'default_effective_date',
+        'created_by',
+        'je_batch_id',
+        'from_recurring_header_id',
+        'posted',
+        'posted_date',
+        'accrual_rev_effective_date',
+        'accrual_rev_period_name',
+        'accrual_rev_status',
+        'accrual_rev_je_header_id',
+        'description',
+        'control_total',
+        'running_total_dr',
+        'running_total_cr',
+        'running_total_accounted_dr',
+        'running_total_accounted_cr',
+        'currency_conversion_rate',
+        'currency_conversion_type',
+        'currency_conversion_date',
+        'external_reference',
+        'party_name',
+        'attribute1',
+        'attribute_category',
+        'tax_status_code',
+        'parent_je_header_id',
+        'reversed_je_header_id',
+        'originating_bal_seg_value',
+        'intercompany_mode',
+        'dr_bal_seg_value',
+        'cr_bal_seg_value',
+        'local_doc_sequence_id',
+        'local_doc_sequence_value',
+        'display_alc_journal_flag',
+        'je_from_sla_flag',
+        'posting_acct_seq_version_id',
+        'posting_acct_seq_assign_id',
+        'posting_acct_seq_value',
+        'close_acct_seq_version_id',
+        'close_acct_seq_assign_id',
+        'close_acct_seq_value',
+        'tax_legal_entity_id',
+        'post_multi_currency_flag',
+        'post_currency_code',
+        'organization_id',
+        'created_at',
+        'updated_at',
+        'deleted_at'
+            ];
+
+}

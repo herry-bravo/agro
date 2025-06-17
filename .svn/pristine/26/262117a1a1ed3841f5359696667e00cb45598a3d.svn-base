@@ -1,0 +1,201 @@
+<div class="modal fade bd-example-modal-sm" id="poModal" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title text-white">Good Receipt Notes</h4>
+
+                <button type="button" class="close border-0" data-bs-dismiss="modal" aria-label="Close"><span aria-hidden="true">X</span></button>
+            </div>
+
+            <div class="modal-body" style="padding: 0rem 0rem;">
+                <div class="box-body p-2 ">
+                    <table data-toggle="table_grn" id="table_grn" class="table  table-hover w-100 ">
+                        <thead>
+                            <tr>
+                                <th class="text-start"><input type="checkbox" class='form-check-input dt-checkboxes' id="head-cb"></th>
+                                <th class="text-start">GRN</th>
+                                <th class="text-start">Purchase Order</th>
+                                <th class="text-start">Vendor </th>
+                                <th class="text-start">Packing Slip</th>
+                                <th class="text-start">Currency</th>
+                                <th class="text-start">Amount</th>
+                                <th class="text-start">GL Date</th>
+                                <th class="text-center">Transaction Date</th>
+                            </tr>
+                        </thead>
+                    </table>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-primary pull-right " id="addGrn-line" data-bs-dismiss="modal">
+                            <i data-feather="corner-down-right" class="font-medium-3"></i> Submit</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+@push('script')
+<script>
+    $(document).ready(function() {
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+        $("#addGrn-line").click(function() {
+            $id = $("#invoice_id").val();
+            var colnum = 0;
+            console.log($id);
+
+            var invoice_num = $("#invoice_num").val();
+            var dueDate = $("#datepicker-3").val();
+
+            // if(invoice_num || dueDate == 0){
+            //     alert ('Fields is Required');
+            //     return;
+            // }
+
+            idGrn = [];
+            $(".cb-child:checked").each(function() {
+                idGrn.push($(this).attr('data-id'));
+            })
+            // console.log(idGrn)
+            $.ajax({
+                method: 'POST'
+                , headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+                , url: '{{url("search/store-ap") }}'
+                , data: {
+                    idGrn: idGrn
+                    , invoice_num: $("#invoice_num").val()
+                    , invoice_id: $("#invoice_id").val()
+                    , invoice_amount: $("#invoice_amount").val()
+                    , datepicker1: $("#datepicker-1").val()
+                    , datepicker2: $("#datepicker-2").val()
+                    , datepicker3: $("#datepicker-3").val()
+                    , vendor_id: $("#vendor_id").val()
+                    , terms_id: $("#terms_id").val()
+                    , customer_currency: $("#customer_currency").val()
+                    , invoice_type_lookup_code: $("#invoice_type_lookup_code").val()
+                }
+                , success: function(response) {
+                    // console.log(idGrn);
+                    window.location.href = "" + response[0]['invoice_id'] + "/edit";
+
+                    if ($id == 0) {
+
+                        $("#poModal").modal("hide");
+
+                        var index = $('#tableAP tbody tr').length + 1; //row count
+                        console.log(index)
+                        document.getElementById('invoice_num2').value = invoice_num;
+                        var subtotal = 0;
+
+                        var len = response.length;
+                        console.log(response)
+                        // if(len > 0){
+
+                        //     for(var i=0; i<len;){
+                        //         $('.ap_container').append('<tr class="tr_input">\
+                        //             <td width="">\
+                        //                 <input type="text" class="form-control search_ap_item" value="'+response[i]['item_code']+'" name="item_code[]" id="searchitem_'+index+'" autocomplete="off" required><span class="help-block search_item_code_empty" style="display: none;" required>No Results Found ...</span> \
+                        //                 <input type="hidden" class="search_inventory_item_id"  value="'+response[i]['inventory_item_id']+'" id="id_'+index+'" name="inventory_item_id[]">\
+                        //                 <input type="hidden" class="form-control"  value="'+response[i]['inventory_item_id']+'" id="item_code_'+index+'" name="child_item[]" >\
+                        //             </td>\
+                        //             <td width="">\
+                        //                 <input type="text" class="form-control search_item_code"  id="description_'+index+'" value="'+response[i]['item_description']+'" name="item_code[]" autocomplete="off" required>\
+                        //             </td>\
+                        //             <td width="">\
+                        //                 <input type="text" class="form-control search_acc" value="'+response[i]['acc']+' '+response[i]['acc_des']+'" id="accDes_'+[index]+'"   name="item_code[]" autocomplete="off" required>\
+                        //                 <input type="hidden" name="account[]" class="form-control datepicker" id="acc_'+index+'" value="'+response[i]['acc']+'" autocomplete="off">\
+                        //             </td>\
+                        //             <td width="">\
+                        //                 <input type="text" class="form-control text-end recount_ap" readonly id="qty_'+index+'" value="'+response[i]['quantity_invoiced']+'"  name="item_code[]" autocomplete="off" required>\
+                        //             </td>\
+                        //             <td width="">\
+                        //                 <input type="text" class="form-control text-end recount_ap" readonly id="price_'+index+'" value="'+response[i]['unit_price']+'"  name="item_code[]" autocomplete="off" required>\
+                        //             </td>\
+                        //             <td width="">\
+                        //                 <input type="text" class="form-control text-end grandSub" readonly value="'+response[i]['stat_amount']+'"  id="subtotalAdd_'+index+'" name="item_code[]" autocomplete="off" required>\
+                        //             </td>\
+                        //         </tr>')
+
+                        //         $('.journal_container').append('<tr class="tr_input">\
+                        //             <td width="">\
+                        //                 <input type="text" class="form-control search_acc" name="quantity[]" value="'+response[i]['acc']+' '+response[i]['acc_des']+'" id="accDes2_'+index+'" autocomplete="off" required>\
+                        //                 <input type="hidden" name="account[]" class="form-control datepicker" id="acc2_'+index+'" value="'+response[i]['acc']+'" autocomplete="off">\
+                        //             </td>\
+                        //             <td width="">\
+                        //                 <input type="text" class="form-control search_item_code" value="'+response[i]['item_description']+'"  id="description2_'+index+'" name="item_code[]" autocomplete="off" required>\
+                        //             </td>\
+                        //             <td width="">\
+                        //                 <input type="text" class="form-control text-end" value="'+response[i]['stat_amount']+'"  name="item_code[]" autocomplete="off" required>\
+                        //             </td>\
+                        //             <td width="">\
+                        //                 <input type="text" class="form-control text-end" value="0"  name="item_code[]" autocomplete="off" required>\
+                        //             </td>\
+                        //             <td width="">\
+                        //                 <button type="button" class="btn btn-secondary hapusdata btn-sm" style="position: inherit;">X</button>\
+                        //             </td>\
+                        //         </tr>')
+
+                        //         $("#acc4_").val(response[i]['payable']);
+                        //         $("#accDes4_").val(response[i]['payable']+' '+response[i]['payable_des']);
+                        //         $("#acc3_").val(response[i]['tax_acc_code']);
+                        //         $("#accDes3_0").val(response[i]['tax_acc_code']+' '+response[i]['tax_acc_des']);
+                        //         $("#des3_").val(response[i]['tax_acc_des']);
+                        //         $("#pajak").val(response[i]['tax_rate']);
+
+                        //         if(response[i]['tax_rate'] == 0){
+                        //             $('table#table_journal tr#tr_tax').remove();
+                        //         }
+                        //         subtotal  += response[i]['original_amount'];
+                        //         index++;
+                        //         i++;
+                        //     }
+
+                        //         // Disable Button Add Row
+                        //         $('#disableAddRow').remove();
+
+                        //         // Add subtotal
+                        //         var pajak = $("#pajak").val();
+                        //         var passing = $("#passing").val();
+                        //         var total = $("#total").val();
+
+                        //         total = subtotal +  parseInt(total);
+
+                        //         pajak = total * pajak;
+                        //         total = total + pajak;
+
+                        //         console.log(total);
+                        //         $("#passing").val(total);
+                        //         $(".calculate").val(total);
+                        //         $(".tax").val(pajak);
+                        //         $("#total").text(total);
+
+                        //         total = total.toLocaleString( { symbol: '', decimal: ',', separator: '' });
+                        //         pajak = pajak.toLocaleString( { symbol: '', decimal: ',', separator: '' });
+                        //         $(".calculate2").text(total);
+                        //         $(".tax").text(pajak);
+
+                        // }else{
+                        //     alert('oops, PO Not Match or Invoice Number Already Inputed');
+                        // }
+
+                    } else {
+                        window.location.reload();
+                    }
+                }
+                , error: function(data) {
+                    alert('oops, something bad happened');
+                }
+
+            });
+
+
+        });
+    });
+
+</script>
+@endpush

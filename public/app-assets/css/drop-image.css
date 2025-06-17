@@ -1,0 +1,43 @@
+
+    #dropBox {
+		min-width: 400px;
+		max-width: 98%;
+		min-height: 300px;
+		border: 2px dashed black;
+		text-align: center;
+		background: rgb(237, 236, 236);
+		padding: 3em;
+		margin: auto;
+	}
+	#dropBox.hover {
+	  border-color: darkslateblue;
+	  background: aliceblue;
+	}
+
+	#imgUpload {
+		display: none;
+	}
+	#gallery {
+		text-align: center;
+		margin-top: 1.5em;
+	}
+	#gallery div {
+		display: inline-block;
+		margin: .5em 1em;
+	}
+	#gallery img {
+		max-height: 150px;
+	}
+	#gallery .fName,
+	#gallery .fSize {
+		display: block;
+	}
+	#gallery .fName {
+		color: brown;
+	}
+	#gallery .fSize {
+		font-size: .8em;
+	}
+	#gallery .fType {
+		font-size: .7em;
+	}

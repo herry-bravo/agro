@@ -1,0 +1,73 @@
+
+<div class="modal fade" id="productMove" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title text-white" id="exampleModalLongTitle">Product Move Info</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+            </div>
+            <div class="modal-body">
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    {{ trans('cruds.trx.fields.item') }}
+                                </th>
+                                <th>
+                                    {{ trans('cruds.trx.fields.description') }}
+                                </th>
+                                <th>
+                                    {{ trans('cruds.trx.fields.subinventory_code') }}
+                                </th>
+                                <th  class="text-center">
+                                    {{ trans('cruds.trx.fields.transaction_quantity') }}
+                                </th>
+                                <th>
+                                    {{ trans('cruds.trx.fields.transaction_date') }}
+                                </th>
+
+                                <th style="text-align: center;">
+                                {{ trans('cruds.trx.fields.transaction_source_name') }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($trx as $key => $raw)
+                                <tr data-entry-id="{{ $raw->id }}">
+                                    <td style="display:none">
+                                        {{ $raw->transaction_id ?? '' }}
+                                    </td>
+                                    <td>
+                                    {{ $raw->itemMaster->item_code ?? '' }}
+                                    </td>
+                                    <td>
+                                        {{ $raw->itemMaster->description ?? '' }}
+                                    </td>
+                                    <td>
+                                    {{ $raw->subinventory_code ?? '' }}
+                                    </td>
+                                    <td  class="text-center">
+                                        @if ($raw->transaction_source_name == "WIP Assembly Completion")
+                                            <a class="badge bg-primary text-white">+ {{ $raw->transaction_quantity ?? '' }}</a>
+                                        @else
+                                            <a class="badge bg-warning text-white">- {{ $raw->transaction_quantity ?? '' }}</a>
+                                        @endif
+                                    </td>
+                                    <td>
+                                    {{ $raw->created_at->format('Y-m-d H:i') }}
+                                    </td>
+                                    <td  class="text-center">
+                                    {{ $raw->transaction_source_name ?? '' }}
+                                    </td>
+                                </tr>
+
+                                @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

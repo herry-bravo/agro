@@ -1,0 +1,310 @@
+@extends('layouts.admin')
+@section('styles')
+<style>
+    @page {
+        margin: 0 !important;
+        margin-top: 0 !important;
+        /* padding: 5px !important; */
+        size: auto;
+        /*  auto is the current printer page size */
+
+    }
+
+    @media print {
+        .header-navbar {
+            display: none;
+        }
+
+        .breadcrumb-wrapper {
+            display: none;
+        }
+
+        footer {
+            display: none;
+        }
+
+        .btn-icon {
+            display: none;
+        }
+
+        #buttonscroll {
+            display: none;
+            visibility: hidden;
+        }
+
+        .nav {
+            display: None;
+        }
+
+        .page-break {
+            display: block;
+            page-break-after: always;
+        }
+
+        .page {
+            margin: 0;
+            box-shadow: 0;
+        }
+
+
+    }
+
+    *
+
+    /** Define the header rules **/
+    header {
+        position: fixed;
+        top: 10px;
+        left: 20px;
+        right: 20px;
+        height: 3cm;
+    }
+
+    /** Define the footer rules **/
+    footer {
+        position: relative;
+        top: 26cm;
+        bottom: 0cm;
+        left: 0cm;
+        right: 1cm;
+        height: 1cm;
+        text-align: right;
+        margin-right: 20px;
+    }
+
+
+    .container {
+        /* to centre page on screen*/
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: #000000;
+        text-align: left;
+        font-size: 12;
+        margin: 5px;
+        width: 100%;
+        /* margin-right: 20px; */
+        font-size: 11px;
+    }
+
+    table {
+        width: 96%;
+        padding-left: 0;
+        /* padding: 50px; */
+        margin-top: 10px;
+        border-collapse: collapse;
+        border: 1px;
+    }
+
+    tr,
+    th {
+        /* padding-right:3px; */
+        /* padding: 10px; */
+        width: auto;
+    }
+
+    th {
+        /* background-color: #E5E4E2; */
+        font-size: 11px;
+        /* width: 98%; */
+        margin: 10px;
+        padding: 2px;
+        text-align: center;
+        border-top: 1px solid #1d1d1d33;
+        border-bottom: 1px solid #1d1d1d33;
+    }
+
+    h4,
+    p {
+        margin: 0px;
+        font-size: 14px;
+    }
+
+    td {
+        padding: 2px;
+        font-size: 10px;
+        /* vertical-align: text-top; */
+        width: auto;
+    }
+
+    .table-footer {
+        margin-top: 10% !important;
+        text-align: center;
+        font-size: 14px;
+        object-position: center bottom !important;
+    }
+
+    .bg {
+        background-color: #E5E4E2;
+    }
+
+    tfoot {
+        margin-top: 5% !important;
+        border-top: 1px solid #cacaca;
+        border-bottom: 1px dashed #cacaca;
+    }
+
+    .page_break {
+        page-break-before: always;
+    }
+
+    hr {
+        color: green;
+    }
+
+    .table-content {
+        padding: 50px !important;
+    }
+
+    page {
+        background: white;
+        display: block;
+        margin: 0 auto;
+        margin-bottom: 0.5cm;
+        box-shadow: 0 0 0.1cm rgba(0, 0, 0, 0.2);
+    }
+
+    page[size="A4"] {
+        width: 20.5cm;
+        height: 12cm;
+    }
+
+</style>
+@endsection
+@section('breadcrumbs')
+<a href="{{route('admin.work-order.index')}}" class="breadcrumbs__item">{{ trans('cruds.bom.manufacture') }}</a>
+<a href="{{route('admin.work-order.index')}}" class="breadcrumbs__item">{{ trans('cruds.workorder.title') }} {{ trans('global.list') }}</a>
+<a href="#" class="breadcrumbs__item active">{{ trans('cruds.workorder.fields.view') }}</a>
+@endsection
+@section('content')
+<ul class="nav navbar-nav align-items-end ms-auto">
+    <li class="nav-item dropdown dropdown-user nav-item has">
+        <button type="button" class="btn btn-primary btn-icon" id="dropdown-user" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="feather-16" data-feather="settings"> </i>
+        </button>
+        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-user">
+            <a class="dropdown-item" href="javascript:if(window.print)window.print()"><span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-printer font-small-4 me-50">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>Print</span></a>
+            <a class="dropdown-item" href="" data-toggle="modal"><span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clipboard font-small-4 me-50">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                    </svg>Export To Pdf</span></a>
+            <a class="dropdown-item" href="#demoModal" data-toggle="modal"> <i class="me-50 feather-16" data-feather="sliders"> </i> More Filter</a>
+        </div>
+    </li>
+</ul>
+<page size="A4">
+    <body>
+        <div class="container">
+            <table  style="height:10px;  margin-top: 10px;">
+                <tr>
+                    <td style="width: 50%"><img style="float:left;" src="data:image/png;base64,{{DNS1D::getBarcodePNG($header->work_order_number, 'C128',1,20)}}" alt="barcode" ></td>
+                    <td style="width: 40%"><img style="float:left;" src="data:image/png;base64,{{DNS1D::getBarcodePNG($header->bom->parent_item, 'C128',1,20)}}" alt="barcode"></td>
+                    <td style="width: 10%"><img style="width: 40%; float:right" src="{{ asset('app-assets/images/logo/favicon.png') }}" alt="buana-megah"></td>
+                </tr>
+                <tr>
+                    <td style="width: 40%; text-align:left;">{{ $header->work_order_number}}</td>
+                    <td style="width: 30%; text-align:left;">{{$header->bom->parent_item}} - {{$header->bom->parent_description}}</td>
+                </tr>
+            </table>
+            {{-- @foreach($header as $key => $raw) --}}
+            {{-- Body --}}
+            <div class="container ">
+                <table style="width: 50%">
+                    <tr>
+                        <td colspan="2">
+                            Comp. Subinventory :
+                        </td>
+                        <td>{{$header->compl_subinventory_code}} </td>
+                        <td >Shift :</td>
+                        <td>________</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Start Date :
+                        </td>
+                        <td>{{$header->need_by_date->format ('Y-m-d')}}</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Supply To :
+                        </td>
+                        <td>________</td>
+                        <td >Planned Qty :</td>
+                        <td>{{$header->planned_start_quantity}}</td>
+                        <td >Actual Qty :</td>
+                        <td >{{$header->completed_quantity}} </td>
+
+                    </tr>
+                </table>
+                <table class="table-content ">
+                    <tbody>
+                        @php $subtotal=0; @endphp
+                        <tr>
+                            <th >#</th>
+                            <th>Item</th>
+                            <th>Description</th>
+                            <th>UOM</th>
+                            <th>Qty Per</th>
+                            <th>Qty</th>
+                            <th>Onhand</th>
+                            <th>Fix Location</th>
+                            <th>Issue</th>
+                        </tr>
+
+                        {{-- Looping data --}}
+                        @php $line = 0; @endphp
+                        @foreach($data as $key => $row)
+                            {{-- @if ($row->po_header_id==$raw->id) --}}
+                            {{-- @php $line ++;@endphp --}}
+                            <tr>
+                                <td >{{$key+1}}</td>
+                                <td>{{$row->item_list->item_code}}</td>
+                                <td> {{$row->item_list->description}}</td>
+                                <td align="center"> {{$row->uom_code}}</td>
+                                <td align="center">{{$row->quantity_per_product}}</td>
+                                <td align="center">{{$row->quantity}}</td>
+                                <td align="center"></td>
+                                <td align="center">{{$row->supply_subinventory}}</td>
+                                <td align="center"></td>
+                            </tr>
+                            {{-- Count total --}}
+                            {{-- @php $subtotal+=($row->unit_price * $row->po_quantity);@endphp --}}
+
+                            {{-- @endif --}}
+                        @endforeach
+                    </tbody>
+                    {{-- Table Footer, Total Counter --}}
+                    <tfoot>
+                        <tr>
+                            <th colspan="4"> Sender</th>
+                            <th colspan="5"></th>
+                        </tr>
+                        <tr>
+                            <th colspan="4">Approved By: </th>
+                            <th colspan="5"></th>
+                        </tr>
+                    </tfoot>
+                </table>
+
+
+                <table style="margin-top:10%;">
+                    <tr>
+                        {{-- <td style="height: 50px;">Note : <br>{{$raw->notes}}</td> --}}
+                    </tr>
+                </table>
+            </div>
+
+            {{-- Ignore Page Break in Last Loop --}}
+            {{-- @if ($loop->last)
+            <div style="page-break-before: avoid"> </div>
+            @else
+            <div class="page_break"></div>
+            @endif --}}
+
+            {{-- @endforeach --}}
+        </div>
+    </body>
+</page>
+@endsection

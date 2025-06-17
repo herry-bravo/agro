@@ -1,0 +1,311 @@
+@extends('layouts.admin')
+@section('styles')
+<link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/jquery-ui.css') }}">
+@endsection
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+<script src="{{ asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
+@endpush
+@section('breadcrumbs')
+<a href="{{route('admin.completion.index')}}" class="breadcrumbs__item">{{ trans('cruds.bom.manufacture') }}</a>
+<a href="{{route('admin.completion.index')}}" class="breadcrumbs__item">{{ trans('cruds.workorder.completion') }} {{ trans('global.list') }}</a>
+<a href="#" class="breadcrumbs__item active">{{ trans('cruds.workorder.fields.edit') }}</a>
+@endsection
+
+@section('content')
+@if ($errors->any())
+<div class="alert alert-danger">
+    @foreach ($errors->all() as $error)
+    {{ $error }}
+    @endforeach
+</div>
+@endif
+<section id="multiple-column-form">
+    <div class="row">
+        <div class="col-12">
+            <form action="{{ route('admin.work-order.update',[$roll->id]) }}" method="POST" enctype="multipart/form-data" novalidate>
+                @csrf
+                @method('PUT')
+                {{ csrf_field() }}
+                <div class="card">
+                    <div class="card-header" style="height: 40px">
+                        <div class="row col-12">
+                            <div class="col-md-8 mt-1">Detail Completion</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="card-body mt-2">
+                        <div class="row mb-2">
+                            <div class="col-md-1">
+                                <b><p class="text-end">Roll :<p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" name="parent_inventory_item_id" class="form-control" readonly value="{{$roll->uniq_attribute_roll}}" autocomplete="off" required>
+                            </div>
+                            <div class="col-md-1"></div>
+                            <div class="col-md-1">
+                                <b><p class="text-end">Jumbo :</p></b>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text" name="need_by_date" value="{{$roll->attribute_roll}}" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-1">
+                                <b><p class="text-end">Quantity :<p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" name="planned_start_quantity" class="form-control" value="{{$roll->primary_quantity}}" required>
+                            </div>
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-1">
+                                <b><p class="text-end">Quality :</p></b>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text"   class="form-control datepicker" id="" value="{{$roll->attribute_num_quality}}" autocomplete="off" required>
+                                <input type="number" hidden id="created_by" name="created_by" value="{{ auth()->user()->id }}" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-1">
+                                <b><p class="text-end">GSM :<p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" name="planned_start_quantity" class="form-control" value="{{$roll->attribute_number_gsm}}" required>
+                            </div>
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-1">
+                                <b><p class="text-end">Width :</p></b>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text"   class="form-control datepicker" value="{{$roll->attribute_number_w}}" autocomplete="off" required>
+                            </div>
+                        </div>
+
+                    <!-- /.box-body -->
+                    </div>
+                {{-- </div>
+
+                <div class="card"> --}}
+                    <div class="card-header">
+                        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                            <button class="nav-link active" id="nav-component-tab" data-bs-toggle="tab" data-bs-target="#nav-component" type="button" role="tab" aria-controls="nav-component" aria-selected="true">
+                                <span class="bs-stepper-box">
+                                    <i data-feather="tool" class="font-medium-3"></i>
+                                </span>
+                                Quality Control
+                            </button>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="card-body">
+
+                        {{-- Quality Management --}}
+                        <div class="row mt-2">
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Jumbo</label>
+                                    <input type="text" name="" class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Roll</label>
+                                    <input type="text"  class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Width</label>
+                                    <input class="form-control" type="text" value='0'>
+                                </div>
+                            </div>
+
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="site">Ø</label>
+                                    <input type="number" class="form-control" name="" value="0" min="1" max="">
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Weight</label>
+                                    <input type="text" name="" class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Quality</label>
+                                    <input type="text"  class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">GSM</label>
+                                    <input class="form-control" type="text" value='0'>
+                                </div>
+                            </div>
+
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="site">RCT</label>
+                                    <input type="number" class="form-control" name="" value="0" min="1" max="">
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">BST</label>
+                                    <input type="text" name="" class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">COBB</label>
+                                    <input type="text"  class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Smooth Top</label>
+                                    <input class="form-control" type="text" value='0'>
+                                </div>
+                            </div>
+
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="site">Smooth Buttom</label>
+                                    <input type="number" class="form-control" name="" value="0" min="1" max="">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Folding CD</label>
+                                    <input type="text" name="" class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Busted</label>
+                                    <input type="text"  class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Length</label>
+                                    <input class="form-control" type="text" value='0'>
+                                </div>
+                            </div>
+
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="site">Hard</label>
+                                    <input type="number" class="form-control" name="" value="0" min="1" max="">
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">SRC</label>
+                                    <input type="text" name="" class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Export</label>
+                                    <input type="text"  class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Coating</label>
+                                    <input class="form-control" type="text" value='0'>
+                                </div>
+                            </div>
+
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="site">Label</label>
+                                    <input type="number" class="form-control" name="" value="0" min="1" max="">
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Color</label>
+                                    <input type="text" name="" class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Config</label>
+                                    <input type="text"  class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">BP</label>
+                                    <input class="form-control" type="text" value='0'>
+                                </div>
+                            </div>
+
+                            <div class="col-md-1 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="site">Broke</label>
+                                    <input type="number" class="form-control" name="" value="0" min="1" max="">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-2 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Status</label>
+                                    <input type="text" name="" class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-5 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Description</label>
+                                    <input type="text"  class="form-control"  value="0" autocomplete="off" required>
+                                </div>
+                            </div>
+                            <div class="col-md-5 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="number">Problem</label>
+                                    <input class="form-control" type="text" value='0'>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 col-12">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 control-label" for="site">Condition</label>
+                                    <select name="permissions[]" id="permissions" class="form-control select2" multiple="multiple" required>
+                                        <option value="Alur">Alur</option>
+                                        <option value="Belang">Belang</option>
+                                        <option value="Blorok">Blowing</option>
+                                        <option value="Bercak">Bercak</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="d-flex justify-content-between ">
+                            <button type="button" class="btn btn-danger pull-left" data-bs-toggle="modal" data-bs-target="#cancel">Cancel Work Order</button>
+                            <button type="submit" name='action' value="save" class="btn btn-primary pull-right "><i class="fa fa-plus"></i> Add</button>
+                        </div>
+
+                    </div>
+                    <!-- /.box-body -->
+
+                </div>
+
+            </form>
+        </div>
+</section>
+<!-- /.content -->
+@endsection

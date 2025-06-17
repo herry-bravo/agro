@@ -1,0 +1,192 @@
+@extends('layouts.admin')
+@section('styles')
+<link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/jquery-ui.css') }}">
+@endsection
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+<script src="{{ asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
+@endpush
+@if ($errors->any())
+<div class="alert alert-danger">
+    @foreach ($errors->all() as $error)
+    {{ $error }}
+    @endforeach
+</div>
+@endif
+@section('content')
+
+<div class="card">
+    <div class="card-header mt-1 mb-25">
+        <h6 class="card-title ">
+            <a href="{{ route("admin.quotation.index") }}" class="breadcrumbs__item">{{ trans('cruds.quotation.po') }} </a>
+            <a href="{{ route("admin.quotation.index") }}" class="breadcrumbs__item">{{ trans('cruds.quotation.title_singular') }} </a>
+            <a href="" class="breadcrumbs__item">{{ trans('cruds.quotation.fields.edit') }}</a>
+        </h6>
+    </div>
+    <hr>
+    <div class="card-body">
+        <form action="{{ route("admin.quotation.update", [$quotation->id]) }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-25">
+                        <label class="form-label" for="segment1">{{ trans('cruds.quotation.fields.number') }}</label>
+                        <input type="text" class="form-control" value="{{$quotation->segment1}}" name="segment1" autocomplete="off" maxlength="10" readonly>
+                        <input type="hidden" id="id" name="id" value="{{$quotation->id}}">
+                        <input type="hidden" id="created_by" name="created_by" value="{{auth()->user()->id}}">
+                        <input type="hidden" id="created_by" name="updated_by" value="{{auth()->user()->id}}">
+                        <input type="hidden" id="organization_id" value='222' name="org_id"> </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-25">
+                        <label class="form-label" for="status">{{ trans('cruds.quotation.fields.status') }}</label>
+                        <select type="text" id="status" name="status" class="form-control select2" value="{{ old('status', isset($quotation) ? $quotation->status : '') }}" required>
+                            @if (($quotation->status) == 14)
+                            <option value="14" selected>Active</option>
+                            <option value="12">In Active</option>
+                            @elseif (($quotation->status) == 12)
+                            <option value="12" selected>In Active</option>
+                            <option value="14">Active</option>
+                            @endif
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex flex-column mb-25 col-md-2">
+                    <label class="form-check-label mb-50" for="customSwitch10">Master</label>
+                    <div class="form-check form-switch form-check-primary">
+                        <input type="checkbox" class="form-check-input" name="organization_id" id="customSwitch10" value="222" checked="">
+                        <label class="form-check-label" for="customSwitch10">
+                            <span class="switch-icon-left"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg></span>
+                            <span class="switch-icon-right"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 col-12">
+                    <div class="mb-25">
+                        <input type="hidden" id="created_by" name="created_by" value="{{auth()->user()->id}}">
+                        <input type="hidden" id="type_lookup_code" value='2' name="type_lookup_code">
+                        <label class="form-label" for="vendor_id">{{ trans('cruds.quotation.fields.supplier') }}</label>
+                        <select name="vendor_id" id="vendor_id" class="form-control select2" required>
+                            <option hidden disabled selected></option>
+                            @foreach($vendor as $id => $row)
+                            @if (($row->vendor_id)== $quotation->vendor_id))
+                            <option selected value="{{ $row->vendor_id }}" {{ (in_array($id, old('vendor', [])) || isset($role) && $row->contains($id)) ? 'selected' : '' }}>{{ $row->vendor_name }}</option>
+                            @else
+                            <option value="{{ $row->vendor_id }}" {{ (in_array($id, old('vendor', [])) || isset($role) && $row->contains($id)) ? 'selected' : '' }}>{{ $row->vendor_name }}</option>
+                            @endif
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6 col-12">
+                    <div class="mb-25">
+                        <label class="form-label" for="vendor_site_id">{{ trans('cruds.quotation.fields.site') }}</label>
+                        <input type="text" id="vendor_site_id" name="supplier_site_id" class="form-control supplier_site_id" value="{{ $quotation->supplierSite->address1 ??  '' }}" required autocomplete="off">
+                        <input type="hidden" class="search_vendor_site_id" name="vendor_site_id" value='{{$quotation->supplierSite->site_code ??''}}'>
+                    </div>
+                </div>
+                <div class="col-md-6 col-12">
+                    <div class="mb-25">
+                        <label class="form-label" for="company-column">{{ trans('cruds.quotation.fields.effective_date') }}</label>
+                        {{-- <input type="date" id="datepicker-1" name="effective_date" class="form-control flatpickr-basic flatpickr-input" value="{{ old('effective_date', isset($quotation) ? $quotation->effective_date : '') }}" required> --}}
+                        <input type="date" name="effective_date" class="form-control flatpickr-basic flatpickr-input" value="{{ old('effective_date', isset($quotation) ? $quotation->effective_date : '') }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6 col-12">
+                    <div class="mb-25">
+                        <label class="form-label" for="email-id-column">{{ trans('cruds.quotation.fields.currency') }}</label>
+                        <select type="text" id="currency_code" name="currency_code" class="form-control select2" value="{{ old('currency_code', isset($currency_code) ? $quotation->currency_code : '') }}" required>
+                            @if (($quotation->currency_code) == "USD")
+                            <option value="USD" selected>USD</option>
+                            <option value="IDR">IDR</option>
+                            @elseif (($quotation->currency_code) == "IDR")
+                            <option value="IDR" selected>IDR</option>
+                            <option value="USD">USD</option>
+                            @endif
+                        </select>
+                    </div>
+                </div>
+            </div>
+            </br>
+            <div class="row">
+
+                <div class="box box-default">
+                    <div class="box-body scrollx" style="height: 450px;overflow: scroll;">
+                        <table class="table table-striped tableFixHead">
+                            <thead>
+                                <th scope="col">Line</th>
+                                <th scope="col">Product</th>
+                                <th scope="col">UOM</th>
+                                <th scope="col" class="text-center">Price</th>
+                                <th scope="col" class="text-end">From</th>
+                                <th scope="col" class="text-end">To</th>
+                                <th scope="col" class="text-center">#</th>
+                                </tr>
+                            </thead>
+                            <tbody class="quotation_container">
+                                @foreach($quotationDetail as $key => $raw)
+                                <tr class="tr_input" data-entry-id="{{ $raw->id }}">
+                                    <td style="display:none;">
+                                    </td>
+
+                                    <td width="0%" class="rownumber">{{$raw->line_id}}</td>
+                                    <td width="30%">
+                                        <input type="text" readonly class="form-control search_item_code" placeholder="Type here ..." name="item_code[]" id="searchitem_{{$key+1}}" autocomplete="off" value="{{$raw->ItemMaster->item_code ??''}} - {{$raw->ItemMaster->description ??''}}" required title="{{$raw->ItemMaster->description ??''}}"><span class="help-block search_item_code_empty" style="display: none;" required>No Results Found ...</span>
+                                        <input type="hidden" class="search_inventory_item_id" id="id_{{$key+1}}" value='{{$raw->inventory_item_id}}' name="inventory_item_id[]" autocomplete="off">
+                                        <input type="hidden" class="search_inventory_item_id" id="id_{{$key+1}}" value='{{$raw->id}}' name="lineId[]" autocomplete="off"></td>
+                                    <input type="hidden" class="form-control" id="description_{{$key+1}}" name="description_item[]" autocomplete="off">
+                                    <td width="15%">
+                                        <select type="text" id="uom_{{$key+1}}" name="po_uom_code[]" class="form-control" required>
+                                            <option value="{{$raw->po_uom_code}}" selected>{{$raw->po_uom_code}}</option>
+                                            @foreach ($uomCon as $as => $uom)
+                                            @if ($raw->inventory_item_id == $uom->inventory_item_id)
+                                            <option value="{{$uom->interior_unit_code}}">{{$uom->interior_unit_code}}</option>
+                                            @endif
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td width="15%">
+                                        <input type="text" class="form-control unit_price text-end" name="unit_price[]" id="price_{{$key+1}}" autocomplete="off" value="{{$raw->unit_price}}">
+                                    </td>
+                                    <td width="20%">
+                                        <input type="date" name="start_date[]" class="form-control datepicker text-end" id="start_date_{{$key+1}}" value="{{$raw->start_date}}" autocomplete="off">
+                                    </td>
+                                    <td width="20%">
+                                        <input type="date" name="end_date[]" class="form-control datepicker text-end" id="end_date_{{$key+1}}" value="{{$raw->end_date}}" autocomplete="off">
+                                    </td>
+                                    <td width="10px"><button type="button" class="btn btn-ligth btn-sm remove_tr_quotation" disabled>X</button>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="2">
+                                        <button type="button" class="btn btn-light btn-sm add_quotation btn-sm" style="font-size: 12px;"><i data-feather='plus'></i> Add Rows</button>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+            </br>
+            <div class="d-flex justify-content-between mb-1">
+                <button class="btn btn-warning" type="reset"><i data-feather='refresh-ccw'></i> Reset</button>
+                <button class="btn btn-success btn-submit"><i data-feather='save'></i> {{ trans('global.save') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+@endsection

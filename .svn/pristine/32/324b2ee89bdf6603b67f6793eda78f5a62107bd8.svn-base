@@ -1,0 +1,339 @@
+<!-- BEGIN: Main Menu-->
+<div class="main-menu menu-fixed menu-light menu-accordion menu-shadow" data-scroll-to-active="true">
+    <div class="navbar-header">
+        <ul class="nav navbar-nav flex-row">
+            <li class="nav-item">
+                <img class="navbar-brand menu-toggle" style="width: 70%; float:left;" src="{{ asset('app-assets/images/logo/bm.png') }}" alt="buana-megah">
+
+                <a class="nav-link nav-toggle modern-nav-toggle pe-0" data-bs-toggle="collapse"><i class="d-block d-xl-none text-primary toggle-icon font-medium-4" data-feather="x"></i>
+                    <i class="d-none d-xl-block collapse-toggle-icon font-medium-4  text-primary" data-feather="disc" data-ticon="disc"></i>
+                </a>
+            </li>
+        </ul>
+
+    </div>
+
+    <div class="shadow-bottom"></div>
+    <div class="main-menu-content">
+        <ul class="navigation navigation-main" id="main-menu-navigation" data-menu="menu-navigation">
+            <li class="nav-item active">
+                <a class="d-flex align-items-center" href="{{ route("admin.home") }}">
+                    <i data-feather="home"></i>
+                    <span class="" data-i18n="Dashboards">Dashboards</span>
+                    {{-- <span class="menu-title text-truncate" data-i18n="Dashboards">Dashboards</span> --}}
+                    <span class="badge badge-light-warning rounded-pill ms-auto me-1"></span>
+                </a>
+            </li>
+
+            {{-- Side Name --}}
+            @can('inventory_access')
+            <li class=" navigation-header"><span data-i18n="Apps &amp; Pages">Pages</span><i data-feather="more-horizontal"></i>
+            </li>
+
+            {{-- Purchase Order Menu --}}
+            @can('purchaseOrder_access')
+            <li class="nav-item has menu-toggle">
+                <a class="menu-toggle" href="#">
+                    <i data-feather='bar-chart-2'></i>
+                    <span class="" data-i18n="User">Reports</span>
+                    {{-- <span class="menu-title text-truncate" data-i18n="User">Reports</span> --}}
+                </a>
+                <ul class="menu-content">
+                    @can('public_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.std-reports.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.report.title') }}</span></a>
+                    </li>
+                    @endcan
+                </ul>
+            </li>
+            @endcan
+
+            {{-- Inventory --}}
+            <li class="nav-item has"><a class="d-flex align-items-center" href="#"><i data-feather='package'></i><span class="text-truncate" data-i18n="User">{{ trans('cruds.inventory.title') }}</span></a>
+                <ul class="menu-content">
+                    {{-- Sub Inventory --}}
+                    @can('inventoryAdmin_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.item-master.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.inventoryAdmin.item_master') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('inventoryAdmin_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.category.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.inventoryAdmin.org_item') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('inventoryAdmin_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.currencies.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.inventoryAdmin.item_cost') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('inventory_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.mtl-transfer.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.inventory.transfer') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('inventory_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.missTransaction.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.inventory.missTransaction') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('inventory_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.inventory.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.inventory.onhand') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('inventory_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.physic.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.physic.title') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('inventory_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.subInventory.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.subInventory.title') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('inventory_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.material-txns.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.trx.title') }}</span></a>
+                    </li>
+                    @endcan
+
+                </ul>
+            </li>
+            @endcan
+
+            {{-- Production Control --}}
+            @can('purchaseOrder_access')
+            <li class="nav-item has"><a class="d-flex align-items-center" href="#"><i data-feather='layers'></i><span class="text-truncate" data-i18n="User">{{ trans('cruds.prod.title') }}</span></a>
+                <ul class="menu-content">
+                    @can('public_access')
+                    <li>
+                        <a class="d-flex align-items-center" href="{{ route("admin.opunit.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.prod.operation') }}</span></a>
+                    </li>
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.prodplan.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.prod.planning') }}</span></a>
+                    </li>
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.bom.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.prod.bom') }}</span></a>
+                    </li>
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.work-order.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.prod.wo') }}</span></a>
+                    </li>
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.completion.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.prod.comp') }}</span></a>
+                    </li>
+                    @endcan
+                </ul>
+            </li>
+            @endcan
+
+            {{-- Quality Management--}}
+            @can('quality_management')
+            <li class="nav-item has"><a class="d-flex align-items-center" href="#"><i data-feather='thermometer'></i><span class="text-truncate" data-i18n="User">{{ trans('cruds.quality_management.title') }}</span></a>
+                <ul class="menu-content">
+                    {{-- Sub Inventory --}}
+                    @can('quality_management')
+                    <li><a class="d-flex align-items-center" href="{{ route('admin.qm-material.index') }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.quality_management.material') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('quality_management')
+                    <li><a class="d-flex align-items-center" href="{{route('admin.qm-finsihGood.index')}}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.quality_management.finish_good') }}</span></a>
+                    </li>
+                    @endcan
+
+                </ul>
+            </li>
+            @endcan
+
+            {{-- Purchase Order Menu --}}
+            @can('purchaseOrder_access')
+            <li class="nav-item has"><a class="d-flex align-items-center" href="#"><i data-feather='truck'></i><span class="text-truncate" data-i18n="User">Purchase Order</span></a>
+                <ul class="menu-content">
+
+
+                    @can('purchaseOrder_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.quotation.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.purchaseOrder.quotation') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('purchaseOrder_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.purchase-requisition.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.purchaseOrder.pr') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('purchaseOrder_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.auto-create.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.purchaseOrder.autoCreate') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('purchaseOrder_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.orders.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.purchaseOrder.po') }}</span></a>
+                    </li>
+                    @endcan
+
+
+                    @can('purchaseOrder_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.rcv.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.purchaseOrder.receive') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('purchaseOrder_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.return.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.purchaseOrder.return') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('vendor_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.vendor.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.purchaseOrder.supplier') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('purchaseOrder_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.missExpense.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.purchaseOrder.missExpense') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('purchaseOrder_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.purchase.data") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.purchaseOrder.report') }}</span></a>
+                    </li>
+                    @endcan
+
+                </ul>
+            </li>
+            @endcan
+
+            @can('order_management_access')
+            <li class="nav-item has"><a class="d-flex align-items-center" href="#"><i data-feather='edit'></i><span class="text-truncate" data-i18n="User">{{ trans('cruds.OrderManagement.title') }}</span></a>
+                <ul class="menu-content">
+
+                    @can('order_management_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.salesorder.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.OrderManagement.order_organizer') }}</span></a>
+                    </li>
+                    @endcan
+
+                    @can('om_access')
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.salesorder.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.OrderManagement.title_singular') }}</span></a>
+                    </li>
+                    @endcan
+
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.deliveries.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.Delivery.title') }}</span></a>
+                    </li>
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.shipment.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.shiping.title') }}</span></a>
+                    </li>
+                    <li><a class="d-flex align-items-center" href="{{ route("admin.invoices.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.Invoice.title') }}</span></a>
+                    </li>
+
+                    {{-- <li><a class="d-flex align-items-center" href="#"><i data-feather="circle"></i><span
+                                class="menu-item text-truncate"
+                                data-i18n="List">{{ trans('cruds.OrderManagement.quick_ship') }}</span></a>
+            </li> --}}
+
+            <li><a class="d-flex align-items-center" href="{{ route('admin.pricelist.index') }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.OrderManagement.price_list') }}</span></a>
+            </li>
+
+            <li><a class="d-flex align-items-center" href="{{ route('admin.customer.index') }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.OrderManagement.customer') }}</span></a>
+            </li>
+
+            {{-- <li><a class="d-flex align-items-center" href="#"><i data-feather="circle"></i><span
+                                class="menu-item text-truncate"
+                                data-i18n="List">{{ trans('cruds.OrderManagement.post_invoic') }}</span></a>
+            </li> --}}
+
+        </ul>
+        </li>
+        @endcan
+
+        @can('account_payable_access')
+        <li class="nav-item has"><a class="d-flex align-items-center" href="#"><i data-feather='activity'></i><span class="text-truncate" data-i18n="User">{{ trans('cruds.aPayable.title') }}</span></a>
+            <ul class="menu-content">
+                <li><a class="d-flex align-items-center" href="{{ route("admin.ap.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.aPayable.fields.invoice') }}</span></a>
+                </li>
+                <li><a class="d-flex align-items-center" href="{{ route("admin.ap.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.aPayable.fields.creditmemo') }}</span></a>
+                </li>
+                <li><a class="d-flex align-items-center" href="{{ route("admin.ap.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.aPayable.fields.payment') }}</span></a>
+                </li>
+            </ul>
+        </li>
+        @endcan
+
+        @can('account_receive_access')
+        <li class="nav-item has"><a class="d-flex align-items-center" href="#"><i data-feather='inbox'></i><span class="text-truncate" data-i18n="User">{{ trans('cruds.aReceivable.title') }}</span></a>
+            <ul class="menu-content">
+
+
+                <li><a class="d-flex align-items-center" href="{{ route("admin.arCalendar.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.aReceivable.cal') }}</span></a>
+                </li>
+
+                <li><a class="d-flex align-items-center" href="{{ route("admin.arAuto.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.aReceivable.auto') }}</span></a>
+                </li>
+
+                <li><a class="d-flex align-items-center" href="{{ route("admin.ar.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.aReceivable.title_singular') }}</span></a>
+                </li>
+
+
+            </ul>
+        </li>
+        @endcan
+        @can('gl_access')
+        <li class="nav-item has"><a class="d-flex align-items-center" href="#"><i data-feather='book-open'></i><span class="text-truncate" data-i18n="User">{{ trans('cruds.gl.title') }}</span></a>
+            <ul class="menu-content">
+                <li><a class="d-flex align-items-center" href="{{ route("admin.gl.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.gl.fields.journalEntries') }}</span></a>
+                </li>
+                <li><a class="d-flex align-items-center" href=""><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.gl.fields.journalItems') }}</span></a>
+                </li>
+                {{-- <li><a class="d-flex align-items-center" href="{{ route("admin.glmanual.create") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.gl.fields.journalManualEntries') }}</span></a>
+                </li> --}}
+            </ul>
+        </li>
+        @endcan
+        @can('user_management_access')
+        <li class="nav-item has"><a class="d-flex align-items-center" href="#"><i data-feather='user-check'></i><span class=" text-truncate" data-i18n="User">{{ trans('cruds.userManagement.title') }}</span></a>
+            <ul class="menu-content">
+
+
+                <li><a class="d-flex align-items-center" href="{{ route("admin.permissions.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.permission.title') }}</span></a>
+                </li>
+
+                <li><a class="d-flex align-items-center" href="{{ route("admin.roles.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.role.title') }}</span></a>
+                </li>
+
+                <li><a class="d-flex align-items-center" href="{{ route("admin.users.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.user.title') }}</span></a>
+                </li>
+
+
+            </ul>
+        </li>
+        @endcan
+
+
+        @can('client_management_setting_access')
+        <li class="nav-item has">
+            <a class="d-flex align-items-center" href="#"><i data-feather='settings'></i><span class="text-truncate" data-i18n="User">{{ trans('cruds.clientManagementSetting.title') }}</span>
+            </a>
+            <ul class="menu-content">
+
+                <li><a class="d-flex align-items-center" href="{{ route('admin.currencies.index')}}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.currency.title') }}</span></a>
+                </li>
+                <li><a class="d-flex align-items-center" href="{{ route("admin.materialTrnTypes.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.materialTrnTypes.title') }}</span></a>
+                </li>
+                <li><a class="d-flex align-items-center" href="{{ route("admin.accountCode.index") }}" class="nav-link " id="btn-coa"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.coa.title') }}</span></a>
+                </li>
+                <li><a class="d-flex align-items-center" href="{{ route("admin.site.index") }}" class="nav-link "><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.site.title') }}</span></a>
+                </li>
+
+                <li><a class="d-flex align-items-center" href="{{ route("admin.uom-conversion.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.uomconversion.title') }}</span></a>
+                </li>
+
+                <li><a class="d-flex align-items-center" href="{{ route("admin.opunit.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.OpUnit.title') }}</span></a>
+                </li>
+
+                <li><a class="d-flex align-items-center" href="#"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.projectStatus.title') }}</span></a>
+                </li>
+
+                <li><a class="d-flex align-items-center" href="{{ route("admin.terms.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.terms.title') }}</span></a>
+                </li>
+
+                <li><a class="d-flex align-items-center" href="{{ route("admin.uom.index") }}"><i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{ trans('cruds.uom.title') }}</span></a>
+                </li>
+            </ul>
+        </li>
+        @endcan
+
+        </ul>
+    </div>
+</div>
+<!-- END: Main Menu-->

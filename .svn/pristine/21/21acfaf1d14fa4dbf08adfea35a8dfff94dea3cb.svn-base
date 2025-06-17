@@ -1,0 +1,32 @@
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Tax extends Model
+{
+    use SoftDeletes;
+
+    public $table = 'bm_taxs_id_all';
+
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
+    protected $fillable = [
+        'id',
+        'tax_code',
+        'tax_regimes_b',
+        'tax_name',
+        'tax_rate',
+        'tax_taxes_tl',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        
+    ];
+}

@@ -1,0 +1,169 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\MassDestroyTransactionTypeRequest;
+use App\Http\Requests\StoreRequisitionRequest;
+use App\Http\Requests\UpdateTransactionTypeRequest;
+use App\AutoCreate;
+use App\OperationUnit;
+use App\CurrencyGlobal;
+use App\PurchaseRequisition;
+use App\RequisitionDetail;
+use App\PurchaseOrder;
+use App\Quotation;
+use App\TrxStatuses;
+use App\Vendor;
+use App\HPCount;
+use Gate;
+use App\User;
+use App\Site;
+use DB;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class AutoCreateController extends Controller
+{
+    public function index()
+    {
+      //  abort_if(Gate::denies('order_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+       //  $purchaseRequisition = PurchaseRequisition::where('authorized_status',2)->get();
+         $purchaseRequisitionDet = RequisitionDetail::where('purchase_status',2)->get();
+		 $currency=CurrencyGlobal::all();
+		 $vendor=Vendor::all();
+		 $site=Site::all();
+         HPCount::create();
+         $id = HPCount::latest('id')->first();
+	     $head = HPCount::findorNew($id->id+1);
+         $po_number='2'.str_pad($id->id+1, 7, "0", STR_PAD_LEFT);
+         $op=OperationUnit::all();
+
+         //show po with 0 quantity receive
+         $po = PurchaseOrder::leftjoin('bm_po_lines_all','bm_po_header_all.id','=','bm_po_lines_all.po_header_id')
+                            ->select('bm_po_header_all.id','bm_po_header_all.segment1')
+                            ->where('bm_po_header_all.type_lookup_code',1)
+                            ->whereIn('bm_po_header_all.status',[1,2])
+                            ->groupBy('bm_po_header_all.id','bm_po_header_all.segment1')
+                            ->havingRaw('SUM (bm_po_lines_all.quantity_receive) = 0')
+                            ->get();
+		return view('admin.autoCreate.index', compact('purchaseRequisitionDet','currency','vendor','site','po_number','po','op'));
+    }
+
+    public function create()
+    {
+
+    }
+
+    public function store(StoreRequisitionRequest $request)
+    {
+		 $head = Quotation::findorNew($request->id);
+         $head->segment1=$request->segment1;
+
+		/*	try {
+			\DB::beginTransaction();
+				foreach($request->inventory_item_id as $key =>$inventory_item_id){
+				$data = array(
+                            'header_id'=>$request->id,
+                            'line_id'=>$key+1 ,
+
+                );
+            // RequisitionDetail::create($data);
+            }
+			\DB::commit();
+			}catch (Throwable $e){
+				\DB::rollback();
+			} */
+    /* return redirect()->route('admin.purchase-requisition.index'); */
+    }
+    public function edit(PurchaseRequisition $purchaseRequisition)
+    {
+        abort_if(Gate::denies('order_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+		$users =User::all();
+		$status =TrxStatuses::whereIn('trx_code', [1, 2, 13])->get();
+		$requisitionDetail=RequisitionDetail::where('header_id','=',$purchaseRequisition->id)->whereNull('deleted_at')->get();
+	    return view('admin.purchaseRequisition.edit', compact('purchaseRequisition','users','requisitionDetail','status'));
+    }
+
+    public function update(Request $request, PurchaseRequisition $purchaseRequisition,RequisitionDetail $requisitionDetail)
+    {
+        $head =PurchaseRequisition::find($request->id);
+		$head->segment1=$request->segment1;
+        $head->authorized_status=$request->authorized_status;
+        $head->transaction_date=$request->transaction_date;
+        $head->created_by=$request->created_by;
+        $head->updated_by=$request->updated_by;
+        $head->requested_by=$request->requested_by;
+        $head->attribute1=$request->attribute1;
+        $head->description=$request->description;
+
+		try {
+			\DB::beginTransaction();
+             $head->save();
+			count($request->inventory_item_id);
+			foreach($request->inventory_item_id as $key =>$inventory_item_id){
+
+				if(empty($request->lineId[$key])){
+					$data = array(
+                            'header_id'=>$request->id,
+                            'line_id'=>RequisitionDetail::where('header_id',$request->id)->get()->count()+1 ,
+                            'split_line_id'=>$key+1 ,
+                            'inventory_item_id'=>$request->inventory_item_id[$key],
+                            'quantity'=>$request->quantity[$key],
+                            'pr_uom_code'=>$request->pr_uom_code[$key],
+                            'estimated_cost'=>$request->estimated_cost[$key],
+                            'requested_date'=>$request->requested_date[$key],
+                            'created_by'=>$request->created_by,
+                            'updated_by'=>$request->updated_by,
+                            'created_at'=>date('Y-m-d H:i:s'),
+                            'updated_at'=>date('Y-m-d H:i:s'),
+                );
+				RequisitionDetail::create($data);
+				}else{
+				  $data = RequisitionDetail::find($request->lineId[$key]);
+                     $data->header_id=$request->id;
+                     $data->line_id=$key+1 ;
+                     $data->split_line_id=$key+1 ;
+                     $data->inventory_item_id=$request->inventory_item_id[$key];
+                     $data->quantity=$request->quantity[$key];
+                     $data->pr_uom_code=$request->pr_uom_code[$key];
+                     $data->estimated_cost=$request->estimated_cost[$key];
+                     $data->requested_date=$request->requested_date[$key];
+                     $data->created_by=$request->created_by;
+                     $data->updated_by=$request->updated_by;
+                     $data->created_at=date('Y-m-d H:i:s');
+                     $data->updated_at=date('Y-m-d H:i:s');
+					 $data->save();
+				}
+			}
+			\DB::commit();
+			}catch (Throwable $e){
+				\DB::rollback();
+			}
+	}
+
+    public function show(PurchaseRequisition $purchaseRequisition)
+    {
+        abort_if(Gate::denies('order_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.purchaseRequisition.show', compact('purchaseRequisition'));
+    }
+
+    public function destroy(PurchaseRequisition $purchaseRequisition)
+    {
+       abort_if(Gate::denies('order_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $purchaseRequisition->delete();
+		//dd($purchaseRequisition);
+
+        //return redirect()->route('admin.purchase-requisition.index');
+    }
+
+    public function massDestroy(MassDestroyTransactionTypeRequest $request)
+    {
+        TransactionType::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
+    }
+}

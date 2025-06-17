@@ -1,0 +1,171 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\MassDestroyTransactionTypeRequest;
+use App\Http\Requests\StoreTransactionTypeRequest;
+use App\Http\Requests\UpdateTransactionTypeRequest;
+use App\Inventory;
+use App\Onhand;
+use App\Subinventories;
+use App\MaterialTransaction;
+use App\MaterialTxns;
+use Gate;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class MaterialTransferController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        abort_if(Gate::denies('inventory_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        $trx=MaterialTransaction::whereIn('trx_code', [27,32,34,12,14])->get();
+        return view('admin.mtlTransfer.index',compact('trx'));
+    }
+    public function create(Request $request)
+    {
+       $trx=MaterialTransaction::where('trx_code', $request->transaction_type)->first();
+      $reference = $request->source;
+       return view('admin.mtlTransfer.create',compact('request','trx','reference'));
+    }
+
+    public function store(Request $request)
+    {
+        foreach ($request->inventory_item_id as $key => $value)
+		{
+       try {
+        \DB::beginTransaction();
+                        /* Onhand Transaction From subinventory */
+                        $onhandfrom=Onhand::where([['inventory_item_id',$request->inventory_item_id[$key]],['subinventory_code',$request->subinvfrom[$key]],['primary_transaction_quantity','>=',$request->quantity[$key]]])->first();
+
+                        if($onhandfrom && $request->quantity[$key] >0){
+                            $update_stock=	$onhandfrom->primary_transaction_quantity-$request->quantity[$key];
+                            $onhand=Onhand::where(['inventory_item_id'=>$request->inventory_item_id[$key],'subinventory_code'=>$request->subinvfrom[$key]])->update(["primary_transaction_quantity"=>$update_stock]);
+                        }else {
+                            return back()->with('error', 'Stock Zero Or Stock Not Enough '.$request->quantity[$key]);
+                        }
+                        /* End Of Onhand Transaction From subinventory */
+
+                        // /* Onhand Transaction to subinventory */
+							$onhand=Onhand::where(['inventory_item_id'=>$request->inventory_item_id[$key],'subinventory_code'=>$request->subinvto[$key]])->first();
+							if(!$onhand){
+								$stock = array(
+											'inventory_item_id'=>$request->inventory_item_id[$key],
+											'subinventory_code'=>$request->subinvto[$key],
+											'primary_transaction_quantity'=>$request->quantity[$key],
+											'transaction_uom_code'=>$request->uom[$key],
+											'created_by'=>auth()->user()->id,
+											'created_at'=> date('Y-m-d H:i:s'),
+											'updated_at'=> date('Y-m-d H:i:s'),
+								);
+							Onhand::create($stock);
+							}else{
+							 $update_stock=	$onhand->primary_transaction_quantity+$request->quantity[$key];
+								$onhand=Onhand::where(['inventory_item_id'=>$request->inventory_item_id[$key],'subinventory_code'=>$request->subinvto[$key]])->update(["primary_transaction_quantity"=>$update_stock]);
+							}
+						// 	/* End Onhand Transactions */
+                        $trx_plus = array(
+                                        'transaction_id'=>MaterialTxns::all()->count()+1,
+                                        'last_updated_by'=>auth()->user()->id,
+                                        'created_by'=>auth()->user()->id,
+                                        'inventory_item_id'=>$request->inventory_item_id[$key],
+                                        'organization_id'=>'222',
+                                        'subinventory_code'=>$request->subinvfrom[$key],
+                                        'transfer_subinventory'=>$request->subinvto[$key],
+                                        'transaction_type_id'=>$request->transaction_code,
+                                        'transaction_action_id'=>$request->transaction_code,
+                                        'transaction_source_type_id'=>$request->transaction_code,
+                                        'transaction_source_name'=>$request->transaction_type,
+                                        'transaction_quantity'=>($request->quantity[$key] * -1),
+                                        'transaction_uom'=>$request->uom[$key],
+                                        'primary_quantity'=>($request->quantity[$key] * -1),
+                                        'transaction_date'=>date('d-M-Y H:i:s',strtotime($request->transaction_date)),
+                                        'transaction_reference'=>$request->reference[$key],
+                                     //   'currency_code'=>DB::table('bm_po_header_all')->where('segment1',$request->segment1)->first()->currency_code,
+                                        'receiving_document'=>$request->reference[$key],
+                                        'source_line_id'=>"",
+                                        'attribute_category'=>$request->reference[$key],
+                                        );
+                            MaterialTxns::	create($trx_plus);
+                            $trx_minus = array(
+                                'transaction_id'=>MaterialTxns::all()->count()+1,
+                                'last_updated_by'=>auth()->user()->id,
+                                'created_by'=>auth()->user()->id,
+                                'inventory_item_id'=>$request->inventory_item_id[$key],
+                                'organization_id'=>'222',
+                                'subinventory_code'=>$request->subinvto[$key],
+                                'transfer_subinventory'=>$request->subinvfrom[$key],
+                                'transaction_type_id'=>27,
+                                'transaction_action_id'=>27,
+                                'transaction_source_type_id'=>27,
+                                'transaction_source_name'=>$request->transaction_type,
+                                'transaction_quantity'=>$request->quantity[$key],
+                                'transaction_uom'=>$request->uom[$key],
+                                'primary_quantity'=>$request->quantity[$key],
+                                'transaction_date'=>date('d-M-Y H:i:s',strtotime($request->transaction_date)),
+                                'transaction_reference'=>$request->reference[$key],
+                             //   'currency_code'=>DB::table('bm_po_header_all')->where('segment1',$request->segment1)->first()->currency_code,
+                                'receiving_document'=>$request->reference[$key],
+                                'source_line_id'=>"",
+                                'attribute_category'=>$request->reference[$key],
+                                );
+                            MaterialTxns::	create($trx_minus);
+        \DB::commit();
+        }catch (Throwable $e){
+            \DB::rollback();
+        }
+        }
+        return redirect()->route('admin.mtl-transfer.index');
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        //
+    }
+}

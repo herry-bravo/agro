@@ -1,0 +1,521 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Terms;
+use App\Currency;
+use App\CurrencyGlobal;
+use App\Vendor;
+use App\AccPayHeader;
+use App\AccPayTrxLines;
+use App\GlHeader;
+use App\GlLines;
+use App\AccountCode;
+use App\ApPayment;
+use Illuminate\Http\Request;
+use App\Http\Requests\StoreAccPayHeaderRequest;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Throwable;
+
+class AccountPayableController extends Controller
+{
+
+    public function index()
+    {
+        return view('admin.accountPayable.index');
+    }
+
+    public function create()
+    {
+        $terms = Terms::where('term_category','PAYMENT')->get();
+        $currency = CurrencyGlobal::where('currency_status', 1)->get();
+        $vendor = Vendor::all()->take(3);
+
+        $header_id = DB::table('bm_ap_invoices_all')->get()->last();
+        $header_id = isset($header_id->invoice_id) ?  $header_id->invoice_id + 1 : 1;
+        $voucher_num = str_pad($header_id,6,"0",STR_PAD_LEFT);
+
+        $tax =\App\Tax::where(['type_tax_use'=>'Purchase', 'tax_code'=>'TAX-11'])->first();
+        return view('admin.accountPayable.create',compact('terms','currency','vendor','tax','voucher_num'));
+    }
+
+    public function store(Request $request){
+       try {
+        DB::beginTransaction();
+            /* Header */
+            $header_id = DB::table('bm_ap_invoices_all')->get()->last();
+            $header_id = $header_id->invoice_id + 1;
+            $line_number = 1;
+
+            $voucher_num = str_pad($header_id,6,"0",STR_PAD_LEFT);
+
+            $validate_invoice = AccPayHeader::where('invoice_num',$request->invoice_num)->first();
+            if($validate_invoice){
+                return back()->with('error', 'Invoice Already Inputed');
+            }
+
+            $invoice_amount = $request->invoice_amount;
+            $invoice_amount = floatval(preg_replace('/[^\d.]/', '', $invoice_amount));
+
+            $rate = \App\CurrencyRate::where('currency_id', $request->customer_currency)->select('rate','rate_date','currency_id')->latest('rate_date')->first();
+
+            $head =AccPayHeader::findorNew($request->id);
+            $head->invoice_id =$header_id;
+            $head->invoice_num =$request->invoice_num;
+            $head->voucher_num =$voucher_num;
+            $head->vendor_id =$request->vendor_id;
+            $head->invoice_amount =$invoice_amount;
+            $head->invoice_currency_code =$request->customer_currency;
+            $head->invoice_type_lookup_code =$request->invoice_type_lookup_code;
+            $head->invoice_date =$request->datepicker1;
+            $head->gl_date =$request->datepicker2;
+            $head->invoice_received_date =$request->duedate;
+            $head->terms_id =$request->terms_id;
+            $head->routing_status_lookup_code =0;
+            $head->exchange_rate =$rate->rate ?? 0;
+            $head->exchange_date =$rate->rate_date ?? '';
+            $head->job_definition_name=$request->job_definition_name;
+            $head->total_tax_amount =$request->tax_amount;
+            $head->supplier_tax_invoice_number =$request->tax_code ?? 'TAX-00';
+            $head->supplier_tax_exchange_rate =$request->tax_rate ?? 0;
+            $head->created_by =auth()->user()->id;
+            $head->save();
+
+            // dd($request->account_segment);
+            foreach($request->account_segment as $key =>$account_segment){
+                if($request->line_type_lookup_code[$key] == false){
+                    $tax = $request->stat_amount [$key] * $request->tax_rate;
+                    $amount = $request->stat_amount [$key] + $tax;
+                    $data = array(
+                        'invoice_id'=>$header_id,
+                        'line_id'=> $line_number,
+                        'inventory_item_id'=>$request->inventory_item_id [$key],
+                        'po_header_id'=>$request->po_header_id [$key] ?? '',
+                        'po_line_id'=>$request->po_line_id [$key] ?? '',
+                        'item_description'=>$request->item_description [$key],
+                        'rcv_transaction_id'=>$request->receipt_num [$key] ?? '',
+                        'receipt_currency_code'=>$request->customer_currency?? '',
+                        'quantity_invoiced'=>$request->quantity_invoiced[$key],
+                        'unit_price'=>$request->unit_price [$key],
+                        'account_segment'=>$request->account_segment [$key],
+                        'stat_amount'=>$request->stat_amount [$key],
+                        'original_amount'=>$request->stat_amount [$key],
+                        'amount'=>$amount,
+                        'total_rec_tax_amount'=>$request->stat_amount [$key] ?? 0,
+                        'total_nrec_tax_amount'=>$request->total_nrec_tax_amount [$key] ?? 0,
+                        'tax'=>$tax,
+                        'line_type_lookup_code'=>$request->line_type_lookup_code [$key],
+                        'unit_meas_lookup_code'=>$request->unit_meas_lookup_code [$key],
+                        'tax_rate'=>$request->tax_rate,
+                        'tax_rate_code'=>$request->tax_code,
+                        'job_definition_name'=>$request->job_definition_name,
+                        'created_at'=>date('Y-m-d H:i:s'),
+                        'updated_at'=>date('Y-m-d H:i:s'),
+                    );
+
+                    AccPayTrxLines::create($data);
+                }else{
+                    // dd("masuk");
+                    $acc = array(
+                        'invoice_id'=>$header_id,
+                        'line_id'=> $line_number,
+                        'item_description'=>$request->item_description [$key],
+                        'account_segment'=>$request->account_segment [$key],
+                        'total_rec_tax_amount'=>$request->total_rec_tax_amount [$key] ?? 0,
+                        'total_nrec_tax_amount'=>$request->total_nrec_tax_amount [$key] ?? 0,
+                        'line_type_lookup_code'=>$request->line_type_lookup_code [$key],
+                        'job_definition_name'=>$request->job_definition_name,
+                        'created_at'=>date('Y-m-d H:i:s'),
+                        'updated_at'=>date('Y-m-d H:i:s'),
+                    );
+                    AccPayTrxLines::create($acc);
+                }
+                $line_number++;
+            }
+
+            DB::commit();
+
+        }catch (Throwable $e){
+            DB::rollback();
+        }
+
+        if($request->job_definition_name == 'Payable'){
+            return redirect()->route('admin.ap.index')->with('success', 'Data Is Inputed');
+        }else{
+            return redirect()->route('admin.credit-memo.index')->with('success', 'Data Is Inputed');
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+        $ap = AccPayHeader::where('invoice_id',$id)->first();
+    // dd($ap);
+        $terms = Terms::where('term_category','PAYMENT')->get();
+        $currency = CurrencyGlobal::where('currency_status', 1)->get();
+        $vendor = Vendor::all()->take(3);
+        $ap_lines = AccPayTrxLines::where('invoice_id','=',$id)->get();
+        $lines = AccPayTrxLines::where('invoice_id','=',$id)->first();
+        $payment = ApPayment::where('invoice_id','=',$id)->first();
+        $acc = AccountCode::all();
+        $ba = \App\BankAccount::all();
+        $journal = \App\Category::orderBy('id','desc')->where('account_type','Bank & Cash')->get();
+        return view('admin.accountPayable.edit',compact('ap','ap_lines','terms','currency','vendor','acc','ba','journal','lines','payment'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        switch ($request->input('action')) {
+            case 'save':
+                try {
+                    DB::beginTransaction();
+
+                        $invoice_amount = $request->invoice_amount;
+                        $invoice_amount = floatval(preg_replace('/[^\d.]/', '', $invoice_amount));
+
+                        $head =AccPayHeader::find($request->ap_id);
+                        $head->invoice_id =$request->invoice_id;
+                        $head->invoice_num =$request->invoice_num;
+                        $head->vendor_id =$request->vendor_id;
+                        $head->invoice_amount =$invoice_amount;
+                        $head->payment_amount_total =$invoice_amount;
+                        $head->invoice_currency_code =$request->customer_currency;
+                        $head->invoice_type_lookup_code =$request->invoice_type_lookup_code;
+                        $head->invoice_date =$request->datepicker1;
+                        $head->gl_date =$request->datepicker2;
+                        $head->invoice_received_date =$request->duedate;
+                        $head->terms_id =$request->terms_id;
+                        $head->total_tax_amount =$request->tax_amount;
+                        $head->supplier_tax_invoice_number =$request->tax_rate_code ?? 'TAX-00';
+                        $head->supplier_tax_exchange_rate =$request->tax_rate ?? 0;
+                        $head->save();
+
+                        // dd($head);
+                        foreach($request->line_type_lookup_code as $key =>$line_type_lookup_code){
+
+                            if(empty($request->line_id[$key])){
+
+                                $tax = $request->stat_amount [$key] * $request->tax_rate;
+                                $amount = $request->stat_amount [$key] + $tax;
+                                $data = array(
+                                    'invoice_id'=>$request->invoice_id,
+                                    'line_id'=> $line_number,
+                                    'inventory_item_id'=>$request->inventory_item_id [$key],
+                                    'po_header_id'=>$request->po_header_id [$key] ?? '',
+                                    'po_line_id'=>$request->po_line_id [$key] ?? '',
+                                    'item_description'=>$request->item_description [$key],
+                                    'rcv_transaction_id'=>$request->receipt_num [$key] ?? '',
+                                    'receipt_currency_code'=>$request->customer_currency?? '',
+                                    'quantity_invoiced'=>floatval(preg_replace('/[^\d.]/', '', $request->quantity_invoiced[$key])),
+                                    'unit_price'=>$request->unit_price [$key],
+                                    'account_segment'=>$request->account_segment [$key],
+                                    'stat_amount'=>$request->stat_amount [$key],
+                                    'amount'=>$amount,
+                                    'original_amount'=>$request->stat_amount [$key],
+                                    'total_rec_tax_amount'=>$request->stat_amount [$key] ?? 0,
+                                    'total_nrec_tax_amount'=>$request->total_nrec_tax_amount [$key] ?? 0,
+                                    'unit_meas_lookup_code'=>$request->unit_meas_lookup_code [$key],
+                                    'line_type_lookup_code'=>$request->line_type_lookup_code [$key],
+                                    'job_definition_name'=>$request->job_definition_name,
+                                    'tax_rate'=>$request->tax_rate,
+                                    'tax_rate_code'=>$request->tax_code,
+                                    'tax'=>$tax,
+                                    'created_at'=>date('Y-m-d H:i:s'),
+                                    'updated_at'=>date('Y-m-d H:i:s'),
+                                );
+                                AccPayTrxLines::create($data);
+                                $line_number++;
+                            }
+                            else{
+                                $data_lines_ap =AccPayTrxLines::find($request->id[$key]);
+                                $data_lines_ap->invoice_id=$request->invoice_id;
+                                $data_lines_ap->line_id= $request->line_id[$key];
+                                $data_lines_ap->item_description=$request->label [$key];
+                                $data_lines_ap->account_segment=$request->account_segment [$key];
+                                $data_lines_ap->total_rec_tax_amount=$request->total_rec_tax_amount [$key] ?? 0;
+                                $data_lines_ap->total_nrec_tax_amount=$request->total_nrec_tax_amount [$key] ?? 0;
+                                $data_lines_ap->updated_at=date('Y-m-d H:i:s');
+
+                                if($data_lines_ap->line_type_lookup_code == 0){
+
+
+                                   // $amount = $request->stat_amount [$key] + $tax;
+
+                                    $data_lines_ap->inventory_item_id=$request->inventory_item_id[$key];
+
+                                    $data_lines_ap->receipt_currency_code=$request->customer_currency ?? '';
+
+                                    $data_lines_ap->quantity_invoiced=floatval(preg_replace('/[^\d.]/', '', $request->quantity_invoiced[$key]));
+
+                                    $data_lines_ap->unit_price=$request->unit_price[$key];
+                                    $data_lines_ap->stat_amount=floatval(preg_replace('/[^\d.]/', '', $request->stat_amount[$key]));
+                                    $data_lines_ap->original_amount=floatval(preg_replace('/[^\d.]/', '', $request->stat_amount[$key]));
+                                    $data_lines_ap->unit_meas_lookup_code=$request->unit_meas_lookup_code[$key];
+
+                                    $data_lines_ap->tax_rate=$request->tax_rate ?? 0;
+
+                                    $data_lines_ap->tax_rate_code=$request->tax_rate_code ?? 'TAX-00';
+
+                                   $data_lines_ap->tax= floatval(preg_replace('/[^\d.]/', '', $request->stat_amount[$key])) * $request->tax_rate;
+
+                                }
+                                $data_lines_ap->save();
+                            }
+
+                        }
+                        DB::commit();
+
+                    }catch (Throwable $e){
+                        DB::rollback();
+                    }
+
+            break;
+            case 'status':
+                try {
+                    \DB::beginTransaction();
+
+                    AccPayHeader::where('id',$request->ap_id)->update(['routing_status_lookup_code'=>$request->status,'total_tax_amount' =>$request->tax_amount]);
+                    if($request->status == 3){
+                        dd($request->status);
+                        // $head = AccPayHeader::find($request->ap_id);
+                        // // dd($request->invoice_id);
+                        // $head->delete();
+                        AccPayHeader::where('id',$request->ap_id)->update(['routing_status_lookup_code'=>$request->status]);
+                        $line = AccPayTrxLines::where('invoice_id',$id)->first();
+                        AccPayTrxLines::where('invoice_id',$head->invoice_id)->delete();
+                        $test =\App\RcvHeader::where('receipt_num',(int)$line->rcv_transaction_id)->update(['invoice_status_code'=>0]);
+                        if($request->job_definition_name == 'Payable'){
+                            return redirect()->route('admin.ap.edit',$id)->with('warning', 'Data Canceled');
+                        }else{
+                            return redirect()->route('admin.credit-memo.index')->with('success', 'Data Is Canceled');
+                        }
+                    }else if($request->status==2){
+                        // dd($request->calculate_credit);
+                        $date = date('M y');
+                        $header_id = DB::table('bm_gl_je_headers')->get()->last();
+                        $head = GlHeader::findorNew($request->glId);
+                        $id=$header_id->id+1;
+                        $head->je_header_id =$id;
+                        $head->name=$request->job_definition_name.' '.$request->vendor_name.' - '.$date;
+                        $head->created_by=$request->created_by;
+                        $head->last_updated_by=$request->created_by;
+                        $head->je_source='Import';
+                        $head->status=$request->status;
+                        $head->je_batch_id=$request->je_batch_id ;
+                        $head->default_effective_date=$request->duedate;
+                        $head->period_name=$date;
+                        $head->external_reference=$request->invoice_num;
+                        $head->je_category='Purchase order';
+                        $head->currency_code=$request->customer_currency;
+                        $head->currency_conversion_date=$request->exchange_date;
+                        $head->currency_conversion_rate=$request->exchange_rate;
+                        $head->running_total_dr=$request->calculate_debit;
+                        $head->running_total_cr=$request->calculate_credit;
+                        $head->save();
+                        foreach($request->label as $key =>$label){
+                            $data = array(
+                                'je_header_id'=>$id,
+                                'je_line_num'=> $key+1,
+                                'last_updated_by'=>auth()->user()->id,
+                                'ledger_id'=>$request->je_batch_id ,
+                                'code_combination_id'=>$request->account_segment[$key] ?? '', //
+                                'period_name'=>$date,
+                                'effective_date'=>$request->duedate ,
+                                'status'=>$request->status,
+                                'created_by'=>$request->created_by,
+                                'entered_dr'=>$request->total_rec_tax_amount[$key] ?? 0, //
+                                'entered_cr'=>$request->total_nrec_tax_amount [$key], //
+                                'description'=>$request->label [$key], //
+                                'reference_1'=>$request->vendor_name,
+                                'currency_conversion_date'=>$request->exchange_date,
+                                'currency_conversion_rate'=>$request->exchange_rate,
+                                'tax_code'=>$request->tax_rate_code, //
+                                'currency_code'=>$request->customer_currency, //
+                                'created_at'=>date('Y-m-d H:i:s'),
+                                'updated_at'=>date('Y-m-d H:i:s'),
+                            );
+                            GlLines::create($data);
+                        }
+                        \DB::commit();
+                        return redirect()->route('admin.gl.edit',$id)->with('success', 'Data Stored');
+                    }
+                    \DB::commit();
+                }catch (Throwable $e){
+                    \DB::rollback();
+                }
+
+
+            break;
+            case 'payment':
+                try {
+                    \DB::beginTransaction();
+                    $amount_paid = floatval(preg_replace('/[^\d.]/', '', $request->amount_paid));
+                    if($amount_paid != $request->amount){
+                        $paid_status = 'Partial';
+                    }else{
+                        $paid_status = 'Paid';
+                    }
+                    //Status update
+                    $apUpdate = AccPayHeader::where('id',$request->ap_id)->first();
+                    $apUpdate->routing_status_lookup_code = $request->paid_status;
+                    $apUpdate->amount_paid =  ($apUpdate->amount_paid ?? 0)+$amount_paid;
+                    $apUpdate->approved_amount =($apUpdate->approved_amount ?? 0) + $amount_paid;
+                    $apUpdate->payment_status_flag = $paid_status;
+                    $apUpdate->save();
+
+                    $date = date('M y');
+                    $invoice_payment_id = DB::table('bm_ap_invoice_payments_id')->get()->last();
+                    $invoice_payment_id = ($invoice_payment_id->invoice_payment_id ?? 0)+1;
+                    $payment=ApPayment::findorNew($id);
+
+                    $payment->accounting_date = $request->accounting_date;
+                    $payment->amount = $amount_paid;
+                    $payment->invoice_id = $request->invoice_num;
+                    $payment->invoice_payment_id = $invoice_payment_id;
+                    $payment->last_updated_by = auth()->user()->id;
+                    $payment->payment_num = $request->je_batch_id;
+                    $payment->period_name = $date;
+                    $payment->posted_flag = 4;
+                    $payment->set_of_books_id = \App\Category::where('category_code',$request->attribute_category)->first()->attribute1;
+                    $payment->accts_pay_code_combination_id = $request->accts_pay_code_combination_id;
+                    $payment->created_by = $request->created_by;
+                    $payment->bank_account_num = \App\BankAccount::where('bank_account_id',$request->bank_num)->first()->bank_acct_use_id ; //
+                    $payment->bank_account_type = \App\BankAccount::where('bank_account_id',$request->bank_num)->first()->attribute_category; //
+                    $payment->bank_num = $request->bank_num; //
+                    $payment->payment_base_amount = $request->amount;
+                    $payment->invoice_payment_type = $request->invoice_payment_type;
+                    $payment->payment_type = 'Outbound';
+                    $payment->invoicing_vendor_site_id = $request->vendor_id;
+                    $payment->invoice_currency_code = $request->customer_currency;
+                    $payment->payment_currency_code = $request->payment_currency_code;
+                    $payment->global_attribute1 = $request->global_attribute1;
+                    $payment->attribute1 = $request->memo;
+                    $payment->attribute_category = $request->attribute_category;
+                    $payment->exchange_date=$request->exchange_date;
+                    $payment->exchange_rate=$request->exchange_rate;
+                    $payment->created_at = date('Y-m-d H:i:s');
+                    $payment->updated_at = date('Y-m-d H:i:s');
+                    $payment->save();
+
+                    //GL Create
+                    $header_id = DB::table('bm_gl_je_headers')->get()->last();
+                    $id=$header_id->je_header_id+1;
+                    $head = GlHeader::findorNew($request->glid);
+                    $head->je_header_id =$id;
+                    $head->name=$request->vendor_name.' Payment Rp. '.$amount_paid; //
+                    $head->created_by=$request->created_by;
+                    $head->last_updated_by=$request->created_by;
+                    $head->je_source='Import'; //
+                    $head->status=$request->paid_status;
+                    $head->je_batch_id=$request->je_batch_id ;
+                    $head->default_effective_date=$request->accounting_date;
+                    $head->period_name=$date;
+                    $head->external_reference=$invoice_payment_id;
+                    $head->je_category='Bank';
+                    $head->currency_code=$request->payment_currency_code;
+                    $head->running_total_dr=$request->amount;
+                    $head->running_total_cr=$request->amount;
+                    $head->currency_conversion_date=$request->exchange_date;
+                    $head->currency_conversion_rate=$request->exchange_rate;
+                    $head->save();
+                    foreach($request->payment as $key =>$label){
+                        if($request->payment[$key] == 21010000){
+                            $entered_dr= 0;
+                            $entered_cr= $request->amount;
+                            $label = 'Outstanding Payment';
+                        }else{
+                            $entered_cr= 0;
+                            $entered_dr= $request->amount;
+                            $label = 'Trade AP';
+                        }
+                        $data = array(
+                            'je_header_id'=>$id,
+                            'je_line_num'=> $key+1,
+                            'last_updated_by'=>auth()->user()->id,
+                            'ledger_id'=>$request->je_batch_id ,
+                            'code_combination_id'=>$request->payment[$key] ?? '', //
+                            'period_name'=>$date,
+                            'effective_date'=>$request->accounting_date ,
+                            'status'=>$request->paid_status,
+                            'created_by'=>$request->created_by,
+                            'entered_dr'=>$entered_dr,
+                            'entered_cr'=>$entered_cr,
+                            'description'=>$label,
+                            'reference_1'=>$request->vendor_name,
+                            'currency_conversion_date'=>$request->exchange_date,
+                            'currency_conversion_rate'=>$request->exchange_rate,
+                            'tax_code'=>$request->tax_code, //
+                            'currency_code'=>$request->customer_currency, //
+                            'created_at'=>date('Y-m-d H:i:s'),
+                            'updated_at'=>date('Y-m-d H:i:s'),
+                        );
+                        GlLines::create($data);
+                    }
+
+
+                    \DB::commit();
+                    return redirect()->route('admin.gl.edit',$id)->with('success', 'Data Stored');
+                }catch (Throwable $e){
+                    \DB::rollback();
+                }
+
+
+            break;
+        }
+         return back()->with('success', 'Data Is Updated');
+     }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+
+    public function destroy($id)
+    {
+        $line = AccPayTrxLines::where('invoice_id',$id)->first();
+        $test =\App\RcvHeader::where('receipt_num',(int)$line->rcv_transaction_id)->update(['invoice_status_code'=>0]);
+        $ap = AccPayHeader::where('invoice_id',$id)->delete();
+        $ap_line = AccPayTrxLines::where('invoice_id',$id)->delete();
+
+        return back()->with('success', 'Data Is Deleted');
+    }
+
+    public function massDestroy(MassDestroyClientRequest $request)
+    {
+        AccPayHeader::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
+    }
+    public function data()
+    {
+        return view('admin.accountPayable.report');
+    }
+}

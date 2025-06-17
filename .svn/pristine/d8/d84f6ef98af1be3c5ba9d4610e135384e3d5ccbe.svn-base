@@ -1,0 +1,179 @@
+@extends('layouts.admin')
+@section('content')
+@can('order_create')
+@endcan
+<div class="card">
+    <div class="card-header m-1">
+        <h6 class="card-title">
+            <a href="" class="breadcrumbs__item">{{ trans('cruds.quotation.po') }} </a>
+            <a href="{{ route("admin.bom.index") }}" class="breadcrumbs__item">  Report </a>
+        </h6>
+        @can('role_create')
+        <div class="row">
+        </div>
+        @endcan
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class=" table table-bordered table-striped table-hover datatable datatable-Order">
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">
+                            <input type="checkbox" class='form-check-input dt-checkboxes' id="head-cb">
+                        </th>
+                        <th>
+                            {{ trans('cruds.rcv.fields.orderno') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.purchaseOrder.fields.customer_code') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.order.fields.customer_name') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.rcv.fields.product') }}
+                        </th>
+                        <th class="text-end">
+                            {{ trans('cruds.purchaseorder.fields.price') }}
+                        </th>
+                        <th class="text-end">
+                            {{ trans('cruds.rcv.fields.qty') }}
+                        </th>
+                        <th class="text-end">
+                            {{ trans('cruds.purchaseorder.fields.qtyrcv') }}
+                        </th>
+                        <th class="text-end">
+                            {{ trans('cruds.rcv.fields.outstandingqty') }}
+                        </th>
+                        <th class="text-end">
+                            {{ trans('cruds.quotation.fields.currency') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.purchaseorder.fields.buyer') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.purchaseorder.fields.status') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.order.fields.created_at') }}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($purchase_report as $key => $order)
+                    <tr data-entry-id="{{ $order->id }}">
+                        <td>
+                            {{ $order->id ?? '' }}
+                        </td>
+                        <td>
+                            {{ $order->PurchaseOrder->segment1 ?? '' }}
+                        </td>
+                        <td>
+                            {{ $order->PurchaseOrder->vendor_id ?? '' }}
+                        </td>
+                        <td>
+                            {{ $order->PurchaseOrder->Vendor->vendor_name ?? '' }}
+                        </td>
+                        <td>
+                            {{ $order->itemMaster->item_code ?? '' }} {{ $order->item_description ?? '' }}
+                        </td>
+                        <td class="text-end">
+                            {{ $order->unit_price ?? '' }}
+                        </td>
+                        <td class="text-end">
+                            {{ $order->po_quantity ?? '' }}
+                        </td>
+                        <td class="text-end">
+                            {{ $order->quantity_receive ?? 0 }}
+                        </td>
+                        <td class="text-end">
+                            {{ $order->po_quantity - $order->quantity_receive  }}
+                        </td>
+                        <td class="text-center">
+                            {{ $order->PurchaseOrder->currency_code ?? '' }}
+                        </td>
+                        <td>
+                            {{ $order->PurchaseOrder->User->name ?? '' }}
+                        </td>
+                        <td>
+                            {{ $order->PurchaseOrder->TrxStatuses->trx_name ?? '' }}
+                        </td>
+                        <td>
+                            {{ $order->created_at->isoFormat('Y-MM-D') ?? '' }}
+                        </td>
+
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+
+    </div>
+</div>
+@endsection
+@section('scripts')
+@parent
+<script>
+    $(function() {
+        let dtButtons = $.extend(true, [], $.fn.dataTable.defaults.buttons)
+        @can('order_delete')
+        let deleteButtonTrans = '{{ trans('
+        global.datatables.delete ') }}'
+        let deleteButton = {
+            text: deleteButtonTrans
+            , url: "{{ route('admin.orders.massDestroy') }}"
+            , className: 'btn-danger'
+            , action: function(e, dt, node, config) {
+                var ids = $.map(dt.rows({
+                    selected: true
+                }).nodes(), function(entry) {
+                    return $(entry).data('entry-id')
+                });
+
+                if (ids.length === 0) {
+                    alert('{{ trans('
+                        global.datatables.zero_selected ') }}')
+
+                    return
+                }
+
+                if (confirm('{{ trans('
+                        global.areYouSure ') }}')) {
+                    $.ajax({
+                            headers: {
+                                'x-csrf-token': _token
+                            }
+                            , method: 'POST'
+                            , url: config.url
+                            , data: {
+                                ids: ids
+                                , _method: 'DELETE'
+                            }
+                        })
+                        .done(function() {
+                            location.reload()
+                        })
+                }
+            }
+        }
+        dtButtons.push(deleteButton)
+        @endcan
+
+        $.extend(true, $.fn.dataTable.defaults, {
+            order: [
+                [1, 'desc']
+            ]
+            , pageLength: 10
+        , });
+        $('.datatable-Order:not(.ajaxTable)').DataTable({
+            buttons: dtButtons
+        })
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+            $($.fn.dataTable.tables(true)).DataTable()
+                .columns.adjust();
+        });
+    })
+
+</script>
+@endsection

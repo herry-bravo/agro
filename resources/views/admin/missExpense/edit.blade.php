@@ -1,0 +1,277 @@
+@extends('layouts.admin')
+@section('styles')
+@endsection
+@push('script')
+    <script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+@endpush
+@section('breadcrumbs')
+
+      <a href="{{ route("admin.missExpense.index")}}" class="breadcrumbs__item">Purchase Order</a>
+      <a href="{{ route("admin.missExpense.index")}}" class="breadcrumbs__item">Miscellaneous Expense</a>
+      <a href="" class="breadcrumbs__item active">Edit</a>
+
+@endsection
+@section('content')
+<meta name="csrf-token" id="csrf-token" content="{{ csrf_token() }}">
+<section id="multiple-column-form">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title">
+                        <a href="{{ route('admin.missExpense.index') }}"
+                            class="breadcrumbs__item">{{ trans('cruds.quotation.po') }} </a>
+                        <a href="{{ route('admin.missExpense.index') }}"
+                            class="breadcrumbs__item">{{ trans('cruds.missExpense.title') }} </a>
+                        <a href=""
+                            class="breadcrumbs__item">Edit </a>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route("admin.missExpense.update",[$miss->attributenumber]) }}" method="POST" enctype="multipart/form-data" class="form-horizontal create_purchase" >
+                        @csrf
+                        @method('PUT')
+                        <div class="row mt-2 mb-1">
+                            <div class="col-md-4">
+                                <label class="col-sm-0 control-label" for="number">{{ trans('cruds.missExpense.head.date') }}</label>
+                                <input type="date" id="datePicker" name="gl_date" class="form-control datepicker" value="" required >
+                                <input type="hidden" hidden id="created_by" name="created_by" value="{{ auth()->user()->id }}" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.aju') }} </label>
+                                <select id="aju" name="attributenumber" class="form-control select2">
+                                    <option value="{{$miss->attributenumber}}">{{$miss->attributenumber}}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="col-sm-0 control-label" for="number">{{ trans('cruds.missExpense.head.rate') }}</label>
+                                <input type="text" id="rate" name="intattribute1" class="form-control  text-end" value="{{$miss->intattribute1}}" required >
+                            </div>
+                        </div>
+                        <div class="row mt-2 mb-1">
+                            <div class="col-md-3">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.trucking') }}</label>
+                                <input type="number" id="trucking" class="form-control text-end" value="{{(float)$miss->intattribute10}}" name="intattribute10"  >
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.doc') }}</label>
+                                <input type="number" id="doc_fee" class="form-control text-end" value="{{(float)$miss->intattribute11}}"  name="intattribute11"  >
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.adm') }}</label>
+                                <input type="number" id="admin" class="form-control text-end" value="{{(float)$miss->intattribute12}}" name="intattribute12"  >
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.service') }}</label>
+                                <input type="number" id="service" class="form-control text-end" value="{{(float)$miss->intattribute13}}" name="intattribute13"  >
+                            </div>
+                        </div>
+                        <div class="row mt-2 mb-1">
+                            <div class="col-md-3">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.cleaning') }}</label>
+                                <input type="number" id="cleaning" class="form-control text-end" value="{{(float)$miss->intattribute14}}" name="intattribute14"  >
+                            </div>
+                            <div class="col-md-3">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.chanel') }}</label>
+                                <input type="number" id="chanel" class="form-control text-end" value="{{(float)$miss->intattribute15}}" name="intattribute15"  >
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.emkl1') }}</label>
+                                <input type="number" id="emkl" class="form-control text-end" value="{{(float)$miss->intattribute16}}" name="intattribute16"  >
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.lift') }}</label>
+                                <input type="number" id="lift" class="form-control text-end" value="{{(float)$miss->intattribute17}}" name="intattribute17"  >
+                            </div>
+                        </div>
+                        <div class="row mt-2 mb-1">
+
+                            <div class="col-md-3">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.PIB') }}</label>
+                                <input type="number" id="pib" class="form-control text-end" value="{{(float)$miss->intattribute18}}" name="intattribute18"  >
+                            </div>
+                            <div class="col-md-3">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.miss') }}</label>
+                                <input type="number" id="miscellaneous" class="form-control text-end" value="{{(float)$miss->intattribute19}}" name="intattribute19"  >
+                            </div>
+                            <div class="col-md-1">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.cont') }}</label>
+                                <input type="number" id="cont" class="form-control text-end" value="{{(float)$miss->intattribute9}}" name="container"  >
+                            </div>
+                            <div class="col-md-4">
+                                <label class="col-sm-0 control-label" for="site">{{ trans('cruds.missExpense.head.total') }}</label>
+                                <label class="form-control text-end head_total" id="head_total">{{number_format($miss->intattribute3)}}</label>
+                                <input type="hidden" id="" class="form-control text-end" value="{{(float)$miss->intattribute3}}" name="item_code"  >
+                            </div>
+                            <div class="col-md-1 mt-1">
+                                <button type="button" id="button_1" class="btn btn-ligth btn-sm head_expense" style="position: inherit;"><i class="" data-feather="plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="row mt-2">
+                        <div class="box box-default">
+                                <div class="card-header">
+                                    <nav>
+                                        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                            <button class="nav-link active" id="nav-component-tab" data-bs-toggle="tab" data-bs-target="#nav-component" type="button" role="tab" aria-controls="nav-component" aria-selected="true">
+                                                <span class="bs-stepper-box">
+                                                    <i data-feather="briefcase" class="font-medium-3"></i>
+                                                </span>
+                                                Component
+                                            </button>
+                                            <button class="nav-link expenseCalculate" id="nav-micellaneous-tab" data-bs-toggle="tab" data-bs-target="#nav-micellaneous" type="button" role="tab" aria-controls="nav-micellaneous" aria-selected="false">
+                                                <span class="bs-stepper-box">
+                                                    <i data-feather="dollar-sign" class="font-medium-3"></i>
+                                                </span>
+                                                Micellaneous
+                                            </button>
+                                        </div>
+                                    </nav>
+                                </div>
+                                <hr>
+                                <div class="tab-content" id="nav-tabContent" >
+                                    {{-- Tab Component --}}
+                                    <div class="tab-pane fade show active" id="nav-component" role="tabpanel" aria-labelledby="nav-component-tab">
+                                        <div class="box-body table-responsive scrollx tableFixHead" style="height: 380px;overflow: scroll;">
+                                            <table id="" class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="text-center">Order Number</th>
+                                                        <th class="text-center">Item Code</th>
+                                                        <th class="text-center">Description</th>
+                                                        <th class="text-center">UOM</th>
+                                                        <th class="text-center">Received QTY</th>
+                                                        <th class="text-center">Price</th>
+                                                        <th class="text-center">Total</th>
+                                                        <th class="text-center">Conversion (IDR)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @php $i = 0; $total = 0; $asuransi=0;@endphp
+                                                    @foreach ($data as $key =>$row)
+                                                        <tr class="tr_input">
+                                                            <td>
+                                                                <label class="form-control text-start" id="tax_main">{{$row->order_number}}</label>
+                                                                <input type="hidden" name="order_number[]" class="form-control" value="{{$row->order_number }}" required>
+                                                            </td>
+                                                            <td>
+                                                                <label class="form-control text-start" id="tax_main">{{$row->itemmaster->item_code}}</label>
+                                                                <input type="hidden" name="inventory_item_id[]" class="form-control" value="{{$row->inventory_item_id }}" required>
+                                                            </td>
+                                                            <td>
+                                                                <label class="form-control text-start" id="tax_main">{{$row->item_description}}</label>
+                                                                <input type="hidden" name="item_description[]" class="form-control" value="{{$row->item_description }}" required>
+                                                            </td>
+                                                            <td>
+                                                                <label class="form-control text-center" id="tax_main">{{$row->purchaseorderdet->po_uom_code}}</label>
+                                                                <input type="hidden" name="item_id[]" id="uom_{{$key+1}}" class="form-control" value="{{$row->purchaseorderdet->po_uom_code }}" required>
+                                                            </td>
+                                                            <td>
+                                                                <label class="form-control text-end" id="tax_main">{{$row->intattribute2}}</label>
+                                                                <input type="hidden" name="intattribute2[]" id="rcvQty_{{$key+1}}" class="form-control" value="{{$row->intattribute2 }}" required>
+                                                            </td>
+                                                            <td>
+                                                                <label class="form-control text-end" id="tax_main">{{number_format($row->shipment_unit_price,3)}}</label>
+                                                                <input type="hidden" name="shipment_unit_price[]" id="price_{{$key+1}}" class="form-control price" value="{{ $row->shipment_unit_price}}" required>
+                                                            </td>
+                                                            @php
+                                                                $total = $row->shipment_unit_price  * $row->intattribute2
+                                                            @endphp
+                                                            <td>
+                                                                <label class="form-control text-end" id="tax_main">{{number_format($total,3)}}</label>
+                                                                <input type="hidden" name="item_id[]" id="total_{{$key+1}}" class="form-control"  value="{{$total}}" required>
+                                                            <td>
+                                                                <label class="form-control text-end conversionRate" id="tax_main">{{number_format($total * $row->intattribute1,3)}}</label>
+                                                                <input type="hidden" name="item_id[]" id="conversion_{{$key+1}}" class="form-control" value="{{$total * $row->intattribute1}}" required>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table></br>
+                                        </div>
+                                    </div>
+                                    {{-- Tab Misscellaneous --}}
+                                    <div class="tab-pane fade" id="nav-micellaneous" role="tabpanel" aria-labelledby="nav-micellaneous-tab">
+                                        <div class="box-body table-responsive" style="height: 380px;overflow: scroll;">
+                                            <table  class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="text-center">Logistic Cost</th>
+                                                        <th class="text-center">KSO</th>
+                                                        <th class="text-center">Asuransi</th>
+                                                        <th class="text-center">Later of Credit</th>
+                                                        <th class="text-center">Cost Total</th>
+                                                        <th class="text-center">Cost each Item</th>
+                                                        <th class="text-center">Price each Item</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @php $i = 0; $total = 0; $asuransi=0;@endphp
+                                                    @foreach ($data as $key =>$row)
+                                                        <tr class="tr_input">
+                                                            <td>
+                                                                <label class="form-control text-end head_total" id="tax_main">{{number_format($row->intattribute3)}}</label>
+                                                                <input type="hidden"  name="intattribute3[]" id="logistic_{{$key+1}}" class="form-control text-end  logistic" value="{{$row->intattribute3}}" required>
+                                                                <input type="hidden"  name="item_id[]" id="lineId_{{$key+1}}" class="form-control text-end" value="{{$row->shipment_header_id}}" required>
+                                                                <input type="hidden"  name="item_id[]" id="aju_{{$key+1}}" class="form-control text-end" value="{{$row->attributenumber}}" required>
+                                                                <input type="hidden"  name="id[]" id="" class="form-control text-end" value="{{$row->id}}" required>
+                                                                <input type="hidden"  name="rcv_id[]" class="form-control text-end" value="{{$row->id}}" required>
+                                                                <input type="hidden"  name="po_line_id[]" class="form-control text-end" value="{{$row->po_line_id}}" required>
+                                                                <input type="hidden"  name="po_line_location_id[]" class="form-control text-end" value="{{$row->po_line_location_id}}" required>
+                                                                <input type="hidden"  name="item_id[]" id="rate_{{$key+1}}" class="form-control text-end  " value="{{$row->intattribute1}}" required>
+                                                                <input type="hidden"  name="item_id[]" id="price_{{$key+1}}" class="form-control text-end sum1 " value="{{$row->purchaseorderdet->base_model_price ?? $row->shipment_unit_price}}" required>
+                                                            </td>
+                                                            <td>
+                                                                <label class="form-control text-end kso" id="kso2_{{$key+1}}">{{number_format($row->intattribute4,2)}}</label>
+                                                                <input type="hidden" name="intattribute4[]" id="kso_{{$key+1}}" class="form-control text-end kso" value="{{$row->intattribute4}}" required>
+                                                            </td>
+                                                            <td>
+                                                                <label class="form-control text-end" id="asuransi2_{{$key+1}}">{{number_format($row->intattribute5,2)}}</label>
+                                                                <input type="hidden" name="intattribute5[]" id="asuransi_{{$key+1}}" class="form-control text-end sum3" value="{{$row->intattribute5}}" required>
+                                                            </td>
+                                                            <td>
+                                                                <label class="form-control text-end" id="lc2_{{$key+1}}">{{number_format($row->intattribute6,2)}}</label>
+                                                                <input type="hidden" name="intattribute6[]" id="lc_{{$key+1}}" class="form-control text-end sum4" value="{{$row->intattribute6}}" required>
+                                                            </td>
+                                                            <td >
+                                                                <label class="form-control text-end" id="totalCost2_{{$key+1}}">{{number_format($row->intattribute7,2)}}</label>
+                                                                <input  type="hidden" name="intattribute7[]" id="totalCost_{{$key+1}}" class="form-control text-end"  value="{{$row->intattribute7}}" required>
+                                                            </td>
+                                                            <td>
+                                                                <label class="form-control text-end" id="costItem2_{{$key+1}}">{{number_format($row->intattribute8,2)}}</label>
+                                                                <input type="hidden" name="intattribute8[]" id="costItem_{{$key+1}}" class="form-control text-end " value="{{$row->intattribute8}}" required>
+                                                            </td>
+                                                            <td>
+                                                                <label class="form-control text-end" id="priceItem2_{{$key+1}}">{{number_format($row->rcv_price,2)}}</label>
+                                                                <input type="hidden" name="rcv_price[]" id="priceItem_{{$key+1}}" class="form-control text-end" value="{{$row->rcv_price}}" required>
+                                                                <input type="hidden" name="rcv_price2" id="priceItem1_{{$key+1}}" class="form-control text-end" value="{{$row->rcv_price}}" required>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table></br>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.box-body -->
+                        <hr>
+                        <div class="d-flex justify-content-between mb-50">
+                            <input class="btn float-left" type="hidden">
+                            <button type="submit" class="btn btn-primary float-right"><i class="fa fa-plus"></i> {{ trans('global.save') }}</button>
+                        </div>
+                    </form>
+                </div>
+          <!-- /.box-body -->
+            </div>
+        </div>
+    </div>
+</section>
+    <!-- /.content -->
+@endsection

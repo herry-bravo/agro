@@ -1,0 +1,226 @@
+<?php
+
+namespace App\Http\Controllers\admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+use App\ProdPlanning;
+use App\PlanningDetail;
+
+class ProductionPlanningController extends Controller
+{
+
+    public function index()
+    {
+        $pm = \App\OperationUnit::All();
+        return view('admin.productionPlanning.index', compact('pm'));
+    }
+
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        //get data from selected PM
+        $records = DB::table('bm_view_order_planning')->where(['opration'=>$request->pm,'promise_date'=>NULL])->orderBy('schedule_ship_date','asc')->get();
+
+        $pm = \App\OperationUnit::where('short_name',$request->pm)->first(); //get PM
+
+        $quantities=0; // will counting from prod_planning
+        $planning_schedule = Date('Y-m-d');
+
+        if(empty($records)){
+            return back()->with('error', 'No data needs to be entered on '.$request->pm);
+        }
+
+		try {
+			\DB::beginTransaction();
+                //Loop each planing data from selected PM
+                foreach($records as $record){
+                    $header = DB::table('bm_prod_planning')->get()->last();
+                    $id = ($header->prod_planning_id??0) + 1;
+
+                    //Validate capasity PM
+                    $quantities += $record->qty;
+
+                    if($quantities > $pm->capacity){
+                        $planning_schedule = date('Y-m-d', strtotime($planning_schedule . ' +1 day'));
+                        $quantities=0;
+                    }
+
+                    // save header planning
+                    $head=array(
+                        'prod_planning_id'=>$id,
+                        'customer_code'=>$record->invoice_to_org_id,
+                        'order_number'=>$record->order_number,
+                        'customer_po_number'=>$record->cust_po_number,
+                        'inventory_item_id'=>$record->inventory_item_id,
+                        'item_code'=>$record->user_description_item,
+                        'attribute_number_gsm'=>(int)$record->attribute_number_gsm,
+                        'attribute_number_w'=>(int)$record->width,
+                        'ordered_quantity'=>(int)$record->qty,
+                        'planning_schedule'=> $planning_schedule,
+                        'completed_schedule'=>$planning_schedule,
+                        'roll_seq'=>$record->roll,
+                        'status'=>'Enter',
+                        'operation_unit'=>$record->opration,
+                        'created_by'=>auth()->user()->id,
+                    );
+                    ProdPlanning::create($head);
+
+                    // get detail sales
+                    $process=\App\SalesOrderDetail::where(['header_id'=>$record->sales_header_id,'line_number'=>$record->roll])->get();
+                    $lines_total = count($process);
+                    $estimate_master = \App\Gramatur::where(['inventory_item_id'=>$record->inventory_item_id,'gsm'=>$record->attribute_number_gsm,'operation'=>$record->opration])->first()->value ?? 5872; //get from db
+                    // dd($estimate_master);
+
+                    foreach($process as $key => $proces){
+                        $detail = DB::table('bm_planning_detail_id')->get()->last();
+                        $detail_id = ($detail->line_id??0) + 1;
+
+                        //Estimation roll code
+                        $estimation = ($estimate_master/$lines_total) * $proces->attribute_number_w / $pm->range_capacity_max;
+                        $rol_total = $proces->ordered_quantity / $estimation;
+                        // dd($pm);
+
+                        $data = array(
+                            'header_id'=>$id,
+                            'line_id'=>$detail_id,
+                            'line_number'=>$key+1,
+                            'inventory_item_id'=>$proces->inventory_item_id,
+                            'item_description'=>$proces->user_description_item,
+                            'attribute_gsm_line'=>(int)$proces->attribute_number_gsm,
+                            'attribute_w_line'=>(int)$proces->attribute_number_w,
+                            'total_roll_by_line'=>round($rol_total),
+                            'qty_estimation'=>(int)$estimation,
+                            'total_qty'=> (int)$proces->ordered_quantity,
+                            'status'=>'Enter',
+                            'operation_unit'=>$record->opration,
+                            'created_by'=>auth()->user()->id,
+                        );
+                        // dd($data);
+                        PlanningDetail::create($data);
+
+                        //update promises_date sales
+                        $proces->promise_date = $planning_schedule;
+                        $proces->save();
+                    }
+
+                }
+            \DB::commit();
+        }catch (Throwable $e){
+            \DB::rollback();
+        }
+        return back()->with('success', 'Production Planning Successfull Inputed');
+
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+        $plan = ProdPlanning::where('prod_planning_id',$id)->first();
+        $data = \App\PlanningDetail::where('header_id',$plan->prod_planning_id)
+                            ->get();
+        // dd($data);
+        $pm = \App\OperationUnit::All();
+        return view('admin.productionPlanning.edit', compact('plan','pm','data'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        //
+        $head = ProdPlanning::find($id);
+        $head->attribute_number_gsm = $request->attribute_number_gsm;
+        $head->attribute_number_w = $request->attribute_number_w;
+        $head->ordered_quantity = $request->ordered_quantity;
+        $head->planning_schedule = $request->planning_schedule;
+        $head->completed_schedule = $request->completed_schedule;
+        $head->operation_unit = $request->operation_unit;
+        $head->updated_at = date('Y-m-d H:i:s');
+		try {
+			\DB::beginTransaction();
+
+            $head->save();
+
+            foreach($request->detail_id as $key => $detail_id){
+                $data = \App\PlanningDetail::find($request->detail_id[$key]);
+                $data->attribute_gsm_line = $request->attribute_gsm_line[$key];
+                $data->attribute_w_line = $request->attribute_w_line[$key];
+                $data->total_roll_by_line = $request->total_roll_by_line[$key];
+                $data->qty_estimation = $request->qty_estimation[$key];
+                $data->total_qty = $request->total_qty[$key];
+                $data->operation_unit = $request->operation_unit;
+                $data->updated_at = date('Y-m-d H:i:s');
+                $data->save();
+            }
+
+            \DB::commit();
+        }catch (Throwable $e){
+            \DB::rollback();
+        }
+
+        return back()->with('Success','Planning Updated');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        //
+
+		try {
+			\DB::beginTransaction();
+
+            $head = ProdPlanning::find($id);
+            \App\PlanningDetail::where('header_id',$head->prod_planning_id)->delete();
+
+            $sales_head = \App\SalesOrder::where('order_number',$head->order_number)->first();
+            \App\SalesOrderDetail::where(['header_id'=>$sales_head->header_id,'line_number'=>$head->roll_seq])->update(['promise_date'=>Null]);
+            $head->delete();
+
+            \DB::commit();
+        }catch (Throwable $e){
+            \DB::rollback();
+        }
+       return redirect()->route('admin.prodplan.index')->with('success','Data is deleted');
+
+    }
+}

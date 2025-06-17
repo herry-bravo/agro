@@ -1,0 +1,107 @@
+/*================================================================================
+	Item Name: Vuexy - Vuejs, HTML & Laravel Admin Dashboard Template
+	Version: 2.0
+
+
+================================================================================
+
+NOTE:
+------
+PLACE HERE YOUR OWN SCSS CODES AND IF NEEDED, OVERRIDE THE STYLES FROM THE OTHER STYLESHEETS.
+WE WILL RELEASE FUTURE UPDATES SO IN ORDER TO NOT OVERWRITE YOUR STYLES IT'S BETTER LIKE THIS.  */
+
+/**====== custom scrollbar css start ======**/
+html::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+html::-webkit-scrollbar:horizontal {
+    width: 8px;
+    height: 8px;
+}
+
+html::-webkit-scrollbar:vertical {
+    width: 8px;
+    height: 8px;
+}
+
+html::-webkit-scrollbar-track {
+    background: rgb(179, 177, 177);
+    border-radius: 8px;
+
+}
+
+html::-webkit-scrollbar-thumb {
+    background: rgb(136, 136, 136);
+    border-radius: 8px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+    background: rgb(64, 150, 59, 1);
+    border-radius: 8px;
+}
+
+html::-webkit-scrollbar-thumb:active {
+    background: rgb(28, 104, 24, 1);
+    border-radius: 8px;
+}
+
+.table-responsive::-webkit-scrollbar {
+    -webkit-appearance: auto;
+}
+
+.table-responsive::-webkit-scrollbar:vertical {
+    width: 8px;
+}
+
+.table-responsive::-webkit-scrollbar:horizontal {
+    height: 8.5px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: rgb(64, 150, 59, 1);
+    border-radius: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:active {
+    background:#40963b;
+    border-radius: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb{
+    background:#40963b;
+    border-radius: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    border-radius: 8px;
+    background-color: #f6f6f6;
+}
+
+.box box-default::-webkit-scrollbar-track {
+    border-radius: 8px;
+}
+
+/**====== Custom scrollbar css end ======**/
+
+/* Delete Button */
+.hapusdata {
+    background: #db2929;
+    border: 0px solid rgba(0, 0, 0, 0.3);
+    border-radius: 0.2rem;
+    font-weight: 500;
+    color: white;
+    padding: 0.48rem 1rem;
+    font-size: 0.9rem;
+}
+
+.hapusdata:hover:not(.disabled):not(:disabled) {
+    box-shadow: 0 5px 10px -5px #db2929;
+}
+
+/* End Delete */
+
+.title-big {
+    font-size: 5rem;
+}

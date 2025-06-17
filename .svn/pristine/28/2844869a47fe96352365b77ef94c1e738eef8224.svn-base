@@ -1,0 +1,214 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\CurrencyGlobal;
+use App\PriceList;
+use App\Http\Controllers\Admin\PriceListController as AdminPriceListController;
+use App\transaction;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\MassDestroyClientRequest;
+use App\Http\Requests\StorePriceListRequest;
+use App\Http\Requests\StoreVendorRequest;
+use App\Http\Requests\UpdateClientRequest;
+use App\Http\Requests\UpdatePriceListRequest;
+use App\PriceListDetail;
+use App\Customer;
+use Carbon\Carbon;
+use Gate;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response;
+use Throwable;
+
+class SellingPriceController extends Controller
+{
+    public function index()
+    {
+        abort_if(Gate::denies('price_list_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        $pricelist = PriceList::orderBy('id','desc')->get();
+        return view('admin.pricelist.index', compact('pricelist'));
+    }
+
+    public function create()
+    {
+        abort_if(Gate::denies('price_list_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $pricelist = new PriceList();
+        $currency = CurrencyGlobal::where('currency_status', 1)->get();
+        $customers = Customer::where('customer_type', 2)->get();
+        return view('admin.pricelist.create', compact('pricelist', 'currency','customers'));
+    }
+
+    public function store(StorePriceListRequest $request)
+    {
+        abort_if(Gate::denies('price_list_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        if(is_null($request->inventory_item_id)){
+            return back()->with('error', 'Price List Detail Cant Be Empty' );
+        }
+
+            $header = PriceList::findorNew($request->id);
+            $header->price_list_name = $request->price_list_name;
+            $header->description = $request->description_header;
+            $header->effective_date = $request->effective_date;
+            $header->currency = $request->currency;
+            $header->location_id = $request->location_id;
+            $header->created_by = $request->created_by;
+            $header->updated_by = $request->created_by;
+            $header->updated_at = date('Y-m-d H:i:s');
+            $header->flag_status = 1;
+            // dd($header);
+        try {
+                DB::beginTransaction();
+                $header->save();
+                $id = $header->id;
+
+                foreach($request->inventory_item_id as $key =>$search_item_code_id){
+                    $data = array(
+                        'header_id'=>$id,
+                        'line_id'=>$request->line_id [$key],
+                        'inventory_item_id'=>$request->inventory_item_id [$key],
+                        'user_item_description'=>$request->user_item_description [$key],
+                        'uom'=>$request->uom [$key],
+                        'unit_price'=>$request->prices_list [$key],
+                        'discount'=>$request->discount [$key],
+                        'packing_type'=>$request->packing_type [$key],
+                        'effective_from'=>$request->effective_from [$key],
+                        'effective_to'=>$request->effective_to [$key],
+                        'created_by'=>$request->created_by,
+                        'updated_by'=>$request->updated_by,
+                    );
+                    PriceListDetail::create($data);
+                }
+
+            DB::commit();
+            return redirect()->route('admin.pricelist.index')->with('success', 'Data Price List Successfull Inputed');
+        }catch (Throwable $e){
+           // dd($e);
+            DB::rollback();
+            return back()->with('error','Data Cant be empty '.$e.'');
+        }
+    }
+
+    public function edit(PriceList $pricelist)
+    {
+        abort_if(Gate::denies('price_list_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // dd($pricelist);
+
+        $currency = CurrencyGlobal::where('currency_status', 1)->get();
+        $list = PriceListDetail::where('header_id', $pricelist->id)->whereNull('deleted_at')->get();
+        $customers = Customer::get();
+        return view('admin.pricelist.edit', compact('list', 'currency','pricelist','customers'));
+    }
+
+    public function update(Request $request)
+    {
+        abort_if(Gate::denies('price_list_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        if(is_null($request->inventory_item_id)){
+            return back()->with('error', 'Price List Detail Cant Be Empty' );
+        }
+
+        $pricelist = PriceList::find($request->id);
+        $pricelist->price_list_name = $request->price_list_name;
+        $pricelist->description = $request->description_header;
+        $pricelist->effective_date = $request->effective_date;
+        $pricelist->currency = $request->currency;
+        $pricelist->location_id = $request->location_id;
+        $pricelist->created_by = $request->created_by;
+        $pricelist->updated_by = $request->updated_by;
+        $pricelist->flag_status = 1;
+        // dd($pricelist);
+
+        try{
+            \DB::beginTransaction();
+            $pricelist->save();
+            foreach($request->inventory_item_id as $key =>$inventory_item_id){
+
+                if(empty($request->lineId[$key])){
+                    $item = PriceListDetail::where(['inventory_item_id'=>$request->inventory_item_id[$key],'header_id'=>$request->id])->first();
+                    if($item){
+                        return back()->with('error', 'Duplicate Entry Of Item');
+                    }else{
+                        $data = array(
+                            'header_id'=>$pricelist->id,
+                            'line_id'=>PriceListDetail::where('header_id',$pricelist->id)->get()->count()+1,
+                            'inventory_item_id'=>$request->inventory_item_id [$key],
+                            'user_item_description'=>$request->user_item_description [$key],
+                            'uom'=>$request->uom [$key],
+                            'unit_price'=>$request->prices_list [$key],
+                            'discount'=>$request->discount [$key],
+                            'packing_type'=>$request->packing_type [$key],
+                            'effective_from'=>$request->effective_from [$key],
+                            'effective_to'=>$request->effective_to [$key],
+                            'created_by'=>$request->created_by,
+                            'updated_by'=>$request->updated_by,
+                        );
+                        // dd($data);
+                        PriceListDetail::create($data);
+                    }
+                }else{
+                    $list = PriceListDetail::find($request->lineId[$key]);
+                    $list->header_id = $pricelist->id;
+                    $list->line_id = $request->$key+1;
+                    $list->inventory_item_id = $request->inventory_item_id[$key];
+                    $list->user_item_description = $request->user_item_description [$key];
+                    $list->uom = $request->uom[$key];
+                    $list->unit_price = floatval($request->unit_prices[$key]);
+                    $list->discount = floatval($request->discount[$key]);
+                    $list->packing_type = $request->packing_type[$key];
+                    $list->effective_from = $request->effective_from[$key];
+                    $list->effective_to = $request->effective_to[$key];
+                    $list->updated_by = $request->updated_by;
+                    $list->created_by = $request->created_by;
+                    $list->updated_at= date('Y-m-d H:i:s');
+                    $list->save();
+                }
+                // dd($list);
+
+            }
+            \DB::commit();
+
+        }catch (Throwable $e){
+            \DB::rollback();
+            dd($e);
+            return back()->with('error','Data Cant be empty');
+        }
+
+        return redirect()->route('admin.pricelist.index')->with('success', 'Data Price List Successfull Updated');
+    }
+
+    public function show(PriceList $pricelist)
+    {
+        abort_if(Gate::denies('price_list_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $listdetail = PriceListDetail::where('header_id', $pricelist->id)->get();
+        // dd($listdetail);
+
+        return view('admin.pricelist.show', compact('listdetail','pricelist'));
+    }
+
+    public function destroy(PriceListDetail $pricelist)
+    {
+        abort_if(Gate::denies('price_list_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // dd($request);
+        if(!is_null($pricelist->id)){
+            $pricelist->delete();
+            return back()->with('success', 'Sucessfull deleted');
+        }else{
+            return back()->with('warning', 'Id not exist');
+        }
+
+
+        return back();
+    }
+
+    public function massDestroy(MassDestroyClientRequest $request)
+    {
+        PriceList::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
+    }
+}

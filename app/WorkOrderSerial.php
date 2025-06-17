@@ -1,0 +1,85 @@
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+
+class WorkOrderSerial extends Model
+{
+    use HasFactory;
+    use SoftDeletes;
+
+    public $table = 'bm_wie_wo_op_material_serial';
+
+    protected $dates = [
+        'creation_date',
+        'last_update_date',
+        'attribute_date1',
+        'attribute_date2',
+        'attribute_date3',
+        'attribute_date4',
+        'attribute_date5',
+        'attribute_datetime1',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
+    protected $fillable = [
+        'id',
+        'wo_op_material_serial_id',
+        'object_version_number',
+        'organization_id',
+        'work_order_id',
+        'wo_operation_material_id',
+        'wo_op_material_lot_id',
+        'inventory_item_id',
+        'serial_number',
+        'quantity_usage',
+        'serial_status',
+        'created_by',
+        'creation_date',
+        'last_updated_by',
+        'last_update_date',
+        'last_update_login',
+        'attribute_category',
+        'attribute_char1',
+        'attribute_char2',
+        'attribute_char20',
+        'attribute_number1',
+        'attribute_number2',
+        'attribute_date1',
+        'attribute_date2',
+        'attribute_date3',
+        'attribute_date4',
+        'attribute_date5',
+        'attribute_datetime1',
+        'request_id',
+        'job_definition_name',
+        'job_definition_package',
+        'created_at',
+        'updated_at',
+        'deleted_at'
+    ];
+
+
+    public function item()
+    {
+        return $this->hasone(ItemMaster::class, 'inventory_item_id', 'inventory_item_id')->select('inventory_item_id','description','item_code','primary_uom_code');
+    }
+
+
+    public function wo()
+    {
+        return $this->hasone(WorkOrder::class, 'work_order_id', 'work_order_id');
+    }
+
+    public function pm()
+    {
+        return $this->hasone(OperationUnit::class, 'short_name', 'attribute_category');
+
+    }
+}

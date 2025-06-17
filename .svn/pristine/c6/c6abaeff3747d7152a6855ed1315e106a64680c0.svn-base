@@ -1,0 +1,182 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateRaCustomerTrxLinesAllTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('bm_ra_customer_trx_lines_all', function (Blueprint $table) {
+            $table->id();
+            $table->integer('customer_trx_line_id')->nullable();
+$table->datetime('last_update_date')->nullable();
+$table->string('last_updated_by',64)->nullable();
+$table->datetime('creation_date')->nullable();
+$table->string('created_by',64)->nullable();
+$table->string('last_update_login',32)->nullable();
+$table->integer('customer_trx_id')->nullable();
+$table->float('line_number')->nullable();
+$table->integer('set_of_books_id')->nullable();
+$table->string('reason_code',30)->nullable();
+$table->integer('inventory_item_id')->nullable();
+$table->string('description',240)->nullable();
+$table->float('previous_customer_trx_id')->nullable();
+$table->float('previous_customer_trx_line_id')->nullable();
+$table->float('quantity_ordered')->nullable();
+$table->float('quantity_credited')->nullable();
+$table->float('quantity_invoiced')->nullable();
+$table->float('unit_standard_price')->nullable();
+$table->float('unit_selling_price')->nullable();
+$table->string('sales_order',50)->nullable();
+$table->float('sales_order_revision')->nullable();
+$table->string('sales_order_line',30)->nullable();
+$table->DATE('sales_order_date')->nullable();
+$table->float('accounting_rule_id')->nullable();
+$table->float('accounting_rule_duration')->nullable();
+$table->string('line_type',20)->nullable();
+$table->string('attribute_category',30)->nullable();
+$table->string('attribute1',150)->nullable();
+$table->float('request_id')->nullable();
+$table->float('program_application_id')->nullable();
+$table->float('program_id')->nullable();
+$table->DATE('program_update_date')->nullable();
+$table->DATE('rule_start_date')->nullable();
+$table->float('initial_customer_trx_line_id')->nullable();
+$table->string('interface_line_context',30)->nullable();
+$table->string('interface_line_attribute1',30)->nullable();
+$table->string('interface_line_attribute2',30)->nullable();
+$table->string('sales_order_source',50)->nullable();
+$table->string('taxable_flag',1)->nullable();
+$table->float('extended_amount')->nullable();
+$table->float('revenue_amount')->nullable();
+$table->string('autorule_complete_flag',1)->nullable();
+$table->float('link_to_cust_trx_line_id')->nullable();
+$table->float('tax_precedence')->nullable();
+$table->float('tax_rate')->nullable();
+$table->float('item_exception_rate_id')->nullable();
+$table->float('tax_exemption_id')->nullable();
+$table->float('autorule_duration_processed')->nullable();
+$table->string('uom_code',3)->nullable();
+$table->string('default_ussgl_transaction_code',30)->nullable();
+$table->string('default_ussgl_trx_code_context',30)->nullable();
+$table->string('interface_line_attribute10',30)->nullable();
+$table->float('vat_tax_id')->nullable();
+$table->string('autotax',1)->nullable();
+$table->float('last_period_to_credit')->nullable();
+$table->string('item_context',30)->nullable();
+$table->string('tax_exempt_flag',1)->nullable();
+$table->string('tax_exempt_number',80)->nullable();
+$table->string('tax_exempt_reason_code',30)->nullable();
+$table->string('tax_vendor_return_code',30)->nullable();
+$table->float('sales_tax_id')->nullable();
+$table->float('location_segment_id')->nullable();
+$table->float('movement_id')->nullable();
+$table->float('org_id')->nullable();
+$table->DATE('wh_update_date')->nullable();
+$table->string('global_attribute1',150)->nullable();
+$table->string('global_attribute_category',30)->nullable();
+$table->float('gross_unit_selling_price')->nullable();
+$table->float('gross_extended_amount')->nullable();
+$table->string('amount_includes_tax_flag',1)->nullable();
+$table->float('taxable_amount')->nullable();
+$table->float('warehouse_id')->nullable();
+$table->string('translated_description',240)->nullable();
+$table->float('extended_acctd_amount')->nullable();
+$table->float('br_ref_customer_trx_id')->nullable();
+$table->float('br_ref_payment_schedule_id')->nullable();
+$table->float('br_adjustment_id')->nullable();
+$table->string('mrc_extended_acctd_amount',240)->nullable();
+$table->float('payment_set_id')->nullable();
+$table->float('contract_line_id')->nullable();
+$table->string('source_data_key1',150)->nullable();
+$table->string('invoiced_line_acctg_level',15)->nullable();
+$table->string('override_auto_accounting_flag',1)->nullable();
+$table->float('ship_to_customer_id')->nullable();
+$table->float('ship_to_address_id')->nullable();
+$table->float('ship_to_site_use_id')->nullable();
+$table->float('ship_to_contact_id')->nullable();
+$table->string('historical_flag',1)->nullable();
+$table->float('tax_line_id')->nullable();
+$table->float('line_recoverable')->nullable();
+$table->float('tax_recoverable')->nullable();
+$table->string('tax_classification_code',30)->nullable();
+$table->float('amount_due_remaining')->nullable();
+$table->float('acctd_amount_due_remaining')->nullable();
+$table->float('amount_due_original')->nullable();
+$table->float('chrg_amount_remaining')->nullable();
+$table->float('chrg_acctd_amount_remaining')->nullable();
+$table->float('frt_adj_remaining')->nullable();
+$table->float('frt_adj_acctd_remaining')->nullable();
+$table->float('frt_ed_amount')->nullable();
+$table->float('frt_ed_acctd_amount')->nullable();
+$table->float('frt_uned_amount')->nullable();
+$table->float('frt_uned_acctd_amount')->nullable();
+$table->string('deferral_exclusion_flag',1)->nullable();
+$table->float('acctd_amount_due_original')->nullable();
+$table->DATE('rule_end_date')->nullable();
+$table->float('payment_trxn_extension_id')->nullable();
+$table->float('interest_line_id')->nullable();
+$table->float('object_version_number')->nullable();
+$table->float('memo_line_seq_id')->nullable();
+$table->string('trx_business_category',240)->nullable();
+$table->string('user_defined_fisc_class',30)->nullable();
+$table->string('product_fisc_classification',240)->nullable();
+$table->string('line_intended_use',240)->nullable();
+$table->string('product_type',240)->nullable();
+$table->string('product_category',240)->nullable();
+$table->float('assessable_value')->nullable();
+$table->string('source_document_line_number',240)->nullable();
+$table->float('source_document_line_id')->nullable();
+$table->float('fair_market_value_amount')->nullable();
+$table->string('link_to_parentline_context',240)->nullable();
+$table->string('link_to_parentline_attribute1',240)->nullable();
+$table->string('link_to_parentline_attribute2',240)->nullable();
+$table->string('tax_action',10)->nullable();
+$table->DATE('global_attribute_date1')->nullable();
+$table->string('requires_manual_scheduling',1)->nullable();
+$table->string('tax_invoice_number',150)->nullable();
+$table->DATE('tax_invoice_date')->nullable();
+$table->float('final_discharge_location_id')->nullable();
+$table->string('authorization_number',30)->nullable();
+$table->string('auth_complete_flag',1)->nullable();
+$table->float('ship_to_party_id')->nullable();
+$table->float('ship_to_party_contact_id')->nullable();
+$table->float('ship_to_party_site_use_id')->nullable();
+$table->float('ship_to_party_address_id')->nullable();
+$table->float('doc_line_id_int_1')->nullable();
+$table->string('doc_line_id_char_1',30)->nullable();
+$table->string('recurring_bill_flag',1)->nullable();
+$table->DATE('contract_start_date')->nullable();
+$table->DATE('contract_end_date')->nullable();
+$table->float('recurring_bill_plan_id')->nullable();
+$table->DATE('billing_period_start_date')->nullable();
+$table->DATE('billing_period_end_date')->nullable();
+$table->float('recurring_bill_plan_line_id')->nullable();
+$table->float('bill_plan_line_id')->nullable();
+$table->float('freight_charge')->nullable();
+$table->float('insurance_charge')->nullable();
+$table->float('packing_charge')->nullable();
+$table->float('miscellaneous_charge')->nullable();
+$table->float('commercial_discount')->nullable();
+
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('bm_ra_customer_trx_lines_all');
+    }
+}

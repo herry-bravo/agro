@@ -1,0 +1,162 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\PurchaseOrder;
+use App\PurchaseOrderDet;
+use App\TrxStatuses;
+use App\RcvHeader;
+use App\RcvDetail;
+use App\Onhand;
+use App\Grn;
+use App\MaterialTxns;
+use Gate;
+use App\User;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\DB;
+
+class ReturnController extends Controller
+{
+    //
+    public function index()
+    {
+        abort_if(Gate::denies('order_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+		$return = RcvDetail::where('shipment_line_status_code',2)->get();
+        return view('admin.return.index', compact('return'));
+
+    }
+
+    public function create()
+    {
+        abort_if(Gate::denies('return_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+		$order_head = PurchaseOrder::where('status','=',2)->get();
+		$return = RcvHeader::All();
+		return view('admin.return.create' , compact('order_head', 'return'));
+    }
+
+    public function store(Request $request)
+    {
+		$id = RcvHeader::latest('shipment_header_id')->first();
+        $data = RcvHeader::where('receipt_num',$request->receipt_num)->where('transaction_type','RECEIVE')->first();
+		$head =RcvHeader::findorNew($request->id);
+        $head->shipment_header_id=str_pad($id->id+1, 6, "0", STR_PAD_LEFT);
+		$head->receipt_num= $request->receipt_num;
+	    $head->currency_code=DB::table('bm_po_header_all')->where('segment1',$request->segment1)->first()->currency_code;
+		$head->conversion_date=DB::table('bm_po_header_all')->where('segment1',$request->segment1)->first()->rate_date;
+		$head->transaction_type="RETURN";
+		$head->receipt_source_code=$request->type_lookup_code;
+		$head->gl_date=$request->gl_date;
+		$head->vendor_id=$data->vendor_id;
+		$head->vendor_site_id=$data->vendor_site_id;
+		$head->ship_to_location_id=$data->ship_to_location_id;
+		$head->packing_slip=$data->packing_slip;
+		$head->comments=$data->comments;
+		$head->attribute1=$data->attribute1;
+		$head->conversion_rate=$data->conversion_rate;
+		$head->organization_id=$data->organization_id;
+		$head->created_by=$request->created_by;
+		$head->last_updated_by=$request->created_by;
+		$head->created_at=date('Y-m-d H:i:s');
+		$head->updated_at=date('Y-m-d H:i:s');
+        // dd($head);
+			try {
+			\DB::beginTransaction();
+				$head->save();
+				$checked_array=$request->line_number;
+				$line_id=1;
+                $shipment_line_status_code = 2;
+					foreach ($request->check as $key => $value)
+					{
+
+						if(in_array($request->check[$key],$checked_array))
+						{
+                            if($request->product_category[$key]=='null'){
+                                $category=NULL;
+                            }else{
+                                $category=$request->product_category[$key];
+                            }
+							$data = array(
+							'po_header_id'=>isset($request->po_header_id[$key])? $request->po_header_id[$key] :'',
+							'po_line_location_id'=>isset($request->no_id[$key])? $request->no_id[$key] :'',
+							'quantity_returned'=>isset($request->quantity_returned[$key])? $request->quantity_returned[$key] :'',
+							'shipment_line_status_code'=>$shipment_line_status_code,
+							'po_line_id'=>isset($request->po_line_id[$key])? $request->po_line_id[$key] :'',
+							'uom_code'=>isset($request->uom_code[$key])? $request->uom_code[$key] :'',
+							'item_description'=>isset($request->item_description[$key])? $request->item_description[$key] :'',
+							'item_id'=>isset($request->item_id[$key])? $request->item_id[$key] :'',
+							'to_subinventory'=>isset($request->to_subinventory[$key])? $request->to_subinventory[$key] :'',
+							'transfer_cost'=>isset($request->transfer_cost[$key])? $request->transfer_cost[$key] :'',
+							'secondary_uom_code'=>isset($request->secondary_uom_code[$key])? $request->secondary_uom_code[$key] :'',
+							'product_category'=>isset( $category)?  $category :NULL,
+							'quantity_accepted'=>isset($request->quantity_returned[$key])? -1* $request->quantity_returned[$key] :'',
+							'shipment_unit_price'=>isset($request->shipment_unit_price[$key])? $request->shipment_unit_price[$key] :'',
+							'secondary_quantity_received'=>isset($request->secondary_quantity_received[$key])? -1*$request->quantity_returned[$key] :'',
+							'shipment_header_id'=> $head->shipment_header_id,
+							'shipment_line_id'=>$line_id,
+							'created_at'=> date('Y-m-d H:i:s'),
+							'updated_at'=> date('Y-m-d H:i:s'),
+							);
+
+                            /* Set validation current stok */
+							$onhand=Onhand::where(['inventory_item_id'=>$data['item_id'],'subinventory_code'=>$data['to_subinventory']])->first();
+                            if($onhand){
+                                $currentStok = $onhand->primary_transaction_quantity;
+                                if($currentStok > $data['quantity_returned']){
+
+                                    /* Update PO */
+                                    $return_line=PurchaseOrderDet::find($data['po_line_location_id'], ['quantity_receive']);
+                                    $new_qty= $return_line->quantity_receive - $data['quantity_returned'];
+                                    RcvDetail::create($data);
+                                    PurchaseOrderDet::where("id", $data['po_line_location_id'])->update([
+                                                "quantity_receive" => $new_qty,
+                                                "line_status" => 2
+                                    ]);
+
+                                    /*Update Onhand */
+                                    $update_stock=	$onhand->primary_transaction_quantity-$data['quantity_returned'];
+                                    $onhand=Onhand::where(['inventory_item_id'=>$data['item_id'],'subinventory_code'=>$data['to_subinventory']])->update(["primary_transaction_quantity"=>$update_stock]);
+
+                                }else{
+                                    return back()->with('error', 'Stock Not Enough');
+                                }
+                            }else{
+                                return back()->with('error', 'Not Exist');
+                            }
+
+                            $trx = array(
+                                'transaction_id'=>MaterialTxns::all()->count()+1,
+                                'last_updated_by'=>$request->updated_by,
+                                'created_by'=>$request->created_by,
+                                'inventory_item_id'=>$data['item_id'],
+                                'organization_id'=>'222',
+                                'subinventory_code'=>$data['to_subinventory'],
+                                'transaction_type_id'=>2,
+                                'transaction_action_id'=>2,
+                                'transaction_source_type_id'=>2,
+                                'transaction_source_name'=>"Purchase Order Return",
+                                'transaction_quantity'=>$data['quantity_returned'],
+                                'transaction_uom'=>$data['uom_code'],
+                                'primary_quantity'=>$data['quantity_returned'],
+                                'transaction_date'=>$request->gl_date,
+                                'transaction_reference'=>$request->segment1,
+                                'currency_code'=>DB::table('bm_po_header_all')->where('segment1',$request->segment1)->first()->currency_code,
+                                'receiving_document'=>$request->packing_slip,
+                                'source_line_id'=>$data['po_line_id'],
+                                'attribute_category'=>$request->receipt_num,
+                                );
+                            MaterialTxns::create($trx);
+
+						}
+						$line_id++;
+					}
+
+			\DB::commit();
+			}catch (Throwable $e){
+				\DB::rollback();
+			}
+     return redirect()->route('admin.return.index');
+    }
+}

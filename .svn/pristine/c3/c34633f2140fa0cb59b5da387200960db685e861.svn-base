@@ -1,0 +1,434 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\ArCustomerTrx;
+use App\Terms;
+use App\Currency;
+use App\Customer;
+use App\Site;
+use App\CurrencyGlobal;
+use App\GlHeader;
+use App\GlLines;
+use App\ArCustomerTrxLines;
+use App\ArReceivableApplications;
+use DB;
+
+class ArController extends Controller
+{
+
+    public function index()
+    {
+        $cust = ArCustomerTrx::where('bill_template_name','!=','Credit Note')->get();
+        return view('admin.arReceivable.index',compact('cust'));
+    }
+
+    public function create()
+    {
+        $terms = Terms::where('term_category','PAYMENT')->get();
+        $currency = CurrencyGlobal::where('currency_status', 1)->get();
+        $customer = Customer::All();
+        $site = Site::where('site_type','=','Shipto')->get();
+        return view('admin.arReceivable.create',compact('customer','terms','currency','site'));
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            \DB::beginTransaction();
+
+                $id_cust_head = DB::table('bm_ra_customer_trx_all')->get()->last();
+                $id_cust_head = $id_cust_head->customer_trx_id +1;
+                $trx_number = str_pad($id_cust_head,6,"0",STR_PAD_LEFT);
+
+                $cust_head = ArCustomerTrx::findorNew($request->id);
+                $cust_head->customer_trx_id = $id_cust_head;
+                $cust_head->trx_number = $trx_number;
+                $cust_head->bill_template_name = $request->bill_template_name;
+                $cust_head->trx_date = date('Y-m-d');
+                $cust_head->bill_to_customer_id = $request->bill_to_customer_id;
+                $cust_head->ship_to_customer_id = $request->ship_to_customer_id;
+                $cust_head->term_id = $request->term_id;
+                $cust_head->delivery_method_code = $request->delivery_method_code;
+                $cust_head->invoice_currency_code = $request->invoice_currency_code;
+                $cust_head->attribute1 = $request->attribute1;
+                $cust_head->attribute2 = $request->attribute2;
+                $cust_head->created_by = $request->created_by;
+                $cust_head->org_id = $request->org_id;
+                $cust_head->exchange_date = \App\CurrencyRate::where('currency_id',$request->invoice_currency_code)->latest()->first()->rate_date;
+                $cust_head->exchange_rate = \App\CurrencyRate::where('currency_id',$request->invoice_currency_code)->latest()->first()->rate;
+                $cust_head->status_trx = 0;
+                $cust_head->created_at = date('Y-m-dH:i:s');
+                $cust_head->updated_at = date('Y-m-dH:i:s');
+                $cust_head->save();
+
+                $subtotal = 0;
+                foreach($request->inventory_item_id as $key => $line){
+                    $id_cust_line = DB::table('bm_ra_customer_trx_lines_all')->get()->last();
+                    $cust_line = array(
+                        'customer_trx_line_id'=>$id_cust_line->customer_trx_line_id+1,
+                        'customer_trx_id'=>$id_cust_head,
+                        'line_number'=>$key+1,
+                        'sales_order_line'=>$request->source_line_id ?? 0,
+                        'inventory_item_id'=>$request->inventory_item_id[$key],
+                        'description'=>$request->description[$key],
+                        'quantity_ordered'=>$request->quantity_invoiced[$key],
+                        'quantity_invoiced'=>$request->quantity_invoiced[$key],
+                        'unit_selling_price'=>$request->unit_selling_price[$key],
+                        'sales_order'=>$request->sales_order_number ?? 0,
+                        'amount_due_original'=>$request->quantity_invoiced[$key] * $request->unit_selling_price[$key],
+                        'tax_rate'=>$request->tax,
+                        'sales_tax_id'=>$request->tax_code ?? 'TAX-00',
+                        'uom_code'=>$request->uom_code[$key],
+                        'created_by'=>$request->created_by,
+                        'creation_date'=>date('Y-m-d H:i:s'),
+                        'updated_at'=>date('Y-m-d H:i:s')
+                    );
+                    // dd($cust_line);
+                    $subtotal += $request->quantity_invoiced[$key] * $request->unit_selling_price[$key];
+                    ArCustomerTrxLines::create($cust_line);
+                }
+
+
+                $total = $subtotal * $request->tax;
+                $total = $subtotal + $total;
+
+                $id_ar_head =  DB::table('bm_ar_receivable_applications_all')->get()->last();
+                $ar_head = array(
+                    'receivable_application_id'=>$id_ar_head->receivable_application_id+1,
+                    'amount_applied'=>$total,
+                    'gl_date'=>date('Y-m-d'),
+                    'attribute1'=>$trx_number,
+                    'application_rule'=>$request->bill_template_name,
+                    'customer_trx_id'=>$id_cust_head,
+                    'freight_applied'=>$request->term_id,
+                    'status'=>0,
+                    'tax_code'=>$request->tax_code?? 'TAX-00',
+                    'tax_applied'=>$request->tax,
+                    'created_by'=>$request->created_by,
+                    'org_id'=>isset($request->organization_id)?$request->organization_id:182,
+                    'creation_date'=>date('Y-m-d H:i:s'),
+                    'created_at'=>date('Y-m-d H:i:s'),
+                    'updated_at'=>date('Y-m-d H:i:s'),
+                );
+                ArReceivableApplications::create($ar_head);
+
+                $id = DB::table('bm_ra_customer_trx_all')->get()->last();
+                $id = $id->id;
+
+            \DB::commit();
+        }catch (Throwable $e){
+            \DB::rollback();
+        }
+
+        if($request->bill_template_name == 'Receivable'){
+            return redirect()->route('admin.ar.edit',$id)->with('success', 'Data Stored');
+        }else{
+            return redirect()->route('admin.credit-note.edit',$id)->with('success', 'Data Stored');
+        }
+    }
+
+    public function edit($id)
+    {
+        $cust = ArCustomerTrx::find($id);
+        $line = ArCustomerTrxLines::where('customer_trx_id',$cust->customer_trx_id)->get();
+        $data = ArCustomerTrxLines::where('customer_trx_id',$cust->customer_trx_id)->first();
+
+        $ar = ArReceivableApplications::where('customer_trx_id',$cust->customer_trx_id)->first();
+        $terms = Terms::where('term_category','PAYMENT')->get();
+        $currency = CurrencyGlobal::where('currency_status', 1)->get();
+        $payment = \App\ApPayment::where('invoice_id','=',$id)->first();
+        $ba = \App\BankAccount::all();
+        $journal = \App\Category::orderBy('id','desc')->where('account_type','Bank & Cash')->get();
+        $acc = \App\AccountCode::all();
+        return view('admin.arReceivable.edit',compact('cust','terms','currency','line','data','ba','journal','payment','ar','acc'));
+    }
+
+    public function update(Request $request, $id)
+    {
+
+        switch ($request->input('action')) {
+            case 'save':
+                $head = ArCustomerTrx::find($id);
+                $head->trx_date = date('Y-m-d');
+                $head->bill_to_customer_id = $request->bill_to_customer_id;
+                $head->ship_to_customer_id = $request->ship_to_party_id;
+                $head->term_id = $request->term_id;
+                $head->delivery_method_code = $request->delivery_method_code;
+                $head->invoice_currency_code = $request->invoice_currency_code;
+                $head->attribute1 = $request->attribute1;
+                $head->attribute2 = $request->attribute2;
+                $head->created_by = $request->created_by;
+                $head->org_id = $request->organization_id;
+                $head->br_amount = $request->ar_amount;
+                $head->updated_at = date('Y-m-d H:i:s');
+
+
+                $ar_head = ArReceivableApplications::where('customer_trx_id',$head->customer_trx_id)->first();
+                $ar_head->amount_applied=$request->ar_amount;
+                $ar_head->tax_applied=floatval($request->pajak);
+                $ar_head->tax_code=\App\Tax::where(['tax_rate'=>floatval($request->pajak),'type_tax_use'=>'Sales'])->first()->tax_code;
+                $ar_head->last_update_date = date('Y-m-d H:i:s');
+                $ar_head->last_updated_by = auth()->user()->id;
+                $ar_head->updated_at = date('Y-m-d H:i:s');
+
+                try {
+                    \DB::beginTransaction();
+                    $head->save();
+                    $ar_head->save();
+                    foreach($request->inventory_item_id as $key =>$row){
+                        if(empty($request->lineId[$key])){
+                            $id_cust_line = ArCustomerTrxLines::count('id');
+                            $data = array(
+                                'customer_trx_line_id'=>$id_cust_line+1,
+                                'customer_trx_id'=>$head->customer_trx_id,
+                                'line_number'=>$key+1,
+                                'sales_order_line'=>$request->source_line_id[$key] ?? 0,
+                                'inventory_item_id'=>$request->inventory_item_id[$key],
+                                'description'=>$request->description[$key],
+                                'quantity_ordered'=>$request->quantity_ordered[$key],
+                                'quantity_invoiced'=>$request->quantity_invoiced[$key],
+                                'unit_selling_price'=>$request->unit_selling_price[$key],
+                                'sales_order'=>$request->sales_order_number[$key] ?? '',
+                                'code_combinations'=>$request->code_combinations[$key] ?? '',
+                                'amount_due_original'=>$request->amount_due_original[$key] ?? '',
+                                'tax_rate'=>floatval($request->pajak),
+                                'sales_tax_id'=>\App\Tax::where(['tax_rate'=>floatval($request->pajak),'type_tax_use'=>'Sales'])->first()->tax_code,
+                                'created_by'=>$request->created_by,
+                                'creation_date'=>date('Y-m-d H:i:s'),
+                                'updated_at'=>date('Y-m-d H:i:s')
+                            );
+                            // dd($data);
+                            ArCustomerTrxLines::create($data);
+                        }else{
+                            $data = ArCustomerTrxLines::find($request->lineId[$key]);
+                            $data->inventory_item_id = $request->inventory_item_id[$key];
+                            $data->description = $request->description[$key];
+                            $data->quantity_ordered = $request->quantity_ordered[$key];
+                            $data->quantity_invoiced = $request->quantity_invoiced[$key];
+                            $data->unit_selling_price = $request->unit_selling_price[$key];
+                            $data->sales_order = $request->sales_order [$key] ?? '';
+                            $data->code_combinations = $request->code_combinations[$key] ?? '';
+                            $data->amount_due_original = $request->amount_due_original[$key] ?? '';
+                            $data->tax_rate=floatval($request->pajak);
+                            $data->sales_tax_id=\App\Tax::where(['tax_rate'=>floatval($request->pajak),'type_tax_use'=>'Sales'])->first()->tax_code;
+                            // $data->uom_code = $request->uom_code[$key] ?? '';
+                            $data->created_by = $request->created_by;
+                            $data->updated_at = date('Y-m-d H:i:s');
+                            // dd($data);
+                            $data->save();
+                        };
+                    }
+
+                    // dd ($request->ar_amount);
+                    ArReceivableApplications::where('customer_trx_id',$head->customer_trx_id)->update(['amount_applied'=>$request->ar_amount]);
+
+                    \DB::commit();
+                    }catch (Throwable $e){
+                        \DB::rollback();
+                    }
+
+            break;
+            case 'status':
+                    $cust = ArCustomerTrx::find($id);
+                    $cust->update(['status_trx'=>$request->status]);
+
+                    if($request->status == 3){
+                        ArCustomerTrx::where('id',$id)->update(['attribute1'=>NULL,'status_trx'=>$request->status]);
+                        ArCustomerTrxLines::where('customer_trx_id',$cust->customer_trx_id)->delete();
+                        $cust->delete();
+
+                        return redirect()->route('admin.ar.index')->with('success', 'Data Deleted');
+                    }else if($request->status==2){
+                        // dd($request->calculate_credit);
+
+                        ArReceivableApplications::where('customer_trx_id',$cust->customer_trx_id)->update(['gl_posted_date'=>date('Y-m-d')]);
+
+                        $date = date('M y');
+                        $header_id = DB::table('bm_gl_je_headers')->get()->last();
+                        $head = GlHeader::findorNew($request->id);
+                        $id=$header_id->id+1;
+                        $head->je_header_id =$id;
+                        $head->name=$cust->bill_template_name.' '.$request->customer_name.' - '.$date;
+                        $head->created_by=$request->created_by;
+                        $head->last_updated_by=$request->created_by;
+                        $head->je_source='Import';
+                        $head->status=$request->status;
+                        $head->je_batch_id=$request->je_batch_id ;
+                        $head->default_effective_date=$request->trx_date;
+                        $head->period_name=$date;
+                        $head->external_reference=$request->invoice_num;
+                        $head->je_category='Sales order';
+                        $head->currency_code=$request->invoice_currency_code;
+                        $head->currency_conversion_date=$request->exchange_date; //
+                        $head->currency_conversion_rate=$request->exchange_rate; //
+                        $head->running_total_dr=$request->calculate_debit ;
+                        $head->running_total_cr=$request->calculate_credit;
+                        // dd($head);
+                        try {
+                            \DB::beginTransaction();
+
+                            $head->save();
+
+                            foreach($request->code_combinations as $key =>$label){
+                                $data = array(
+                                    'je_header_id'=>$id,
+                                    'je_line_num'=> $key+1,
+                                    'last_updated_by'=>auth()->user()->id,
+                                    'ledger_id'=>$request->je_batch_id ,
+                                    'code_combination_id'=>$request->code_combinations[$key] ?? '',
+                                    'period_name'=>$date,
+                                    'effective_date'=>$request->trx_date ,
+                                    'status'=>$request->status,
+                                    'created_by'=>$request->created_by,
+                                    'entered_dr'=>$request->entered_dr[$key],
+                                    'entered_cr'=>$request->entered_cr [$key],
+                                    'description'=>$request->label [$key],
+                                    'currency_conversion_date'=>$request->exchange_date, //
+                                    'currency_conversion_rate'=>$request->exchange_rate, //
+                                    'reference_1'=>$request->customer_name,
+                                    'tax_code'=>\App\Tax::where(['tax_rate'=>floatval($request->pajak),'type_tax_use'=>'Sales'])->first()->tax_code,
+                                    'created_at'=>date('Y-m-d H:i:s'),
+                                    'updated_at'=>date('Y-m-d H:i:s'),
+                                );
+                                GlLines::create($data);
+                            }
+                            // dd($data);
+
+                            \DB::commit();
+                        }catch (Throwable $e){
+                            \DB::rollback();
+                        }
+
+                        return redirect()->route('admin.gl.edit',$id)->with('success', 'Data Stored');
+                    }
+
+                return back()->with('success','Account Receivale is Updated');
+
+            break;
+            case 'payment':
+                try {
+                    \DB::beginTransaction();
+
+                        $amount_paid = floatval(preg_replace('/[^\d.]/', '', $request->amount_paid));
+                        if($amount_paid != $request->amount){
+                            $paid_status = 'Partial';
+                        }
+
+                        //Status update
+                        $arCust = ArCustomerTrx::find($id);
+                        $arCust->status_trx = $request->paid_status ;
+                        $arCust->payment_attributes = $paid_status ?? 'Full Paid';
+                        $arCust->save();
+
+                        $arUpdate = ArReceivableApplications::where('customer_trx_id',$arCust->customer_trx_id)->first();
+                        $arUpdate->status = $request->paid_status ;
+                        $arUpdate->amount_applied =  $arUpdate->amount_applied;
+                        $arUpdate->amount_applied_from =$arUpdate->amount_applied_from + $amount_paid;
+                        $arUpdate->application_type = $paid_status ?? 'Full Paid';
+                        $arUpdate->attribute_category = $request->attribute_category;
+                        $arUpdate->save();
+
+                        $date = date('M y');
+                        $invoice_payment_id = DB::table('bm_ap_invoice_payments_id')->get()->last();
+                        $invoice_payment_id = ($invoice_payment_id->invoice_payment_id ?? 0)+1;
+                        $payment=\App\ApPayment::findorNew($id);
+
+                        $payment->accounting_date = $request->accounting_date;
+                        $payment->amount = $amount_paid;
+                        $payment->invoice_id = $request->invoice_id;
+                        $payment->invoice_payment_id = $invoice_payment_id;
+                        $payment->last_updated_by = auth()->user()->id;
+                        $payment->payment_num = $request->je_batch_id;
+                        $payment->period_name = $date;
+                        $payment->posted_flag = 4;
+                        $payment->set_of_books_id = \App\Category::where('category_code',$request->attribute_category)->first()->attribute1;
+                        $payment->accts_pay_code_combination_id = $request->accts_pay_code_combination_id;
+                        $payment->created_by = $request->created_by;
+                        $payment->bank_account_num = \App\BankAccount::where('bank_account_id',$request->bank_num)->first()->bank_acct_use_id ; //
+                        $payment->bank_account_type = \App\BankAccount::where('bank_account_id',$request->bank_num)->first()->attribute_category; //
+                        $payment->bank_num = $request->bank_num; //
+                        $payment->payment_base_amount = $request->amount;
+                        $payment->invoice_payment_type = $request->invoice_payment_type;
+                        $payment->payment_type =  $request->payment_type;
+                        $payment->invoicing_vendor_site_id = $request->bill_to_customer_id;
+                        $payment->invoice_currency_code = $request->invoice_currency_code;
+                        $payment->payment_currency_code = $request->payment_currency_code;
+                        $payment->global_attribute1 = $request->global_attribute1;
+                        $payment->attribute1 = $request->memo;
+                        $payment->attribute_category = $request->attribute_category;
+                        $payment->exchange_date=$request->exchange_date;
+                        $payment->exchange_rate=$request->exchange_rate;
+                        $payment->created_at = date('Y-m-d H:i:s');
+                        $payment->updated_at = date('Y-m-d H:i:s');
+                        $payment->save();
+
+                        //GL Create
+                        $header_id = DB::table('bm_gl_je_headers')->get()->last();
+                        $id=$header_id->je_header_id+1;
+                        $head = GlHeader::findorNew($request->id);
+                        $head->je_header_id =$id;
+                        $head->name=$request->customer_name.' Payment Rp.'.$amount_paid; //
+                        $head->created_by=$request->created_by;
+                        $head->last_updated_by=$request->created_by;
+                        $head->je_source='Import'; //
+                        $head->status=$request->paid_status;
+                        $head->je_batch_id=$request->je_batch_id ;
+                        $head->default_effective_date=$request->accounting_date;
+                        $head->period_name=$date;
+                        $head->external_reference=$invoice_payment_id;
+                        $head->je_category='Bank';
+                        $head->currency_code=$request->payment_currency_code;
+                        $head->running_total_dr=$amount_paid;
+                        $head->running_total_cr=$amount_paid;
+                        $head->currency_conversion_date=$request->exchange_date;
+                        $head->currency_conversion_rate=$request->exchange_rate;
+                        $head->save();
+                        foreach($request->payment as $key =>$label){
+                            if($request->payment[$key] == 11020000){
+                                $entered_dr= $amount_paid;
+                                $entered_cr= 0;
+                                $label = 'Outstanding Payment';
+                            }else{
+                                $entered_dr= 0;
+                                $entered_cr= $amount_paid;
+                                $label = 'Trade AR';
+                            }
+                            $data = array(
+                                'je_header_id'=>$id,
+                                'je_line_num'=> $key+1,
+                                'last_updated_by'=>auth()->user()->id,
+                                'ledger_id'=>$request->je_batch_id ,
+                                'code_combination_id'=>$request->payment[$key] ?? '', //
+                                'period_name'=>$date,
+                                'effective_date'=>$request->accounting_date ,
+                                'status'=>$request->paid_status,
+                                'created_by'=>$request->created_by,
+                                'entered_dr'=>$entered_dr,
+                                'entered_cr'=>$entered_cr,
+                                'description'=>$label,
+                                'reference_1'=>$request->customer_name,
+                                'currency_conversion_date'=>$request->exchange_date,
+                                'currency_conversion_rate'=>$request->exchange_rate,
+                                'tax_code'=>\App\Tax::where(['tax_rate'=>floatval($request->pajak),'type_tax_use'=>'Sales'])->first()->tax_code, //
+                                'currency_code'=>$request->payment_currency_code, //
+                                'created_at'=>date('Y-m-d H:i:s'),
+                                'updated_at'=>date('Y-m-d H:i:s'),
+                            );
+                            GlLines::create($data);
+                        }
+                        // dd($data);
+
+                    \DB::commit();
+                    return redirect()->route('admin.gl.edit',$id)->with('success', 'Data Stored');
+                }catch (Throwable $e){
+                    \DB::rollback();
+                }
+
+            break;
+        }
+        return back()->with('success','Account Receivale is Updated');
+    }
+}

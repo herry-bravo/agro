@@ -1,0 +1,169 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\PurchaseRequisition;
+use App\RequisitionDetail;
+use App\Comments;
+use App\Http\Requests\UpdateAppRequest;
+use Illuminate\Support\Facades\Auth;
+
+class AppController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Request $request, $id)
+    {
+        dd($id);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(PurchaseRequisition $purchaseRequisition, UpdateAppRequest $request,$id)
+    {
+        $data = array(
+            'comments'=>$request->notes,
+            'app_header_id'=>$id,
+            'app_lvl_id'=>$request->app_lvl,
+            'userID'=>auth()->user()->userID,
+        );
+        if($request->authorized_status==13){
+
+            switch ($request->input('action')) {
+                case "":
+                    PurchaseRequisition::where(['id'=>$id])->update(["app_lvl"=>NULL,"authorized_status"=>$request->authorized_status]);
+                    RequisitionDetail::where(['header_id'=>$id])->update(["purchase_status"=>$request->authorized_status]);
+                    Comments::create($data);
+                    return redirect()->route('admin.purchase-requisition.index');
+                case "3-reject":
+                    // reject auto purchase
+                    // dd("in");
+                RequisitionDetail::where(['id'=>$id])->update(["purchase_status"=>$request->authorized_status]);
+                $pr_detail = RequisitionDetail::find($id);
+
+                $counter = RequisitionDetail::where(['header_id'=>$pr_detail->header_id])->count('id'); //Jumlah Line
+                $check = RequisitionDetail::where(['header_id'=>$pr_detail->header_id])->where('purchase_status','!=',1)->count('id'); // Line yang udh diapprove
+
+                if($check == $counter){
+                    PurchaseRequisition::where(['req_header_id'=>$pr_detail->header_id])->update(["app_lvl"=>12,"authorized_status"=>$request->authorized_status]);
+                }
+                Comments::create($data);
+                return back()->with('success', 'rejected');
+                case "4":
+                    PurchaseRequisition::where(['id'=>$id])->update(["app_lvl"=>12,"authorized_status"=>$request->authorized_status]);
+                    RequisitionDetail::where(['header_id'=>$id])->update(["purchase_status"=>$request->authorized_status]);
+                    Comments::create($data);
+                    return back()->with('success', 'rejected');
+            }
+            $user=Auth::user()->id;
+            RequisitionDetail::where(['id'=>$id])->update(["purchase_status"=>$request->authorized_status]);
+            PurchaseRequisition::where(['req_header_id'=>$id])->update(["app_lvl"=>12,"authorized_status"=>$request->authorized_status,"updated_by"=>$user]);
+            Comments::create($data);
+            return redirect()->route('admin.purchase-requisition.index')->with('success', 'rejected');
+
+        }else{
+        switch ($request->input('action')) {
+        case "1":
+            PurchaseRequisition::where(['id'=>$id])->update(["app_lvl"=>$request->app_lvl+1,"intattribute1"=>$request->action+1]);
+            Comments::create($data);
+            return redirect()->route('admin.purchase-requisition.index');
+        case "2":
+            PurchaseRequisition::where(['id'=>$id])->update(["app_lvl"=>$request->app_lvl+1,"intattribute2"=>$request->action]);
+            Comments::create($data);
+            return redirect()->route('admin.purchase-requisition.index');
+        case "3":
+            PurchaseRequisition::where(['id'=>$id])->update(["app_lvl"=>12,"authorized_status"=>$request->authorized_status]);
+            RequisitionDetail::where(['header_id'=>$id])->update(["purchase_status"=>$request->authorized_status]);
+            Comments::create($data);
+            return redirect()->route('admin.purchase-requisition.index');
+		case "4":
+            PurchaseRequisition::where(['id'=>$id])->update(["app_lvl"=>12,"authorized_status"=>$request->authorized_status]);
+            RequisitionDetail::where(['header_id'=>$id])->update(["purchase_status"=>$request->authorized_status]);
+            Comments::create($data);
+            return redirect()->route('admin.purchase-requisition.index');
+        case "":
+            $process=PurchaseRequisition::where(['id'=>$id])->update(["app_lvl"=>$request->app_lvl]);
+            $response = ['status' => 'success', 'success' => true, 'message' => 'Record Has Been Submited'];
+            return $response;
+        case "3-approve":
+            // dd("masuk");
+            RequisitionDetail::where(['id'=>$id])->update(["purchase_status"=>$request->authorized_status]);
+            $pr_detail = RequisitionDetail::find($id);
+
+            $counter = RequisitionDetail::where(['header_id'=>$pr_detail->header_id])->count('id'); //Jumlah Line
+            $check =RequisitionDetail::where(['header_id'=>$pr_detail->header_id])->where('purchase_status','!=',1)->count('id'); // Line yang udh diapprove
+
+            if($check == $counter){
+                PurchaseRequisition::where(['req_header_id'=>$pr_detail->header_id])->update(["app_lvl"=>12,"authorized_status"=>$request->authorized_status]);
+            }
+            Comments::create($data);
+            return back()->with('success', 'imported');
+        }
+    }
+
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        //
+    }
+}

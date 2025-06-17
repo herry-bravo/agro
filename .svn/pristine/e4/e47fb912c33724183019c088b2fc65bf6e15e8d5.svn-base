@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Product Label</title>
+
+    <style>
+        @page { size: 8cm 29cm potrait; }
+        @page { margin-top: 3mm;
+                margin-left: 0.6cm;
+        }
+    </style>
+</head>
+<body>
+    @for ($i = 1; $i <= $request->counter; $i++)
+
+                    <img src="data:image/png;base64,{{ DNS1D::getBarcodePNG($request->item,'C39') }}"
+                        alt="{{ $request->item}}"
+                        width="230.5"
+                        height="60.5">
+                        <p  style="margin-top:-0.5%; margin-left:1cm;">{{$request->item}} -  {{$request->grn }}</p><br><br>
+
+
+    @endfor
+</body>
+</html>

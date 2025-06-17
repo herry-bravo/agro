@@ -1,0 +1,225 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Gate;
+use App\Bom;
+use App\Onhand;
+use App\MaterialTxns;
+use App\WorkOrder;
+use App\WorkOrderSerial;
+use App\InvOnhandFG;
+use App\FgQuality;
+use DB;
+use Symfony\Component\HttpFoundation\Response;
+
+class CompletionController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        //
+        abort_if(Gate::denies('order_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        $wo = WorkOrderSerial::All();
+        $wo2 = WorkOrderSerial::select('work_order_id', DB::raw('count(work_order_id)' ))
+                            ->groupBy('work_order_id')
+                            ->get();
+        $completion = InvOnhandFG::All();
+        // dd($completion);
+        return view('admin.woCompletion.index', compact('wo','wo2','completion'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create(Request $request)
+    {
+        $id = $request->roll;
+        $wo = $request->wo;
+        if(empty($id || $wo)){
+            return back()->with('error', 'Field (Roll Code/ Work Order Number) is required');
+        }
+
+        if ($id){
+            $bigRoll = WorkOrderSerial::find($id);
+            $completion = WorkOrderSerial::where('id',$id)->get();
+            $qty = $bigRoll->quantity_usage;
+        }else{
+            $completion = WorkOrderSerial::where('work_order_id',$wo)->get();
+            $bigRoll = WorkOrderSerial::where('work_order_id',$wo)->first();
+            $qty =0;
+        }
+
+        $date = date('Y-m-d');
+        $count=InvOnhandFG::leftJoin('bm_wie_wo_op_material_serial as s','s.job_definition_name','bm_inv_onhand_fg_detail.attribute_roll')
+                                ->select(DB::raw('count(bm_inv_onhand_fg_detail.id) as count_date' ))
+                                ->where('bm_inv_onhand_fg_detail.completion_date',$date)
+                                ->where('s.attribute_number1',$bigRoll->attribute_number1)
+                                ->groupBy('bm_inv_onhand_fg_detail.completion_date','s.attribute_number1')->first();
+
+         if($count){
+            $count_date = $count->count_date ?? 0;
+         }else{
+             $count_date =0;
+         }
+
+		return view('admin.woCompletion.create', compact('bigRoll','count_date','completion','qty'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        //
+        try {
+            \DB::beginTransaction();
+            $total = 0;
+
+            foreach($request->uniq_attribute_roll as $key => $uniq_attribute_roll){
+                // dd($request->roll_qty);
+                //check qty
+                $total += $request->primary_quantity[$key];
+                if($request->primary_quantity[$key] > $request->roll_qty){
+                    return back()->with('error','Quantity of '.$request->uniq_attribute_roll[$key].' not available');
+                }
+
+                $data = array(
+                    'inventory_item_id'=> $request->inventory_item_id,
+                    'uniq_attribute_roll'=> $request->uniq_attribute_roll[$key],
+                    'attribute_number_gsm'=> $request->attribute_number_gsm[$key],
+                    'attribute_number_l'=> $request->attribute_number_l[$key],
+                    'attribute_number_w'=> $request->attribute_number_w[$key],
+                    'primary_uom'=> $request->primary_uom[$key],
+                    'primary_quantity'=> $request->primary_quantity[$key],
+                    'attribute_num_quality'=> $request->attribute_num_quality[$key],
+                    'completion_date'=> $request->completion_date,
+                    'attribute_roll'=> $request->attribute_roll,
+                    'attribute_number'=> $request->created_by,
+                    'shipping_status_flag'=> 0,
+                    'created_at'=> date('Y-m-d H:i:s'),
+                    'updated_at'=> date('Y-m-d H:i:s'),
+                );
+                // dd($data);
+                InvOnhandFG::create($data);
+
+                $onhand=Onhand::where(['inventory_item_id'=>$request->inventory_item_id,'subinventory_code'=>$request->subinventory])->first();
+                // dd($request->subinventory);
+                if(!$onhand){
+                    $stock = array(
+                        'inventory_item_id'=>$request->inventory_item_id,
+                        'subinventory_code'=>$request->subinventory,
+                        'primary_transaction_quantity'=>$request->primary_quantity[$key],
+                        'transaction_uom_code'=>'KG',
+                        'created_by'=>$request->created_by,
+                        'created_at'=> date('Y-m-d H:i:s'),
+                        'updated_at'=> date('Y-m-d H:i:s'),
+                    );
+                     Onhand::create($stock);
+                }else{
+                    $update_stock=	$onhand->primary_transaction_quantity+$request->primary_quantity[$key];
+                    $onhand=Onhand::where(['inventory_item_id'=>$request->inventory_item_id,'subinventory_code'=>$request->subinventory])->update(["primary_transaction_quantity"=>$update_stock]);
+                }
+                $trx = array(
+                    'transaction_id'=>MaterialTxns::all()->count()+1,
+                    'last_updated_by'=>$request->created_by,
+                    'created_by'=>$request->created_by,
+                    'inventory_item_id'=>$request->inventory_item_id,
+                    'organization_id'=>'222',
+                    'subinventory_code'=>'9000',
+                    'transaction_type_id'=>11,
+                    'transaction_action_id'=>11,
+                    'transaction_source_type_id'=>11,
+                    'transaction_source_name'=>"WIP Assembly Completion",
+                    'transaction_quantity'=>$request->primary_quantity[$key],
+                    'transaction_uom'=>"Kg", //static
+                    'primary_quantity'=>$request->primary_quantity[$key],
+                    'transaction_date'=>date('Y-m-d H:i:s'),
+                    'transaction_reference'=>$request->work_order_number,
+                    'currency_code'=>"", //static
+                    'source_line_id'=>1, //static
+                    'attribute_category'=>$request->work_order_number,
+                    );
+                    // dd($trx);
+                MaterialTxns::create($trx);
+            }
+
+            if($total > $request->roll_qty){
+                return back()->with('error','Quantity not available');
+            }
+
+        \DB::commit();
+        }catch (Throwable $e){
+            \DB::rollback();
+        }
+            return redirect()->route('admin.completion.index')->with('success','Roll Inputed');
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Request $request, $id)
+    {
+        //
+        $roll = InvOnhandFG::find($id);
+
+        $quality = FgQuality::where('uniq_attribute_roll',$roll->uniq_attribute_roll)->first();
+        // dd($quality);
+        return view('admin.woCompletion.edit', compact('roll','quality'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function quality(Request $request)
+    {
+        //
+        if($request->id != 0){
+            FgQuality::where('id',$request->id)->update($request->except(['_token','id']));
+        }else{
+            FgQuality::create($request->except('id'));
+        }
+
+        return back()->with('success','Quality Inputed');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        //
+    }
+}

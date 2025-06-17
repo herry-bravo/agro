@@ -1,0 +1,233 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Terms;
+use App\Currency;
+use App\CurrencyGlobal;
+use App\Vendor;
+use App\AccPayHeader;
+use App\AccPayTrxLines;
+use Illuminate\Http\Request;
+use App\Http\Requests\StoreAccPayHeaderRequest;
+use Illuminate\Validation\Rule;
+
+class AccountPayableController extends Controller
+{
+
+    public function index()
+    {
+        return view('admin.accountPayable.index');
+    }
+
+    public function create()
+    {
+        $terms = Terms::where('term_category','PAYMENT')->get();
+        $currency = CurrencyGlobal::where('currency_status', 1)->get();
+        $vendor = Vendor::all()->take(3);
+        return view('admin.accountPayable.create',compact('terms','currency','vendor'));
+    }
+
+
+    public function store(Request $request)
+    {
+       try {
+        \DB::beginTransaction();
+
+            /* Header */
+            $header_id = AccPayHeader::latest()->first();
+            $header_id = $header_id->id + 1;
+            $line_number = 1;
+
+            $voucher_num = str_pad($header_id,6,"0",STR_PAD_LEFT);
+
+            $validate_invoice = AccPayHeader::where('invoice_num',$request->invoice_num)->first();
+            if($validate_invoice){
+                return back()->with('error', 'Invoice Already Inputed');
+            }
+
+            $invoice_amount = $request->invoice_amount;
+            $invoice_amount = floatval(preg_replace('/[^\d.]/', '', $invoice_amount));
+
+            $head =AccPayHeader::findorNew($request->id);
+            $head->invoice_id =$header_id;
+            $head->invoice_num =$request->invoice_num;
+            $head->voucher_num =$voucher_num;
+            $head->vendor_id =$request->vendor_id;
+            $head->invoice_amount =$invoice_amount;
+            $head->invoice_currency_code =$request->customer_currency;
+            $head->invoice_type_lookup_code =$request->invoice_type_lookup_code;
+            $head->invoice_date =$request->datepicker1;
+            $head->gl_date =$request->datepicker2;
+            $head->invoice_received_date =$request->duedate;
+            $head->terms_id =$request->terms_id;
+            $head->created_by =auth()->user()->id;
+            // dd($head);
+            $head->save();
+
+            foreach($request->inventory_item_id as $key =>$inventory_item_id){
+                $data = array(
+                        'invoice_id'=>$header_id,
+                        'line_id'=> $line_number,
+                        'inventory_item_id'=>$request->inventory_item_id [$key],
+                        'po_header_id'=>$request->po_header_id [$key] ?? '',
+                        'po_line_id'=>$request->po_line_id [$key] ?? '',
+                        'item_description'=>$request->item_description [$key],
+                        'rcv_transaction_id'=>$request->receipt_num [$key] ?? '',
+                        'receipt_currency_code'=>$request->customer_currency?? '',
+                        'quantity_invoiced'=>$request->quantity_invoiced[$key],
+                        'unit_price'=>$request->unit_price [$key],
+                        'account_segment'=>$request->payable_account_code [$key],
+                        'stat_amount'=>$request->stat_amount [$key],
+                        'original_amount'=>$request->stat_amount [$key],
+                        'unit_meas_lookup_code'=>$request->unit_meas_lookup_code [$key],
+                        'created_at'=>date('Y-m-d H:i:s'),
+                        'updated_at'=>date('Y-m-d H:i:s'),
+                    );
+                    // dd($data);
+                    AccPayTrxLines::create($data);
+                    $line_number++;
+                }
+
+                \DB::commit();
+
+        }catch (Throwable $e){
+            \DB::rollback();
+        }
+        return redirect()->route('admin.ap.index')->with('success', 'Data Is Inputed');
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+        $ap = AccPayHeader::where('invoice_id',$id)->first();
+    // dd($ap);
+        $terms = Terms::where('term_category','PAYMENT')->get();
+        $currency = CurrencyGlobal::where('currency_status', 1)->get();
+        $vendor = Vendor::all()->take(3);
+        $ap_lines = AccPayTrxLines::where('invoice_id','=',$id)->get();
+        // dd($ap_lines);
+        return view('admin.accountPayable.edit',compact('ap','ap_lines','terms','currency','vendor'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+         \DB::beginTransaction();
+
+             /* Header */
+
+             $invoice_amount = $request->invoice_amount;
+             $invoice_amount = floatval(preg_replace('/[^\d.]/', '', $invoice_amount));
+
+             $head =AccPayHeader::find($request->ap_id);
+             $head->invoice_id =$request->invoice_id;
+             $head->invoice_num =$request->invoice_num;
+             $head->vendor_id =$request->vendor_id;
+             $head->invoice_amount =$invoice_amount;
+             $head->invoice_currency_code =$request->customer_currency;
+             $head->invoice_type_lookup_code =$request->invoice_type_lookup_code;
+             $head->invoice_date =$request->datepicker1;
+             $head->gl_date =$request->datepicker2;
+             $head->invoice_received_date =$request->duedate;
+             $head->terms_id =$request->terms_id;
+             $head->save();
+
+             foreach($request->inventory_item_id as $key =>$inventory_item_id){
+				if(empty($request->line_id[$key])){
+                    $data = array(
+                        'invoice_id'=>$request->invoice_id,
+                        'line_id'=> $line_number,
+                        'inventory_item_id'=>$request->inventory_item_id [$key],
+                        'po_header_id'=>$request->po_header_id [$key] ?? '',
+                        'po_line_id'=>$request->po_line_id [$key] ?? '',
+                        'item_description'=>$request->item_description [$key],
+                        'rcv_transaction_id'=>$request->receipt_num [$key] ?? '',
+                        'receipt_currency_code'=>$request->customer_currency?? '',
+                        'quantity_invoiced'=>$request->quantity_invoiced[$key],
+                        'unit_price'=>$request->unit_price [$key],
+                        'acc'=>$request->payable_account_code [$key],
+                        'stat_amount'=>$request->stat_amount [$key],
+                        'original_amount'=>$request->stat_amount [$key],
+                        'unit_meas_lookup_code'=>$request->unit_meas_lookup_code [$key],
+                        'created_at'=>date('Y-m-d H:i:s'),
+                        'updated_at'=>date('Y-m-d H:i:s'),
+                    );
+                    AccPayTrxLines::create($data);
+                    $line_number++;
+                }else{
+                    $data =AccPayTrxLines::find($request->id[$key]);
+                    $data->invoice_id=$request->invoice_id;
+                    $data->line_id= $request->line_id[$key];
+                    $data->inventory_item_id=$request->inventory_item_id [$key];
+                    $data->po_header_id=$request->po_header_id [$key] ?? '';
+                    $data->po_line_id=$request->po_line_id [$key] ?? '';
+                    $data->item_description=$request->item_description [$key];
+                    $data->rcv_transaction_id=$request->receipt_num [$key] ?? '';
+                    $data->receipt_currency_code=$request->customer_currency?? '';
+                    $data->quantity_invoiced=$request->quantity_invoiced[$key];
+                    $data->unit_price=$request->unit_price [$key];
+                    $data->account_segment=$request->payable_account_code [$key];
+                    $data->stat_amount=$request->stat_amount [$key];
+                    $data->original_amount=$request->stat_amount [$key];
+                    $data->unit_meas_lookup_code=$request->unit_meas_lookup_code [$key];
+                    $data->updated_at=date('Y-m-d H:i:s');
+                    $data->save();
+                }
+
+            }
+
+            \DB::commit();
+
+         }catch (Throwable $e){
+             \DB::rollback();
+         }
+         return back()->with('success', 'Data Is Updated');
+     }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $ap = AccPayHeader::where('invoice_id',$id)->delete();
+        $ap_line = AccPayTrxLines::where('invoice_id',$id)->delete();
+
+        return back()->with('success', 'Data Is Deleted');
+    }
+
+    public function massDestroy(MassDestroyClientRequest $request)
+    {
+        AccPayHeader::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
+    }
+}

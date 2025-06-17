@@ -1,0 +1,248 @@
+@extends('layouts.admin')
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
+@endpush
+@section('breadcrumbs')
+
+<a href="#" class="breadcrumbs__item">{{ trans('cruds.trx.fields.inv') }}</a>
+<a href="{{ route("admin.subInventory.index") }}" class="breadcrumbs__item active"> {{ trans('cruds.trx.title') }}</a>
+
+@endsection
+@section('content')
+<div class="card">
+    <div class="card-body">
+
+            <table id="table-mtl-trx" class=" table table-striped display " style="width:100%" data-source="data-source">
+                <thead>
+                    <tr>
+                        <th>
+                            #
+                        </th>
+                        <th>
+                            &nbsp;  &nbsp; &nbsp;  &nbsp; {{ trans('cruds.trx.fields.item') }}  &nbsp; &nbsp; &nbsp; &nbsp;
+                        </th>
+                        <th>
+                            &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp   {{ trans('cruds.trx.fields.description') }} &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp
+                        </th>
+                        <th>
+                           SubInventory
+                        </th>
+                        <th class="text-center">
+                           To SubInventory
+                        </th>
+                        <th class="text-center">
+                            {{ trans('cruds.trx.fields.transaction_quantity') }}
+                        </th>
+                        <th class="text-center">
+                            {{ trans('cruds.trx.fields.transaction_uom') }}
+                        </th>
+                        <th class="text-center">
+                            {{ trans('cruds.trx.fields.base_qty') }}
+                        </th>
+                        <th class="text-center">
+                            {{ trans('cruds.trx.fields.base_uom') }}
+                        </th>
+                        <th class="text-center">
+                            {{ trans('cruds.trx.fields.transaction_reference') }}
+                        </th>
+                        <th class="text-center">
+                            {{ trans('cruds.trx.fields.receiving_document') }}
+                        </th>
+                        <th class="text-center">
+                            {{ trans('cruds.trx.fields.attribute_category') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.trx.fields.transaction_cost') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.trx.fields.transaction_date') }}
+                        </th>
+                        <th style="text-align: center;">
+                            {{ trans('cruds.trx.fields.transaction_source_name') }}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+                <tfoot>
+
+                </tfoot>
+            </table>
+
+    </div>
+</div>
+@endsection
+@push('script')
+<script>
+    $(document).ready(function() {
+        //  $.fn.dataTable.ext.errMode = 'none';
+
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        $('#table-mtl-trx').DataTable({
+            "bServerSide": true
+            , ajax: {
+                url: '{{url("search/mtl-trx-report") }}'
+                , type: "GET"
+                , headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+                , data: function(d) {
+                    return d
+                }
+            }
+            , responsive: false
+            , scrollX : true
+            , searching: true
+            , dom: '<"card-header border-bottom"<"head-label"><"dt-action-buttons text-end">><"d-flex justify-content-between align-items-center mx-0 row"<"col-sm-12 col-md-8"Bl><"col-sm-12 col-md-4"f>>t<"d-flex justify-content-between mx-0 row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>'
+            , displayLength: 15
+            , "lengthMenu": [
+                    [10, 25, 50, -1]
+                    , [10, 25, 50, "All"]
+                ]
+
+            , columnDefs: [{
+
+                    render: function(data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                    , targets: [0]
+                },   { width: 200, targets: 2 }
+
+            ]
+            , buttons: [{
+                    extend: 'print'
+                    , text: feather.icons['printer'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Print'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                    , customize: function(win) {
+                        $(win.document.body)
+                            .css('font-size', '10pt')
+
+
+                        $(win.document.body).find('table')
+                            .addClass('compact')
+                            .css('font-size', '10pt');
+                    }
+                    , header: true
+                    , title: '<i>Internal</i> Surat Jalan</br> '
+                    , orientation: 'landscape'
+                }
+                , {
+                    extend: 'csv'
+                    , text: feather.icons['file-text'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Csv'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'excel'
+                    , text: feather.icons['file'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Excel'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'pdf'
+                    , text: feather.icons['clipboard'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Pdf'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'copy'
+                    , text: feather.icons['copy'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Copy'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'colvis'
+                    , text: feather.icons['eye'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Colvis'
+                    , className: ''
+                }, {
+                    text: feather.icons['filter'].toSvg({
+                        class: 'font-small-4 me-50 '
+                    }) + 'Filter'
+                    , className: 'btn-warning'
+                    , action: function(e, node, config) {
+                        $('#modalFilter').modal('show')
+                    }
+                , }
+            , ]
+            , columns: [{
+                    data: 'id'
+                    , className: "text-center"
+                , }
+                , {
+                    data: 'item_code'
+                    , className: "text-start"
+                }, {
+                    data: 'description'
+                    , className: "text-start"
+                }, {
+                    data: 'subinventory_code'
+                    , className: "text-start"
+                }, {
+                    data: 'transfer_subinventory'
+                    , className: "text-start"
+                }, {
+                    data: 'transaction_quantity'
+                    , className: "text-end"
+                }, {
+                    data: 'primary_uom_code'
+                    , className: "text-center"
+                }, {
+                    data: 'primary_qty'
+                    , className: "text-end"
+                }, {
+                    data: 'secondary_uom'
+                    , className: "text-center"
+                }, {
+                    data: 'transaction_reference'
+                    , className: "text-start"
+                }, {
+                    data: 'receiving_document'
+                    , className: "text-start"
+                }, {
+                    data: 'attribute_category'
+                    , className: "text-start"
+                }, {
+                    data: 'transaction_cost'
+                    , className: "text-start"
+                }, {
+                    data: 'transaction_date'
+                    , className: "text-end"
+                }, {
+                    data: 'transaction_source_name'
+                    , className: "text-start"
+                }
+            ]
+
+        });
+    });
+
+</script>
+@endpush

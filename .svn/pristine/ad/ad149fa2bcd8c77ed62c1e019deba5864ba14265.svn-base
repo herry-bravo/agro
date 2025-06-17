@@ -1,0 +1,16 @@
+@extends('layouts.admin')
+@laravelViewsStyles
+@section('breadcrumbs')
+
+<a href="" class="breadcrumbs__item">Operation Unit</a>
+<a href="" class="breadcrumbs__item">Index</a>
+
+@endsection
+@section('content')
+
+<div class="card">
+        <livewire:operation-unit-view/>
+</div>
+
+@endsection
+@laravelViewsScripts

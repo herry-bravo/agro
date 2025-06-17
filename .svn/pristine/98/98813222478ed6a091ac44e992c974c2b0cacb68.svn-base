@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\ItemMaster;
+use Illuminate\Http\Request;
+
+class GalleryController extends Controller
+{
+    //
+    public function index()
+    {
+        $model = ItemMaster::whereNotNull('img_path')->get();
+        $category = ItemMaster::select('category_code')->groupBy('category_code')->get();
+        return view('admin.gallery.index', [
+            "model" => $model,
+            "category" => $category,
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create( Request $request)
+    {
+
+    }
+
+    public function store(Request $request)
+    {
+
+    }
+}

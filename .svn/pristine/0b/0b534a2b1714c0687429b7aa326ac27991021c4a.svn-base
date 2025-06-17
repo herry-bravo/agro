@@ -1,0 +1,335 @@
+@extends('layouts.admin')
+@section('styles')
+<link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/jquery-ui.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/drop-image.css') }}">
+@endsection
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+<script src="{{ asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
+@endpush
+@section('content')
+<section id="multiple-column-form">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header mt-1 mb-50">
+                    <h6 class="card-title ">
+                        <a href="{{ route("admin.purchase-requisition.index") }}" class="breadcrumbs__item">Purchase Requisition </a>
+                        <a href="{{ route("admin.purchase-requisition.create") }}" class="breadcrumbs__item">Create</a>
+                    </h6>
+                </div>
+                <hr>
+                <div class="card-body">
+                    <form action="{{ route('admin.purchase-requisition.store') }}" method="POST" enctype="multipart/form-data">
+                        {{ csrf_field()}}
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div class="mb-1">
+                                    <label class="col-sm-0 control-label" for="number">{{ trans('cruds.requisition.fields.number') }}</label>
+                                    <input type="text" class="form-control" value="{{$number}}" name="segment1" autocomplete="off" maxlength="10" readonly>
+                                    <input type="hidden" id="id" name="id" value="{{$head_id}}">
+                                    <input type="hidden" id="created_by" name="created_by" value="{{auth()->user()->id}}">
+                                    <input type="hidden" id="created_by" name="updated_by" value="{{auth()->user()->id}}">
+                                    <input type="hidden" id="organization_id" value='222' name="org_id">
+                                </div>
+                            </div>
+                            <div class="col-md-2 col-12">
+                                <div class="mb-1">
+                                    <label class="col-sm-0 control-label" for="site">{{ trans('cruds.requisition.fields.cost_center') }}</label>
+                                    <input type="text" class="form-control search_cost_center " placeholder="Type here ..." name="search_cost_center" autocomplete="off" required>
+                                    <input type="hidden" class="form-control search_cc_id" name="attribute1" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="col-md-2 col-12">
+                                <div class="mb-1">
+                                    <label class="col-sm-0 control-label" for="number"> {{ trans('cruds.requisition.fields.requested') }}</label>
+                                    <select name="requested_by" id="agent_id" class="form-control select2">
+                                        {{-- @foreach($users as $id => $users) --}}
+                                        <option value="{{ auth()->user()->id}}">{{ auth()->user()->name }}</option>
+                                        {{-- @endforeach --}}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-12">
+                                <div class="mb-1">
+                                    <label class="col-sm-0 control-label" for="site">Creation Date</label>
+                                    <input readonly type="text" id="transaction_date" name="transaction_date" class="form-control" value="{{ date('d-M-Y H:i:s'); }}">
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-12">
+                                <div class="mb-1">
+                                    <label class="col-sm-0 control-label" for="site">{{ trans('cruds.requisition.fields.ref') }}</label>
+                                    <select name="ref" id="ref_id" class="form-control select2">
+                                        <option value="0">Others</option>
+                                        <option value="4">Material</option>
+                                    </select>
+                                    <input type="hidden" class="form-control search_address1 " name="authorized_status" value="1" autocomplete="off" readonly>
+                                </div>
+                            </div>
+                        </div><br>
+                        <div class="row">
+
+                            <div class="box box-default">
+                                <div class="box-body scrollx tableFixHead" style="height: 380px;overflow: scroll;">
+                                    <table class="table table-fixed table-borderless">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>Description</th>
+                                                <th>Category</th>
+                                                <th class='float-center text-center'>UOM</th>
+                                                <th>Quantity</th>
+                                                <th>Need By Date</th>
+                                                <th class="text-center">Img</th>
+                                                <th class="text-center">#</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="requisition_container">
+                                            <tr class="tr_input">
+                                                <td width="15%">
+                                                    <input type="text" class="form-control search_purchase_item" placeholder="Type here ..." name="item_code[]" id="searchitem_1" autocomplete="off"><span class="help-block search_item_code_empty" style="display: none;">No Results Found ..</span>
+                                                    <input type="hidden" class="search_inventory_item_id" id="id_1" value='0' name="inventory_item_id[]" autocomplete="off">
+                                                    {{-- <input type="hidden" class="form-control" id="description_1" value="" name="description_item[]" autocomplete="off"> --}}
+                                                    <input type="hidden" class="form-control" id="category_1" value="" name="category[]" autocomplete="off">
+                                                </td>
+                                                <td width="35%">
+                                                    <input type="text" class="form-control" id="description_1" value="" name="description_item[]" autocomplete="off">
+                                                </td>
+                                                <td width="10%">
+                                                    <input type="text" class="form-control search_subcategory_code_" name="sub_category[]" id="subcategory_1" autocomplete="off">
+                                                    <span class="help-block search_uom_code_empty glyphicon" style="display: none;"> No Results Found </span>
+                                                </td>
+                                                <td width="10%">
+                                                    <input type="text" class="form-control search_uom_conversion text-center" name="pr_uom_code[]" id="uom_1" autocomplete="off">
+                                                    <span class="help-block search_uom_code_empty glyphicon" style="display: none;"> No Results Found </span>
+                                                </td>
+                                                <td width="10%">
+                                                    <input type="text" class="form-control purchase_quantity float-end text-end" value="0" name="quantity[]" id="qty_1" autocomplete="off" required>
+                                                </td>
+                                                <input type="hidden" class="form-control purchase_cost float-end text-end" value="0" name="estimated_cost[]" id="price_1" onblur="cal()" autocomplete="off" readonly>
+                                                <td width="15%">
+                                                    <input required type="text" name="requested_date[]" class="form-control datepicker float-center text-center" id="date_1" autocomplete="off">
+                                                </td>
+                                                <td width="5%" class="text-center">                                                    
+                                                    <div class="image-upload">
+                                                        <label for="file-input_1">
+                                                            <img src="https://goo.gl/pB9rpQ"/>
+                                                        </label>
+                                                    
+                                                        <input id="file-input_1" type="file"  name="img_path[]"/>
+                                                    </div>
+                                                </td>
+                                                <td width="5%" class="text-center">                                                    
+                                                    <button type="button" class="btn btn-ligth btn-sm" style="position: inherit;">X</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <button type="button" class="btn btn-light btn-sm add_requisition_product " style="font-size: 12px;"><i data-feather='plus'></i> Add Rows</button>
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.box-body -->
+                        <div class="row">
+                            <div class="col-sm-8">
+                                <div class="form-group"></br>
+                                    <label for="form-label textarea-counter ">Description</label>
+                                    <textarea data-length="240" class="form-control char-textarea" id="textarea-counter" name="description" rows="2" required></textarea>
+
+                                </div>
+                                <small class="textarea-counter-value float-end">This Note Only For Internal Purposes, <b>Char Left : <span class="char-count">0</span> / 240 </b></small>
+                            </div>
+                            {{-- <div class="col-sm-2">
+                                <div class="form-group mt-2"></br>
+                                    <label for="form-label textarea-counter ">Attachment   :</label>
+                                    <a class="btn btn-ligth"  data-bs-toggle="modal" data-bs-target="#modaladd">
+                                        <i data-feather='camera'> </i>  Add Attachment
+                                    </a>
+                                </div>
+                            </div> --}}
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <button type="reset" class="btn btn-warning btn-next">
+                                <i data-feather="arrow-left" class="align-middle ms-sm-25 ms-0"></i>Reset
+
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-next">
+                                {{ trans('global.save') }}
+                                <i data-feather="arrow-right" class="align-middle ms-sm-25 ms-0"></i>
+                            </button>
+                        </div>
+                </div>
+
+                <div class="modal fade" id="modaladd" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header  bg-primary">
+                                <h4 class="modal-title text-white" id="exampleModalLongTitle">Add Attachment</h4>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="card-body">
+                                    <div id="dropBox">
+                                        {{-- <form class="" enctype="multipart/form-data"> --}}
+                                        <input type="file" id="imgUpload" class="imgUpload" name="path" multiple accept="image/*" onchange="filesManager(this.files)">
+                                        <label class="btn btn-primary" for="imgUpload">Upload From Your Computer</label>
+                                        {{-- </form> --}}
+                                        <div id="gallery"></div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    {{-- <button type="Submit" class="btn btn-primary" name='action' value="existing">Create</button> --}}
+                                    <button type="button" class="btn btn-primary" name='action' data-bs-dismiss="modal" value="existing">Create</button>
+                                    {{-- <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button> --}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        </form>
+        <!-- /.box-body -->
+    </div>
+    </div>
+</section>
+<!-- /.content -->
+@endsection
+
+@push('script')
+{{-- image --}}
+<script>
+    $(function() {
+        $('#date_1').datepicker({
+            minDate: 1
+        });
+    });
+    let dropBox = document.getElementById('dropBox');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+        dropBox.addEventListener(evt, prevDefault, false);
+    });
+
+    function prevDefault(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // remove and add the hover class, depending on whether something is being
+    // actively dragged over the box area
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropBox.addEventListener(evt, hover, false);
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+        dropBox.addEventListener(evt, unhover, false);
+    });
+
+    function hover(e) {
+        dropBox.classList.add('hover');
+    }
+
+    function unhover(e) {
+        dropBox.classList.remove('hover');
+    }
+
+    dropBox.addEventListener('drop', mngDrop, false);
+
+    function mngDrop(e) {
+        let dataTrans = e.dataTransfer;
+        let files = dataTrans.files;
+
+        document.querySelector('.imgUpload').files = e.dataTransfer.files; // Transfer dragged type file to form input file
+        filesManager(files);
+    }
+
+    function previewFile(file) { // ------------ Untuk menampilkan preview images ----------
+        let imageType = /image.*/;
+        if (file.type.match(imageType)) {
+            let fReader = new FileReader();
+            let gallery = document.getElementById('gallery');
+
+            fReader.readAsDataURL(file);
+
+            fReader.onloadend = function() {
+                let wrap = document.createElement('div');
+                let img = document.createElement('img');
+                let imgCapt = document.createElement('p');
+
+                img.src = fReader.result;
+
+                let fSize = (file.size / 1000) + ' KB';
+                imgCapt.innerHTML = `<span class="fName">${file.name}</span><span class="fSize">${fSize}</span><span class="fType">${file.type}</span>`;
+                gallery.appendChild(wrap).appendChild(img);
+                gallery.appendChild(wrap).appendChild(imgCapt);
+            }
+        } else {
+            alert("Only images are allowed!", file);
+        }
+    }
+
+    function filesManager(files) {
+        files = [...files];
+        files.forEach(previewFile);
+    }
+
+</script>
+@endpush
+
+@section('scripts')
+@parent
+<script>
+    $(function() {
+        @can('order_delete')
+        let deleteButtonTrans = '{{ trans('
+        global.datatables.delete ') }}'
+        let deleteButton = {
+            text: deleteButtonTrans
+            , url: "{{ route('admin.purchase-requisition.massDestroy') }}"
+            , className: 'btn-danger'
+            , action: function(e, dt, node, config) {
+                var ids = $.map(dt.rows({
+                    selected: true
+                }).nodes(), function(entry) {
+                    return $(entry).data('entry-id')
+                });
+
+                if (ids.length === 0) {
+                    alert('{{ trans('
+                        global.datatables.zero_selected ') }}')
+
+                    return
+                }
+
+                if (confirm('{{ trans('
+                        global.areYouSure ') }}')) {
+                    $.ajax({
+                            headers: {
+                                'x-csrf-token': _token
+                            }
+                            , method: 'POST'
+                            , url: config.url
+                            , data: {
+                                ids: ids
+                                , _method: 'DELETE'
+                            }
+                        })
+                        .done(function() {
+                            location.reload()
+                        })
+                }
+            }
+        }
+        dtButtons.push(deleteButton)
+        @endcan
+    })
+
+</script>
+@endsection

@@ -1,0 +1,115 @@
+@extends('layouts.admin')
+@section('styles')
+<link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/plugins/forms/form-validation.css') }}">
+@endsection
+
+@section('content')
+<section id="multiple-column-form">
+    <div class="card">
+        <div class="card-header">
+            <h6 class="card-title mt-1 mb-1">
+                <a href="" class="breadcrumbs__item">User Management </a>
+                <a href="{{ route("admin.permissions.index") }}" class="breadcrumbs__item">  {{ trans('cruds.permission.title_singular') }}</a>
+            </h6>
+            @can('permission_create')
+            <div class="row">
+                <div class="col-lg-12">
+                    <a class="btn btn-primary" href="{{ route("admin.permissions.create") }}">
+                        <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus me-50 font-small-4">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg></span>
+                        {{ trans('global.add') }} {{ trans('cruds.permission.title_singular')  }}
+                    </a>
+                </div>
+            </div>
+            @endcan
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class=" table table-bordered table-striped table-hover datatable datatable-Transaction w-100">
+                    <thead>
+                        <tr>
+                            <th width="10">
+
+                            </th>
+                            <th>
+                                {{ trans('cruds.permission.fields.id') }}
+                            </th>
+                            <th>
+                                {{ trans('cruds.permission.fields.title') }}
+                            </th>
+                            <th>
+                                {{ trans('cruds.permission.fields.created_at') }}
+                            </th>
+                            <th>
+                                {{ trans('cruds.permission.fields.updated_at') }}
+                            </th>
+                            <th>
+                                {{ trans('cruds.permission.fields.deleted_at') }}
+                            </th>
+                            <th>
+                                {{ trans('cruds.order.fields.status') }}
+                            </th>
+                            <th>
+                                Action
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($permissions as $key => $permission)
+                        <tr data-entry-id="{{ $permission->id }}">
+                            <td>
+
+                            </td>
+                            <td>
+                                {{ $permission->id ?? '' }}
+                            </td>
+                            <td>
+                                {{ $permission->title ?? '' }}
+                            </td>
+                            <td>
+                                {{ $permission->created_at ?? '' }}
+                            </td>
+                            <td>
+                                {{ $permission->updated_at ?? '' }}
+                            </td>
+                            <td>
+                                {{ $permission->deleted_at ?? '' }}
+                            </td>
+                            <td>
+                                1
+                            </td>
+                            <td>
+                                @can('permission_show')
+                                <a class="btn btn-xs btn-primary" href="{{ route('admin.permissions.show', $permission->id) }}">
+                                    {{ trans('global.view') }}
+                                </a>
+                                @endcan
+
+                                @can('permission_edit')
+                                <a class="btn btn-xs btn-info" href="{{ route('admin.permissions.edit', $permission->id) }}">
+                                    {{ trans('global.edit') }}
+                                </a>
+                                @endcan
+
+                                @can('permission_delete')
+                                <form action="{{ route('admin.permissions.destroy', $permission->id) }}" method="POST" onsubmit="return confirm('{{ trans('global.areYouSure') }}');" style="display: inline-block;">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                    <input type="submit" class="btn btn-xs btn-danger" value="{{ trans('global.delete') }}">
+                                </form>
+                                @endcan
+
+                            </td>
+
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    </div>
+</section>
+@endsection

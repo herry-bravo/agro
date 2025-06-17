@@ -1,0 +1,118 @@
+@extends('layouts.admin')
+@section('styles')
+@endsection
+@push('script')
+<script src="{{ asset('js/bootstrap.min.js') }}"></script>
+@endpush
+@section('content')
+@can('order_create')
+@endcan
+@section('breadcrumbs')
+    <a href="" class="breadcrumbs__item">Account Receivable</a>
+    <a href="" class="breadcrumbs__item active">Create</a>
+@endsection
+@section('content')
+@if ($errors->any())
+<div class="alert alert-danger">
+    @foreach ($errors->all() as $error)
+    {{ $error }}
+    @endforeach
+</div>
+@endif
+<section id="multiple-column-form">
+    <div class="card">
+        <div class="card-body">
+            <form action="{{ route("admin.arAuto.store") }}" method="POST" enctype="multipart/form-data">
+                {{ csrf_field() }}
+                <div class="row">
+                        <div class="table-responsive">
+                            <table id="table" class=" table table-striped table-hover datatable datatable-Order">
+                                <thead>
+                                    <tr style="text-align: center;">
+                                        <th style="text-center">
+                                            <input type="checkbox" class='form-check-input dt-checkboxes' id="head-cb">
+                                        </th>
+                                        <th scope="col">
+                                            {{ trans('cruds.Delivery.table.no_barang') }}
+                                        </th>
+                                        <th scope="col">
+                                            {{ trans('cruds.Delivery.table.cname') }}
+                                        </th>
+                                        <th scope="col">
+                                            {{ trans('cruds.Delivery.table.shipto') }}
+                                        </th>
+                                        <th scope="col">
+                                            {{ trans('cruds.Delivery.table.sj') }}
+                                        </th>
+                                        <th scope="col">
+                                            {{ trans('cruds.Delivery.table.note') }}
+                                        </th>
+                                        <th scope="col">
+                                            {{ trans('cruds.Delivery.table.curenci') }}
+                                        </th>
+                                        <th scope="col">
+                                            {{ trans('cruds.Delivery.table.ft') }}
+                                        </th>
+                                        <th scope="col">
+                                            {{ trans('cruds.Delivery.table.satuan') }}
+                                        </th>
+                                        <th scope="col">
+                                            {{ trans('cruds.Delivery.table.dt') }}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($delivery as $row)
+                                    <tr data-entry-id="{{ $row->delivery_id }}">
+                                        <td>
+                                            {{ $row->delivery_id }}
+                                        </td>
+                                        <td>
+                                            {{ $row->delivery_id ?? '' }}
+                                            <input type="hidden" id="created_by" name="created_by" value="{{auth()->user()->id?? ''}}">
+                                        </td>
+                                        <td>
+                                            {{$row->customer->party_name ?? ''}}
+                                        </td>
+                                        <td>
+                                            {{$row->party_site->address1 ?? ''}}
+
+                                        </td>
+                                        <td>
+                                            {{$row->packing_slip_number ?? ''}}
+                                        </td>
+                                        <td>
+                                            {{ $row->attribute2 ?? '' }}
+
+                                        </td>
+                                        <td style="width: 0%">
+                                            {{ $row->currency->currency_code ?? '' }}
+
+                                        </td>
+                                        <td style="width: 0%">
+                                            {{ $row->term->term_code ?? '' }}
+                                        </td>
+                                    <td style="width: 0%">
+                                            {{ $row->gross_weight ?? '' }}
+                                        </td>
+                                        <td>
+                                            {{ \Carbon\Carbon::parse($row->on_or_about_date)->format('d-M-Y') ?? '' }}
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-center bd-highlight bg-light inline">
+                            <div class="p-1 bd-highlight " style="margin-top: 0.5%;font-weight: bold;">
+                                Action :
+                            </div>
+                            <div class="p-1 bd-highlight">
+                                <button type='submmit' class="form-control btn btn-primary arrow-right-circle" id="allselect" disabled> Auto Invoince</button>
+                            </div>
+                        </div>
+                    </div>
+            </form>
+        </div>
+    </div>
+    @endsection

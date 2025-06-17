@@ -1,0 +1,129 @@
+@extends('layouts.admin')
+@section('styles')
+<link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/jquery-ui.css') }}">
+@endsection
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+<script src="{{ asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
+@endpush
+@section('breadcrumbs')
+<a href="./" class="breadcrumbs__item">Inventory</a>
+
+<a href="#" class="breadcrumbs__item">Subinventory Transfer</a>
+
+@endsection
+@section('content')
+@if(session()->has('error'))
+<div class="alert alert-danger">
+    {{ session()->get('error') }}
+</div>
+@endif
+<br>
+<section id="multiple-column-form">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    Subinventory Transfer
+                </div>
+                <hr>
+                <div class="card-body">
+                    <form action="{{ route("admin.mtl-transfer.store") }}" method="POST" enctype="multipart/form-data" class="form-horizontal create_purchase">
+                        {{ csrf_field() }}
+                        <div class="row">
+                            <div class="box-body scrollx tableFixHead" style="height: 380px;overflow: scroll;">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th> {{ trans('cruds.inventory.fields.item_number') }}</th>
+                                            <th> {{ trans('cruds.inventory.fields.subinventory') }}</th>
+                                            <th> {{ trans('cruds.trx.fields.subinventory_to') }}</th>
+                                            <th>{{ trans('cruds.trx.fields.transaction_uom') }}</th>
+                                            <th>{{ trans('cruds.trx.fields.transaction_quantity') }}</th>
+                                            <th>{{ trans('cruds.trx.fields.transaction_reference') }}</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="transfer_container">
+                                        <tr class="tr_input">
+                                            <td width="30%">
+                                                <input type="text" class="form-control search_item_code" placeholder="Type here ..." name="item_code[]" id="searchitem_1" autocomplete="off" required><span class="help-block search_item_code_empty" style="display: none;" required>No Results Found ...</span>
+                                                <input type="hidden" class="search_inventory_item_id" id="id_1" name="inventory_item_id[]" autocomplete="off">
+                                                <input type="hidden" class="form-control" value="" id="description_1" name="description_item[]" autocomplete="off">
+                                            </td>
+                                            <td width="15%">
+                                                <input type="text" class="form-control search_subinventory" value="" name="subinventory_from[]" id="subinventoryfrom_1" autocomplete="off">
+                                                <input type="hidden" class="form-control subinvfrom_1" name="subinvfrom[]" id="subinvfrom_1" autocomplete="off">
+                                            </td>
+                                            <td width="15%">
+                                                <input type="text" class="form-control search_subinventoryto" name="subinventory_to[]" id="subinventoryto_1" autocomplete="off">
+                                                <input type="hidden" class="form-control subinvto_1" name="subinvto[]" id="subinvto_1" autocomplete="off">
+                                            </td>
+                                            <td width="10%">
+                                                <input type="text" class="form-control" name="uom[]" id="uom_1" autocomplete="off" readonly required>
+                                            </td>
+                                            <td width="15%">
+                                                <input type="text" class="form-control" name="quantity[]" id="quantity_1" autocomplete="off">
+                                            </td>
+                                            <td width="15%">
+                                                <input type="text" class="form-control search_ref_aju" value="{{ $reference ?? ''}}" name="reference[]" id="reference_1" autocomplete="off">
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger" style="position: inherit;">&times;</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3">
+                                                <button type="button" class="btn btn-outline-info add_transfer"><i class="fa fa-plus"></i> Add More</button>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table></br>
+                            </div>
+                            <!-- /.box-body -->
+                        </div>
+                        </br>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label> Transaction Date</label><br>
+                                    <input type="text" class="form-control " name="transaction_date" value="{{ Carbon\Carbon::parse($request->transaction_date)->format('d-M-Y H:i:s') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>Transaction Type</label><br>
+                                    <input type="text" class="form-control purchase_tax_percent" value="{{$trx->trx_actions}}" name="transaction_type">
+                                    <input type="hidden" class="form-control purchase_tax_percent" value="{{$trx->trx_code}}" name="transaction_code">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label></label><br>
+                                    <input type="text" class="form-control purchase_tax_amount" name="tax_amount">
+                                </div>
+                            </div>
+                            <div class=" col-md-4">
+                                <div class="form-group">
+                                    <label></label>
+                                    <input type="text" class="form-control purchase_total" value="" readonly="" name="purchase_total"> </br>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.box-body -->
+                        </br>
+                        <div class="d-flex justify-content-between">
+                            <button type="reset" class="btn btn-danger pull-left">Reset</button>
+
+                            <input type="submit"  class="btn btn-primary pull-right" value="Save">
+                        </div>
+                </div>
+                </form>
+            </div>
+
+</section>
+<!-- /.content -->
+@endsection

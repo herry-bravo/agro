@@ -1,0 +1,285 @@
+@extends('layouts.admin')
+@section('styles')
+<link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/jquery-ui.css') }}">
+@endsection
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+<script src="{{ asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
+@endpush
+@section('breadcrumbs')
+
+<a href="" class="breadcrumbs__item">Inventory</a>
+<a href="" class="breadcrumbs__item active">Miscellaneous</a>
+@endsection
+@section('content')
+@can('order_create')
+@endcan
+<div class="card">
+    <div class="card-header">
+        <h4 class="card-title mb-2">Miscellaneous Transaction </h4>
+
+        @can('role_create')
+        <div class="row">
+            <div class="col-lg-12">
+                <a class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modaladd" style="margin-top: 8%">
+                    <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus me-50 font-small-4">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg></span>
+                    {{ trans('global.add') }} Miscellaneous Transaction
+                </a>
+            </div>
+        </div>
+        @endcan
+    </div>
+    <div class="card-body">
+            <table id="table-miss" class=" table table-striped display"  style="width:100%" data-source="data-source">
+                <thead>
+                    <tr>
+                        <th>
+                            #
+                        </th>
+                        <th>
+                            {{ trans('cruds.trx.fields.item') }}
+                        </th>
+                         <th>
+                            Category
+                        </th>
+                        <th>
+                            {{ trans('cruds.trx.fields.subinventory_code') }}
+                        </th>
+                        <th class="text-end">
+                            {{ trans('cruds.trx.fields.transaction_quantity') }}
+                        </th>
+                        <th class="text-end">
+                           UOM
+                        </th>
+                        <th class="text-start">
+                            {{ trans('cruds.trx.fields.transaction_reference') }}
+                        </th>
+                        <th class="text-end">
+                            {{ trans('cruds.trx.fields.transaction_date') }}
+                        </th>
+
+                        <th class="text-start">
+                            {{ trans('cruds.trx.fields.transaction_source_name') }}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <form action="{{ route("admin.missTransaction.create") }}" method="GET" enctype="multipart/form-data">
+        @csrf
+        <!-- Modal Example Start-->
+        <div class="modal fade" id="modaladd" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-transparent">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="card-body">
+
+                            <div class="row">
+                                <div class="mb-3 col-md-2">
+                                    <label class="control-label" for="number" required>Date</label>
+                                </div>
+                                <div class="mb-3 col-md-10">
+                                    <input type="text" id="datepicker-1" class="form-control datepicker" autocomplete="off" name="date">
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="mb-3 col-md-2">
+                                    <label class="control-label" for="number">Type</label>
+                                </div>
+                                <div class="mb-3 col-md-10">
+                                    <select name="trx_code" class="form-control select2" required>
+                                        <option hidden disabled selected></option>
+                                        @foreach($type as $row)
+                                        <option value="{{$row->trx_code}}">{{$row->trx_types}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="mb-3 col-md-2">
+                                    <label class="control-label" for="number" >Reference</label>
+                                </div>
+                                <div class="mb-3 col-md-10">
+                                    <input type="text"  class="form-control search_ref_aju" name="reference" id='reference_1'autocomplete="off" >
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary"><i data-feather='plus'></i>Transaction Lines</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+@endsection
+@push('script')
+<script>
+    $(document).ready(function() {
+        //  $.fn.dataTable.ext.errMode = 'none';
+
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        $('#table-miss').DataTable({
+            "bServerSide": true
+            , ajax: {
+                url: '{{url("search/miss-report") }}'
+                , type: "GET"
+                , headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+                , data: function(d) {
+                    return d
+                }
+            }
+            , responsive: false
+            , scrollX: true
+            , searching: true
+            , dom: '<"card-header border-bottom"<"head-label"><"dt-action-buttons text-end">><"d-flex justify-content-between align-items-center mx-0 row"<"col-sm-12 col-md-8"Bl><"col-sm-12 col-md-4"f>>t<"d-flex justify-content-between mx-0 row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>'
+            , displayLength: 15
+            , "lengthMenu": [
+                    [10, 25, 50, -1]
+                    , [10, 25, 50, "All"]
+                ]
+
+            , columnDefs: [{
+
+                    render: function(data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                    , targets: [0]
+                }
+
+            ]
+            , buttons: [{
+                    extend: 'print'
+                    , text: feather.icons['printer'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Print'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                    , customize: function(win) {
+                        $(win.document.body)
+                            .css('font-size', '10pt')
+
+
+                        $(win.document.body).find('table')
+                            .addClass('compact')
+                            .css('font-size', '10pt');
+                    }
+                    , header: true
+                    , title: '<i>Internal</i> Surat Jalan</br> '
+                    , orientation: 'landscape'
+                }
+                , {
+                    extend: 'csv'
+                    , text: feather.icons['file-text'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Csv'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'excel'
+                    , text: feather.icons['file'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Excel'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'pdf'
+                    , text: feather.icons['clipboard'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Pdf'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'copy'
+                    , text: feather.icons['copy'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Copy'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'colvis'
+                    , text: feather.icons['eye'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Colvis'
+                    , className: ''
+                }, {
+                    text: feather.icons['filter'].toSvg({
+                        class: 'font-small-4 me-50 '
+                    }) + 'Filter'
+                    , className: 'btn-warning'
+                    , action: function(e, node, config) {
+                        $('#modalFilter').modal('show')
+                    }
+                , }
+            , ]
+            , columns: [{
+                    data: 'id'
+                    , className: "text-center"
+                , }
+                , {
+                    data: 'item_code'
+                    , className: "text-start"
+                }, {
+                    data: 'category'
+                    , className: "text-start"
+                }, {
+                    data: 'subinventory_code'
+                    , className: "text-start"
+                }, {
+                    data: 'transaction_quantity'
+                    , className: "text-end"
+                }, {
+                    data: 'type_code'
+                    , className: "text-center"
+                }, {
+                    data: 'transaction_reference'
+                    , className: "text-center"
+                }, {
+                    data: 'transaction_date'
+                    , className: "text-end"
+                }, {
+                    data: 'transaction_source_name'
+                    , className: "text-end"
+                }
+            ]
+
+        });
+    });
+
+</script>
+@endpush
+

@@ -1,0 +1,126 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Currency;
+use App\CurrencyRate;
+use App\CurrencyGlobal;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\MassDestroyCurrencyRequest;
+use App\Http\Requests\StoreCurrencyRequest;
+use App\Http\Requests\UpdateCurrencyRequest;
+use Gate;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Auth;
+
+class CurrencyController extends Controller
+{
+    public function index()
+    {
+        abort_if(Gate::denies('currency_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $currencies = CurrencyGlobal::all();
+
+        return view('admin.currencies.index', compact('currencies'));
+    }
+
+    public function create()
+    {
+        abort_if(Gate::denies('currency_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.currencies.create');
+    }
+
+    public function store(Request $request)
+    {
+
+        $currency = CurrencyGlobal::create([
+            'currency_code'=>$request->currency_code,
+            'currency_name'=>$request->name,
+            'created_by'=>Auth::user()->id,
+            'updated_by'=>Auth::user()->id,
+            'currency_status'=>1,
+        ]);
+        // $currency = CurrencyGlobal::create($request->all());
+        if($currency){
+            return redirect()->route('admin.currencies.index');
+        }else{
+            return back()->with('eror','Invalid Curenncy Data');
+        }
+
+
+    }
+
+    public function edit(Currency $currency)
+    {
+
+        abort_if(Gate::denies('currency_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $rate=CurrencyRate::where('currency_id',$currency->currency_code)->get();
+
+       return view('admin.currencies.edit', compact('currency','rate'));
+    }
+
+    public function update(UpdateCurrencyRequest $request, $id)
+    {
+            $head =CurrencyGlobal::find($id);
+            $head->currency_name=$request->currency_name;
+            $head->currency_code=$request->currency_code;
+            $head->currency_status=$request->currency_status;
+            try {
+                \DB::beginTransaction();
+                 $head->save();
+
+                foreach($request->id as $key =>$idD){
+                    if(empty($request->id[$key])){
+                        $data = array(
+                                'rate_date'=>$request->rate_date[$key],
+                                'org_id'=>$request->org_id[$key],
+                                'rate'=>(float)$request->rate[$key],
+                                'currency_id'=>$request->currency_code,
+                                'created_at'=>date('Y-m-d H:i:s'),
+                                'updated_at'=>date('Y-m-d H:i:s'),
+                    );
+                    CurrencyRate::create($data);
+                    }else{
+                        $data = CurrencyRate::find($request->id[$key]);
+                         $data->rate_date=$request->rate_date[$key];
+                         $data->rate=$request->rate[$key];
+                         $data->created_at=date('Y-m-d H:i:s');
+                         $data->updated_at=date('Y-m-d H:i:s');
+                         $data->save();
+                    }
+                }
+                \DB::commit();
+                }catch (Throwable $e){
+                    \DB::rollback();
+                }
+           // }
+       return redirect()->route('admin.currencies.edit',$id)->with('success', 'Data Updated');
+    }
+
+    public function show(Currency $currency)
+    {
+
+        abort_if(Gate::denies('currency_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return view('admin.currencies.show', compact('currency'));
+    }
+
+    public function destroy(Currency $currency)
+    {
+        abort_if(Gate::denies('currency_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $currency->delete();
+
+        return back();
+    }
+
+    public function massDestroy(MassDestroyCurrencyRequest $request)
+    {
+        Currency::whereIn('id', request('ids'))->delete();
+
+        return response(null, Response::HTTP_NO_CONTENT);
+    }
+}

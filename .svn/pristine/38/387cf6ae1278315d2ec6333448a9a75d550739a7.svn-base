@@ -1,0 +1,108 @@
+@extends('layouts.admin')
+@section('styles')
+    <link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/plugins/forms/form-validation.css') }}">
+@endsection
+@push('script')
+    <script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+@endpush
+@section('breadcrumbs')
+    <a href="" class="breadcrumbs__item">Order Management</a>
+    <a href="" class="breadcrumbs__item">{{ trans('cruds.pricelist.title') }}</a>
+    <a href="" class="breadcrumbs__item">View {{ trans('cruds.pricelist.title') }}</a>
+@endsection
+@section('content')
+<section class="invoice-preview-wrapper">
+    <div class="row invoice-preview">
+        <!-- Invoice -->
+        <div class="col-xl-12 col-md-12 col-12">
+            <div class="card invoice-preview-card">
+                <div class="card-body invoice-padding pb-0">
+                    <!-- Header starts -->
+                    <div class="d-flex justify-content-between flex-md-row flex-column invoice-spacing mt-0">
+                        <div>
+                            <div class="logo-wrapper">
+                                <h3 class="text-primary invoice-logo">{{ trans('cruds.pricelist.title') }} #{{ $pricelist->id }}</h3>
+                            </div>
+                            <h6 class="mb-25">Price List Name: <i class="text-primary">{{ $pricelist->price_list_name }}</i></h6>
+                            <h6 class="mb-25">Description: <i class="text-primary">{{ $pricelist->description }}</i></h6>
+                            <h6 class="mb-25">Currency Used: <i class="text-primary">{{ currencyglobal($pricelist->currency) }}</i></h6>
+                            <h6 class="mb-25">Created By: <i class="text-primary">{{ user_name($pricelist->created_by) }}</i></h6>
+                        </div>
+                        <div class="mt-md-0 mt-2 me-5">
+                            <h4 class="invoice-title">
+                                <span class="invoice-number">Effective Date : <i class="text-primary">{{ \Carbon\Carbon::parse($pricelist->effective_date)->format('d/M/Y') }} </i></span>
+                            </h4>
+                        </div>
+                    </div>
+                    <!-- Header ends -->
+                </div>
+
+                <hr class="invoice-spacing">
+
+                <!-- Invoice Description starts -->
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class=" table table-bordered table-striped table-hover datatable datatable-Transaction">
+                            <thead>
+                                <tr>
+                                    <th width="10">
+                                        No.
+                                    </th>
+                                    <th>
+                                        {{ trans('cruds.pricelist.fields.description') }}
+                                    </th>
+                                    <th>
+                                        {{ trans('cruds.pricelist.fields.uom') }}
+                                    </th>
+                                    <th>
+                                        {{ trans('cruds.pricelist.fields.unit_price') }}
+                                    </th>
+                                    <th>
+                                        {{ trans('cruds.pricelist.fields.effective_from') }}
+                                    </th>
+                                    <th>
+                                        {{ trans('cruds.pricelist.fields.effective_to') }}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($listdetail as $key => $row)
+                                    <tr>
+                                        <td>
+                                            {{ $key+1 ?? '' }}
+                                        </td>
+                                        <td>
+                                            {{ $row->user_item_description ?? '' }}
+                                        </td>
+                                        <td>
+                                            {{ $row->uom ?? '' }}
+                                        </td>
+                                        <td>
+                                            {{ round($row->unit_price,2) ?? '' }}
+                                        </td>
+                                        <td>
+                                            {{ Carbon\Carbon::parse($row->effective_from)->format('d/M/Y') ?? '' }}
+                                        </td>
+                                        <td>
+                                            {{  Carbon\Carbon::parse($row->effective_to)->format('d/M/Y') ?? '' }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <span class="fw-bold">Note:</span>
+                            <span>It was a pleasure working with you and your team. We hope you will keep us in mind for
+                                future projects. Thank You!</span>
+                        </div>
+                    </div>
+                </div>
+                <hr class="invoice-spacing">
+            </div>
+        </div>
+        <!-- /Invoice -->
+    </div>
+</section>
+@endsection

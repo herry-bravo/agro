@@ -1,0 +1,401 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Bom;
+use App\Onhand;
+use App\MaterialTxns;
+use App\WorkOrder;
+use App\WorkOrderDetail;
+use App\WorkOrderSerial;
+use App\OperationUnit;
+use Gate;
+use Symfony\Component\HttpFoundation\Response;
+
+class WorkOrderController extends Controller
+{
+    public function index()
+    {
+        abort_if(Gate::denies('order_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        $bom = Bom::All();
+        $wo = WorkOrder::select('bm_wie_work_orders.*','users.name')
+                ->leftjoin('users','users.id','=','bm_wie_work_orders.created_by')
+                ->orderBy('need_by_date','DESC')
+                ->get();
+        return view('admin.workOrder.index', compact('wo'));
+
+    }
+    public function create()
+    {
+        abort_if(Gate::denies('order_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        $bom = Bom::select('parent_inventory_it','parent_item','parent_description')
+                    ->groupBy('parent_inventory_it','parent_item','parent_description')->get();
+        // dd($bom);
+        $pm = OperationUnit::All();
+
+		return view('admin.workOrder.create',compact('bom','pm'));
+    }
+
+    public function store(Request $request)
+    {
+        // dd($request->subinventory);
+        switch ($request->input('action')) {
+            case 'save':
+                // dd('manual');
+                $countHeader = WorkOrder::count('id');
+                $woName = Date('ymd-H.i'.'-').$request->parentbom;
+                // dd($woName);
+                $head = WorkOrder::findorNew($request->id);
+                $head->work_order_id= $countHeader+1;
+                $head->work_order_number=$woName;
+                $head->inventory_item_id=$request->parent_inventory_item_id;
+                $head->created_by=$request->created_by;
+                $head->job_definition_name= $request->pm;
+                $head->need_by_date=$request->need_by_date;
+                $head->planned_start_quantity= $request->planned_start_quantity;
+                $head->source_line_ref=$request->source_line_ref;
+                $head->compl_subinventory_code=$request->compl_subinventory_code;
+                $head->attribute_float1=$request->attribute_float1;
+                $head->attribute_float2=$request->attribute_float2;
+                $head->attribute_float10=$request->attribute_float10 ?? 0;
+                $head->work_order_status_id=1;
+                try {
+                    \DB::beginTransaction();
+                    $head->save();
+                    $id = $head->work_order_id;
+                    foreach($request->inventory_item_id as $key =>$inventory_item_id){
+                        $countDetail = WorkOrderDetail::count('id');
+                        $qty = $request->quantity[$key] * $request->planned_start_quantity;
+                        $data = array(
+                            'wo_operation_material_id'=>$countDetail+1,
+                            'work_order_id'=>$id,
+                            'inventory_item_id'=>isset($request->inventory_item_id[$key])? $request->inventory_item_id[$key] :'',
+                            'uom_code'=>isset($request->uom_code[$key])? $request->uom_code[$key] :'',
+                            'quantity'=>$qty,
+                            'supply_subinventory'=>$request->supply_subinventory[$key],
+                            'quantity_per_product'=>$request->quantity[$key],
+                            'produced_quantity'=>0,
+                            'created_by'=>$request->created_by,
+                            'created_at'=>date('Y-m-d H:i:s'),
+                            'updated_at'=>date('Y-m-d H:i:s'),
+                            );
+                            // dd($data);
+                            WorkOrderDetail::create($data);
+                    }
+                    \DB::commit();
+                    }catch (Throwable $e){
+                        \DB::rollback();
+                    }
+                    return redirect()->route('admin.work-order.index')->with('success', 'Data Price List Successfull Inputed');
+            break;
+
+            case 'auto':
+                $plans = \App\ProdPlanning::where(['planning_schedule'=>$request->planning_date, 'status'=>'Enter'])->get();
+                // dd($plans);
+
+                if(empty($plans)){
+                    return back()->with('error', 'No data needs to be imported');
+                }
+
+                foreach($plans as $plan){
+                    $countHeader = \DB::table('bm_wie_work_orders')->get()->last();
+                    $id = ($countHeader->work_order_id??0) + 1;
+                    $woName = Date('ymd-').$plan->item_code;
+                    $counter = \DB::table('bm_wie_work_orders')->where('work_order_number','like', '%' .$woName. '%')->count()+1;
+                    $woName = $woName.'_'.$counter;
+
+                    $head = WorkOrder::findorNew($request->id);
+                    $head->work_order_id= $id;
+                    $head->work_order_number=$woName;
+                    $head->inventory_item_id=$plan->inventory_item_id;
+                    $head->created_by=auth()->user()->id;
+                    $head->job_definition_name= $plan->operation_unit;
+                    $head->need_by_date=$plan->completed_schedule;
+                    $head->planned_start_quantity= $plan->ordered_quantity;
+                    $head->source_line_ref=$plan->order_number;
+                    $head->source_header_ref=$plan->prod_planning_id;
+                    $head->attribute_float1=$plan->attribute_number_gsm;
+                    $head->attribute_float2=$plan->attribute_number_w;
+                    $head->attribute_float10=$plan->attribute_number_l ?? 0;
+                    $head->compl_subinventory_code=$plan->compl_subinventory_code ?? '9000'; //static
+                    $head->work_order_status_id=1;
+                    // dd($head);
+                    try {
+                        \DB::beginTransaction();
+                        $head->save();
+
+                        $boms = Bom::where('parent_inventory_it',$plan->inventory_item_id)->get();
+                        if(empty($boms)){
+                            return back()->with('error', 'Bom of '.$plan->item_code.' does not exist');
+                        }
+
+                        foreach($boms as $bom){
+                            $countDetail = \DB::table('bm_wie_wo_operation_materials')->get()->last();
+                            $countDetail = ($countDetail->wo_operation_material_id ?? 0) +1;
+
+                            $qty = $bom->usage * $plan->ordered_quantity;
+                            $data = array(
+                                'wo_operation_material_id'=>$countDetail,
+                                'work_order_id'=>$id,
+                                'inventory_item_id'=>isset($bom->child_inventory_id)? $bom->child_inventory_id :'',
+                                'uom_code'=>isset($bom->uom)? $bom->uom :'',
+                                'quantity'=>$qty,
+                                'supply_subinventory'=>$bom->supply_subinventory,
+                                'quantity_per_product'=>$bom->usage,
+                                'produced_quantity'=>0,
+                                'created_by'=>auth()->user()->id,
+                                'created_at'=>date('Y-m-d H:i:s'),
+                                'updated_at'=>date('Y-m-d H:i:s'),
+                                );
+                                // dd($data);
+                                WorkOrderDetail::create($data);
+                        }
+
+                        \App\ProdPlanning::where('prod_planning_id',$plan->prod_planning_id)->update(['status'=>'Imported']);
+                        \App\PlanningDetail::where('header_id',$plan->prod_planning_id)->update(['status'=>'Imported']);
+
+                        \DB::commit();
+                        }catch (Throwable $e){
+                            \DB::rollback();
+                        }
+                    }
+                    return back()->with('success', 'Planning imported');
+
+            break;
+        }
+    }
+
+    public function edit($id){
+        abort_if(Gate::denies('order_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        $wo = WorkOrder::find($id);
+        $wo_detail = WorkOrderDetail::where('work_order_id','=',$wo->work_order_id)->get();
+        $trx = MaterialTxns::where('transaction_reference','=',$wo->work_order_number)
+                            ->orWhere('attribute_category','=',$wo->work_order_number)
+                            ->orderBy('transaction_date')->get();
+        $serial = WorkOrderSerial::where('work_order_id',$wo->work_order_id)->get();
+
+        $pm = OperationUnit::All();
+
+        $planning = \App\PlanningDetail::where('header_id',$wo->source_header_ref)->get();
+
+		return view('admin.workOrder.edit',compact('wo','wo_detail','trx','serial','pm','planning'));
+    }
+
+    public function update(Request $request)
+    {
+
+        try {
+            \DB::beginTransaction();
+            $head = WorkOrder::where('work_order_id',$request->work_order_id)->first();
+            if(empty($head->canceled_date || $head->closed_date)){
+                switch ($request->input('action')) {
+                case 'save':
+                    $head->work_order_id= $request->work_order_id;
+                    $head->inventory_item_id=$request->h_inventory_item_id;
+                    $head->created_by=$request->created_by;
+                    $head->need_by_date=$request->need_by_date;
+                    $head->planned_start_quantity= $request->planned_start_quantity;
+                    $head->job_definition_name=$request->pm;
+                    $head->source_line_ref=$request->source_line_ref;
+                    $head->work_order_status_id=1;
+                    $head->save();
+                        $id = $head->work_order_id;
+                        // dd($request->supply_subinventory[$key]);
+                        foreach($request->inventory_item_id as $key =>$inventory_item_id){
+
+                            //Jumlah konsumsi per item X permintaan produksi
+
+                            if(!empty($request->id_detail[$key])){
+                                $data = WorkOrderDetail::find($request->id_detail[$key]);
+                                $data->wo_operation_material_id = $request->wo_operation_material_id[$key];
+                                $data->work_order_id = $request->work_order_id;
+                                $data->inventory_item_id = $request->inventory_item_id[$key];
+                                $data->uom_code = $request->uom_code[$key];
+                                $data->quantity = $request->quantity[$key];
+                                $data->quantity_per_product = $request->quantity_per_product[$key];
+                                $data->produced_quantity = $request->produced_quantity[$key];
+                                $data->supply_subinventory=$request->supply_subinventory[$key] ;
+                                $data->updated_at = date('Y-m-d H:i:s');
+                                $data->save();
+                            }else{
+                                $countDetail = WorkOrderDetail::count('id');
+                                $qty = $request->quantity[$key] * $request->planned_start_quantity;
+                                $data = array(
+                                    'wo_operation_material_id'=>$countDetail+1,
+                                    'work_order_id'=>$id,
+                                    'inventory_item_id'=>isset($request->inventory_item_id[$key])? $request->inventory_item_id[$key] :'',
+                                    'uom_code'=>isset($request->uom_code[$key])? $request->uom_code[$key] :'',
+                                    'quantity'=>$qty,
+                                    'quantity_per_product'=>$request->quantity[$key],
+                                    'produced_quantity'=>$request->produced_quantity[$key] ?? 0,
+                                    'supply_subinventory'=>$request->supply_subinventory[$key],
+                                    'created_by'=>$request->created_by,
+                                    'created_at'=>date('Y-m-d H:i:s'),
+                                    'updated_at'=>date('Y-m-d H:i:s'),
+                                    );
+                                    // dd($data);
+                                    WorkOrderDetail::create($data);
+                            }
+                        };
+
+                break;
+                case 'wip_complection':
+
+                    $total = 0;
+                    foreach($request->line_id as $key =>$line_id ){
+
+                        $total += $request->quantity_usage[$key];
+                        if($request->quantity_usage[$key] > $request->planned_start_quantity){
+                            return back()->with('error','Quantity of '.$request->job_definition_name[$key].' not available');
+                        }
+                        //Work Order Serial
+                        if(!empty($request->line_id[$key])){
+                            $data = WorkOrderSerial::find($request->line_id[$key]);
+                            $data->quantity_usage = $request->quantity_usage[$key];
+                            $data->attribute_char1 = $request->attribute_char1[$key];
+                            $data->attribute_char2 = $request->attribute_char2[$key];
+                            $data->attribute_char20 = $request->attribute_char20[$key];
+                            $data->updated_at = date('Y-m-d H:i:s');
+                            $data->save();
+                        }else{
+                            $serial = array(
+                                'wo_op_material_serial_id'=> WorkOrderSerial::all()->count()+1,
+                                'work_order_id'=> $request->work_order_id,
+                                'last_updated_by'=>$request->created_by,
+                                'created_by'=>$request->created_by,
+                                'inventory_item_id'=>$request->h_inventory_item_id,
+                                'organization_id'=>'222',
+                                'attribute_number1'=>$request->pm,
+                                'serial_number'=>$request->serial_number[$key],
+                                'quantity_usage'=>$request->quantity_usage[$key],
+                                'job_definition_name'=>$request->job_definition_name[$key],
+                                'attribute_char1'=>$request->attribute_char1[$key],
+                                'attribute_char2'=>$request->attribute_char2[$key],
+                                'attribute_char20'=>$request->attribute_char20[$key],
+                                'creation_date'=>date('Y-m-d'),
+                                'created_at'=>date('Y-m-d H:i:s'),
+                                'updated_at'=>date('Y-m-d H:i:s'),
+                            );
+                            WorkOrderSerial::create($serial);
+
+                            /** Update Parent */
+
+                            //Update WO progress
+                            $head = WorkOrder::where('work_order_id',$request->work_order_id)->first();
+                            $progress = $head->completed_quantity+$request->quantity_usage[$key];
+                            $head->completed_quantity=$progress;
+                                // Validation status
+                                if($head->planned_start_quantity == $progress){
+                                    $head->closed_date = date('Y-m-d H:i:s');
+                                    $head->status_change_reason = "Completed";
+                                }else{
+                                    $head->closed_date = null;
+                                }
+                            $head->save();
+
+                            /** End Update Parent */
+
+                            /**Update Child Item */
+                            $qty_usage = $request->quantity_usage[$key];
+                            foreach($request->inventory_item_id as $key =>$inventory_item_id){
+                                // dd($requ est->supply_subinventory[$key]);
+                                $onhand2=Onhand::where(['inventory_item_id'=>$request->inventory_item_id[$key],'subinventory_code'=>$request->supply_subinventory[$key]])->first();
+
+                                // get used item child
+                                $used = $request->quantity_per_product[$key] * $qty_usage;
+                                // dd($used);
+                                if($onhand2){
+                                    /*Update Onhand */
+                                    $currentStok2 = $onhand2->primary_transaction_quantity;
+                                    if($currentStok2 > $used){
+                                        $update_stock2=	$currentStok2 - $used;
+                                        $onhand2=Onhand::where(['inventory_item_id'=>$request->inventory_item_id[$key],'subinventory_code'=>$request->supply_subinventory[$key]])
+                                                        ->update(["primary_transaction_quantity"=>$update_stock2]);
+                                    }else{
+                                        return back()->with('error', 'Onhand Item '.$request->inventory_item_id[$key].' Not Enough');
+                                    }
+                                }else{
+                                    return back()->with('error', 'onhand Item Not Exist');
+                                }
+
+                                //Update WO Detail produce Quantity
+                                $data = WorkOrderDetail::find($request->id_detail[$key]);
+                                $data->produced_quantity=$request->produced_quantity[$key] + $used;
+                                $data->save();
+                                // dd($data);
+
+                                $trx2 = array(
+                                    'transaction_id'=>MaterialTxns::all()->count()+1,
+                                    'last_updated_by'=>$request->created_by,
+                                    'created_by'=>$request->created_by,
+                                    'inventory_item_id'=>$request->inventory_item_id[$key],
+                                    'organization_id'=>'222',
+                                    'subinventory_code'=>$request->supply_subinventory[$key],
+                                    'transaction_type_id'=>9,
+                                    'transaction_action_id'=>9,
+                                    'transaction_source_type_id'=>9,
+                                    'transaction_source_name'=>"WIP Component Issue",
+                                    'transaction_quantity'=>$used,
+                                    'transaction_uom'=>"Kg", //static
+                                    'primary_quantity'=>$update_stock2,
+                                    'transaction_date'=>date('Y-m-d H:i:s'),
+                                    'transaction_reference'=>$request->work_order_number,
+                                    'currency_code'=>"", //static
+                                    'receiving_document'=>$request->packing_slip,
+                                    'source_line_id'=>1, //static
+                                    'attribute_category'=>$request->work_order_number,
+                                    );
+                                // dd($trx2);
+                                MaterialTxns::create($trx2);
+                            }
+                            /**End Update Child Item */
+                        }
+                    }
+
+                    if($total > $request->planned_start_quantity){
+                        return back()->with('error','Quantity not available');
+                    }
+                break;
+                case 'cancel':
+                    $status = $request->wostatus;
+                    // dd($status);
+                    $head = WorkOrder::find($request->id);
+                    if($status == 0){
+                        $head->closed_date = date('Y-m-d H:i:s');
+                        $head->status_change_reason = $request->status_change_reason;
+                    }elseif($status == 1){
+                        $head->canceled_date = date('Y-m-d H:i:s');
+                        $head->canceled_reason = $request->status_change_reason;
+                        $plan =  \App\ProdPlanning::where('prod_planning_id',$head->source_header_ref)->first();
+                        \App\PlanningDetail::where('header_id',$plan->prod_planning_id)->update(['status'=>'Enter']);
+                        $plan->status='Enter';
+                        $plan->save();
+                    }
+                    // dd($request->status_change_reason);
+                    $head->save();
+                break;
+                }
+            }else{
+                return back()->with('error', 'Work Order Closed');
+            }
+        \DB::commit();
+        }catch (Throwable $e){
+            \DB::rollback();
+        }
+        return back()->with('success', 'Work Order Modified');
+    }
+
+    public function show($id)
+    {
+        abort_if(Gate::denies('order_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        // $client->load('status');
+        $header = WorkOrder::find($id);
+        $data = WorkOrderDetail::where('work_order_id','=',$header->work_order_id)->get();
+        $onhand = Onhand::all();
+
+        return view('admin.workOrder.view', compact('header','data'));
+    }
+}

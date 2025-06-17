@@ -1,0 +1,239 @@
+@extends('layouts.admin')
+@section('styles')
+@endsection
+@push('script')
+@endpush
+@section('breadcrumbs')
+<a href="" class="breadcrumbs__item">Inventory</a>
+<a href="" class="breadcrumbs__item active">Item Master</a>
+@endsection
+
+@section('content')
+<div class="card">
+    <div class="card-header">
+        <h4 class="card-title mb-2">{{ trans('cruds.itemMaster.title_singular') }} {{ trans('global.list') }}</h4>
+        @can('role_create')
+        <div class="row">
+            <div class="col-lg-12">
+                <a href="{{ route("admin.gallery.index") }}" target="blank" class="btn btn-info" style="margin-top: 8%;">Gallery Items</a>
+                <a class="btn btn-primary" href="{{ route("admin.item-master.create") }}" style="margin-top: 8%;">
+                    <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus me-50 font-small-4">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg></span>
+                    {{ trans('global.add') }} {{ trans('cruds.itemMaster.title_singular') }}
+                </a>
+            </div>
+        </div>
+        @endcan
+    </div>
+    <div class="card-body">
+
+            <table data-toggle="table" id="table-item" class=" table  table-hover datatable display" style="width:100%" >
+                <thead>
+                    <tr>
+                        <th>
+                            No
+                        </th>
+                        <th>
+                            {{ trans('cruds.itemMaster.fields.item_code') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.itemMaster.fields.description') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.itemMaster.fields.type') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.itemMaster.fields.Uom') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.itemMaster.fields.category') }}
+                        </th>
+                        <th>
+                            Sub {{ trans('cruds.itemMaster.fields.category') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.itemMaster.fields.sub') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.itemMaster.fields.fixloc') }}
+                        </th>
+                        <th class="text-center">
+                            {{ trans('cruds.itemMaster.fields.createdat') }}
+                        </th>
+                        <th class="text-center">
+                            {{ trans('cruds.itemMaster.fields.updatedat') }}
+                        </th>
+                        <th>
+                            Image
+                        </th>
+
+                        <th>
+                            #
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+</div>
+@endsection
+@push('script')
+<script>
+    $(document).ready(function() {
+        $.fn.dataTable.ext.errMode = 'none';
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+        var table = $('#table-item').DataTable({
+            "bServerSide": true
+            , ajax: {
+                url: '{{url("search/item-report") }}'
+                , type: "POST"
+                , headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+                , data: function(d) {
+                    return d
+                }
+            }
+            , responsive: true
+            ,scrollX :true
+            , dom: '<"card-header border-bottom"<"head-label"><"dt-action-buttons text-end">><"d-flex justify-content-between align-items-center mx-0 row"<"col-sm-12 col-md-8"Bl><"col-sm-12 col-md-4"f>>t<"d-flex justify-content-between mx-0 row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>'
+            , displayLength: 15
+            , "lengthMenu": [
+                [10, 25, 50, -1]
+                , [10, 25, 50, "All"]
+            ]
+            , buttons: [{
+                    extend: 'print'
+                    , text: feather.icons['printer'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Print'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'csv'
+                    , text: feather.icons['file-text'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Csv'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'excel'
+                    , text: feather.icons['file'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Excel'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'pdf'
+                    , text: feather.icons['clipboard'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Pdf'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'copy'
+                    , text: feather.icons['copy'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Copy'
+                    , className: ''
+                    , exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+                , {
+                    extend: 'colvis'
+                    , text: feather.icons['eye'].toSvg({
+                        class: 'font-small-4 me-50'
+                    }) + 'Colvis'
+                    , className: ''
+                , }
+            , ]
+            , columnDefs: [{
+                    render: function(data, type, row, index) {
+                        var info = table.page.info();
+                        return index.row + info.start + 1;
+                    }
+                    , targets: [0]
+                }
+                , {
+                    render: function(data, type, row, index) {
+                        content = `@can('item_edit')
+                        <a href="#imgModal" data-bs-toggle="modal" class="link-info">Image</a>
+                        @endcan`;
+                        return content;
+                    }
+                    , targets: [11]
+                }, {
+                    render: function(data, type, row, index) {
+                        content = `@can('item_edit')
+                        <a class="btn btn-warning btn-sm waves-effect waves-float waves-light" href="item-master/${row.id}/edit">
+                            {{ trans('global.edit') }}
+                        </a>
+                        @endcan`;
+                        return content;
+                    }
+                    , targets: [12]
+                }
+            ]
+            , columns: [{
+                    data: 'id'
+                    , className: "text-center"
+                }
+                , {
+                    data: 'item_code'
+                }, {
+                    data: 'description'
+                }, {
+                    data: 'type_code'
+                }, {
+                    data: 'primary_uom_code'
+                }, {
+                    data: 'category_code'
+                }, {
+                    data: 'sub_category'
+                    , className: "text-center"
+                }, {
+                    data: 'receiving_inventory'
+                    , className: "text-center"
+                }, {
+                    data: 'location'
+                    , className: "text-center"
+                }, {
+                    data: 'created_at'
+                    , className: "text-center"
+                }, {
+                    data: 'updated_at'
+                    , className: "text-center"
+                }, {
+                    data: ''
+                    , className: "text-center"
+                }, {
+                    data: ''
+                    , className: "text-center"
+                }
+            ]
+        })
+    });
+
+</script>
+@endpush

@@ -1,0 +1,208 @@
+@extends('layouts.admin')
+@section('styles')
+<link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/jquery-ui.css') }}">
+@endsection
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+<script src="{{ asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
+@endpush
+@section('breadcrumbs')
+<a href="{{route('admin.work-order.index')}}" class="breadcrumbs__item">{{ trans('cruds.bom.manufacture') }}</a>
+<a href="{{route('admin.work-order.index')}}" class="breadcrumbs__item">{{ trans('cruds.workorder.title') }} {{ trans('global.list') }}</a>
+<a href="#" class="breadcrumbs__item active">{{ trans('cruds.workorder.fields.create') }}</a>
+@endsection
+@section('content')
+@if ($errors->any())
+<div class="alert alert-danger">
+    @foreach ($errors->all() as $error)
+    {{ $error }}
+    @endforeach
+</div>
+@endif
+
+@if(session()->has('error'))
+    <div class="alert alert-danger">
+        {{ session()->get('error') }}
+    </div>
+@endif
+
+<section id="multiple-column-form">
+    <div class="row">
+        <div class="col-12">
+            <form action="{{ route("admin.work-order.store") }}" method="POST" enctype="multipart/form-data" class="form-horizontal create_purchase">
+                {{ csrf_field() }}
+                <div class="card">
+                    <div class="card-header">
+                        Edit Work Order
+                    </div>
+                    <hr>
+                    <div class="card-body mt-1">
+                        <div class="row mb-2">
+                            <div class="col-md-1">
+                                <b><p class="text-end">Product :<p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" id="item_code" class="form-control filter_WorkOrder" autocomplete="off" required>
+                                <input type="hidden" id="parent" name="parent_inventory_item_id" class="form-control" autocomplete="off" required>
+                                {{-- <select id="parent" name="parent_inventory_item_id" class="form-control select2 filter_WorkOrder">
+                                    <option selected></option>
+                                    @foreach ($bom as $key => $row)
+                                        <option value="{{$row->parent_inventory_it}}">{{$row->parent_item}} - {{$row->parent_description}}</option>
+                                    @endforeach
+                                </select> --}}
+                            </div>
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-1">
+                                <b><p class="text-end">Date :</p></b>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text" id="datepicker-1" name="need_by_date" value="{{date('d-M-Y')}}" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-1">
+                                <b><p class="text-end">Quantity :<p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" name="planned_start_quantity" id="sales_qty" class="form-control" value="1" required>
+                            </div>
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-1">
+                                <b><p class="text-end">PM :</p></b>
+                            </div>
+                            <div class="col-md-5">
+                                <select id="pm" name="pm" class="form-control select2 filter_WorkOrder">
+                                    <option selected></option>
+                                    @foreach ($pm as $key => $pm)
+                                        <option value="{{$pm->unit_id}}">{{$pm->name}}</option>
+                                    @endforeach
+                                </select>
+                                <input type="number" hidden id="created_by" name="created_by" value="{{ auth()->user()->id }}" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-1">
+                                <b><p class="text-end">Bill Of Material:<p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" value="" id="parent-bom" name="parentbom" autocomplete="off" readonly required>
+                                <input type="hidden" class="form-control" value="" id="compl_subinventory_code" name="compl_subinventory_code" autocomplete="off" required>
+                            </div>
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-1">
+                                <b><p class="text-end">Source :</p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" name="source_line_ref" class="form-control datepicker" id="source" autocomplete="off" required>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" id="btn-sales" class="btn btn-sm btn-secondary " data-bs-toggle="modal" data-bs-target="#salesModal"> <span class="bs-stepper-box">
+                                    <i data-feather="archive" class="font-medium-3"></i>
+                                </span></button>
+                            </div>
+                        </div>
+                    <!-- /.box-body -->
+                    </div>
+                {{-- </div>
+
+                <div class="card"> --}}
+                    <div class="card-header">
+                        <nav>
+                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                <button class="nav-link active" id="nav-component-tab" data-bs-toggle="tab" data-bs-target="#nav-component" type="button" role="tab" aria-controls="nav-component" aria-selected="true">
+                                    <span class="bs-stepper-box">
+                                        <i data-feather="tool" class="font-medium-3"></i>
+                                    </span>
+                                    Component
+                                </button>
+                                <button class="nav-link" id="nav-micellaneous-tab" data-bs-toggle="tab" data-bs-target="#nav-micellaneous" type="button" role="tab" aria-controls="nav-micellaneous" aria-selected="false">
+                                    <span class="bs-stepper-box">
+                                        <i data-feather="shuffle" class="font-medium-3"></i>
+                                    </span>
+                                    Micellaneous
+                                </button>
+                            </div>
+                        </nav>
+                    </div>
+                    <hr>
+                    <div class="card-body">
+                        <div >
+                            <div class="tab-content" id="nav-tabContent" >
+                                {{-- Tab Component --}}
+                                <div class="tab-pane fade show active" id="nav-component" role="tabpanel" aria-labelledby="nav-component-tab">
+                                    <table id="tableWO" class="table">
+                                        <thead>
+                                            {{-- <th scope="col">Sequence</th> --}}
+                                            <th class="text-center" scope="col">Item</th>
+                                            <th class="text-center" scope="col">Description</th>
+                                            <th class="text-center" scope="col">UOM</th>
+                                            <th class="text-center" scope="col">To Consume</th>
+                                            <th class="text-center" scope="col">Sub Inventory</th>
+                                            <th scope="col"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="workOrder_container">
+
+                                        </tbody>
+                                        {{-- <tfoot >
+                                            <tr class="tr_input">
+                                                <td><input type="text" name="revision[]" class="form-control " id="rev_1"  autocomplete="off"></td>
+                                            </tr>
+                                            <tr>
+                                                <td><button type="button" class="btn btn-outline-success add_workOrder btn-sm" style="font-size: 12px;"><i data-feather='plus'></i> Add Rows</button></td>
+                                            </tr>
+                                        </tfoot> --}}
+                                    </table><br>
+
+                                </div>
+
+                                {{-- Tab Misscellaneous --}}
+                                <div class="tab-pane fade" id="nav-micellaneous" role="tabpanel" aria-labelledby="nav-micellaneous-tab">
+                                    <table class="table table-striped tableFixHead">
+                                        <thead>
+                                            <th scope="col">Micellaneous</th>
+                                            <th scope="col">Work Center</th>
+                                            <th scope="col">Item</th>
+                                            <th scope="col">Schedule Started Date</th>
+                                            <th scope="col">Expected Duration</th>
+                                            <th scope="col">Real Durtion</th>
+                                            <th scope="col"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bomMicellaneous_container">
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                            <td colspan="2">
+                                                <button type="button" class="btn btn-outline-success add_workOrder btn-sm" style="font-size: 12px;"><i data-feather='plus'></i> Add Rows</button>
+                                            </td>
+                                            <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between  mt-2">
+                            <button type="reset" class="btn btn-danger pull-left">Reset</button>
+                            <button type="submit" class="btn btn-primary pull-right "><i class="fa fa-plus"></i> Add</button>
+                        </div>
+                    </div>
+                    <!-- /.box-body -->
+
+                </div>
+
+                @include('admin.workOrder.sales-src')
+
+            </form>
+        </div>
+
+</section>
+<!-- /.content -->
+@endsection

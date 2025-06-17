@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Http\Requests;
+
+use App\PriceList;
+use App\PriceListDetail;
+use Exception;
+use Gate;
+use Illuminate\Foundation\Http\FormRequest;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Validation\Rule;
+
+class StorePriceListRequest extends FormRequest
+{
+    public function authorize()
+    {
+        abort_if(Gate::denies('price_list_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return true;
+    }
+
+    public function rules()
+    {
+        return [
+            'inventory_item_id'    => [
+                'required',
+                // Rule::unique('bm_dc_price_list_lines')
+                // ->where(function($query){
+                //     if(count(array_unique($this->inventory_item_id)) < count($this->inventory_item_id)){
+                //         dd('here');
+                //     }else{
+                //         $query->select('inventory_item_id', $this->inventory_item_id);
+                //     }
+                // })->ignore($this->post)
+            ],
+            'effective_from' =>[
+                'required'
+            ],
+            'effective_to' =>[
+                'required'
+            ],
+        ];
+    }
+    public function messages() {
+        return [
+            'inventory_item_id.unique' => 'Active Product Must Not Overlap',
+            'effective_from.required' => 'Effective From Date Required',
+            'effective_to.required' => 'Effective To Date Required',
+        ];
+    }
+
+}

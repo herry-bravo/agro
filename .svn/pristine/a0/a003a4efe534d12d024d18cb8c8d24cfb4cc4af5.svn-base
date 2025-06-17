@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateCatTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('bm_category', function (Blueprint $table) {
+           
+            $table->increments('id');
+            $table->string('category_code',6);
+            $table->string('category_name',60);
+			$table->string('description',60)->nullable();
+            $table->string('attribute1',75)->nullable();
+            $table->string('attribute2',75)->nullable();
+			$table->string('inventory_account_code',60)->nullable();
+            $table->string('consumption_account_code',60)->nullable();
+            $table->string('payable_account_code',60)->nullable();
+            $table->string('receivable_account_code',60)->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+}

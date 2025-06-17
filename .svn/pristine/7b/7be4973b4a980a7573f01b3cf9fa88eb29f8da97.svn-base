@@ -1,0 +1,258 @@
+@extends('layouts.admin')
+@section('styles')
+<link rel="stylesheet" type="text/css" href="{{ asset('app-assets/css/jquery-ui.css') }}">
+@endsection
+@push('script')
+<script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
+<script src="{{ asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
+<script src="{{ asset('app-assets/vendors/js/extensions/sweetalert2.all.min.js') }}"></script>
+@endpush
+@section('breadcrumbs')
+<a href="{{ route("admin.bom.index") }}" class="breadcrumbs__item">{{ trans('cruds.bom.manufacture') }}</a>
+<a href="{{ route("admin.bom.index") }}" class="breadcrumbs__item">{{ trans('cruds.bom.title_singular') }}</a>
+<a href="#" class="breadcrumbs__item active">{{ trans('cruds.bom.fields.edit') }}</a>
+@endsection
+@section('content')
+
+<section id="multiple-column-form">
+    <div class="row">
+        <div class="col-12">
+            <form action="{{ route('admin.bom.update',[$bom->id]) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+                {{ csrf_field() }}
+                <div class="card">
+                    <div class="card-header">
+                        Edit Bill Of Material
+                    </div>
+                    <hr>
+                    <div class="card-body mt-2">
+                        <div class="row mb-2">
+                            <div class="col-md-1">
+                                <b><p class="text-end">Product :<p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" readonly name="" Value="{{$bom->parent_item}} - {{$bom->parent_description}}" id="searchitem" autocomplete="off" required>
+                                <input type="hidden" class="search_inventory_item_id" id="id" name="parent_inventory_it" value="{{$bom->parent_inventory_it}}" autocomplete="off">
+                                <input type="hidden" class="form-control" id="description" value="{{$bom->parent_description}}" name="parent_description" autocomplete="off">
+                                <input type="hidden" class="form-control" id="item_code" value="{{$bom->parent_item}}" name="parent_item" autocomplete="off">
+                                <input type="hidden" class="form-control" id="type_code" value="{{$bom->parent_item_type}}" name="parent_item_type" autocomplete="off">
+                            </div>
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-1">
+                                <b><p class="text-end">Date :</p></b>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="date" name="effectivity_date" class="form-control flatpickr-basic flatpickr-input active" id="" value="{{$bom->effectivity_date}}" autocomplete="off" required>
+                            </div>
+                        </div>
+
+
+                        <div class="row mb-2">
+                            <div class="col-md-1">
+                                <b><p class="text-end">Quantity :<p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" class="form-control" name="substitute_quantity" value="{{$bom->substitute_quantity}}"  required>
+                            </div>
+                            <div class="col-md-1">
+                            </div>
+                            <div class="col-md-1">
+                                <b><p class="text-end">Responsible :</p></b>
+                            </div>
+                            <div class="col-md-5">
+                                <input type="text" name="" class="form-control datepicker" id="" value="" autocomplete="off" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-1">
+                                <b><p class="text-end">Sub Inventory :<p></b>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" class="form-control search_subinventory" name="subinventory_from[]" id="subinventoryfrom_1" value="{{$bom->completion_subinventory}}" required>
+                                <input type="hidden" class="form-control subinvfrom_1" name="completion_subinventory" id="subinvfrom_1"  value="{{$bom->completion_subinventory}}"autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.box-body -->
+                {{-- </div>
+
+                <div class="card"> --}}
+                    <div class="card-header">
+                        <nav>
+                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                                <button class="nav-link active" id="nav-component-tab" data-bs-toggle="tab" data-bs-target="#nav-component" type="button" role="tab" aria-controls="nav-component" aria-selected="true">
+                                    <span class="bs-stepper-box">
+                                        <i data-feather="layers" class="font-medium-3"></i>
+                                    </span>
+                                    Component
+                                </button>
+                                <button class="nav-link" id="nav-operation-tab" data-bs-toggle="tab" data-bs-target="#nav-operation" type="button" role="tab" aria-controls="nav-operation" aria-selected="false">
+                                    <span class="bs-stepper-box">
+                                        <i data-feather="settings" class="font-medium-3"></i>
+                                    </span>
+                                    Operation
+                                </button>
+                                <button class="nav-link" id="nav-micellaneous-tab" data-bs-toggle="tab" data-bs-target="#nav-micellaneous" type="button" role="tab" aria-controls="nav-micellaneous" aria-selected="false">
+                                    <span class="bs-stepper-box">
+                                        <i data-feather="shuffle" class="font-medium-3"></i>
+                                    </span>
+                                    Micellaneous
+                                </button>
+                                </div>
+                        </nav>
+                    </div>
+                    <hr>
+                    <div class="card-body">
+                        <div class="tab-content" id="nav-tabContent" >
+                            {{-- Tab Component --}}
+                            <div class="tab-pane fade show active" id="nav-component" role="tabpanel" aria-labelledby="nav-component-tab">
+                                <table class="table table-striped tableFixHead">
+                                    <thead>
+                                        <th scope="col">Sequence</th>
+                                        <th scope="col">Item</th>
+                                        <th scope="col">UOM</th>
+                                        <th scope="col">Usage</th>
+                                        <th scope="col">Cost</th>
+                                        <th scope="col">Supply Inventory</th>
+                                        <th scope="col">Active</th>
+                                        <th scope="col"></th>
+                                        </tr>
+                                    </thead>
+                                    @php $seq=10; @endphp
+                                    <tbody class="bomComponent_container">
+                                        @foreach ($child as $key => $row)
+                                            @if ($row->parent_inventory_it == $bom->parent_inventory_it)
+                                                <tr class="tr_input">
+                                            {{-- <td class="">1</td> an original code --}}
+                                                <td class="" width="10%">{{$seq}}</td>
+                                                <td width="30%">
+                                                    <input type="text" class="form-control search_item_code " value="{{$row->child_item}} - {{$row->child_description}}" name="" id="searchitem_{{$key+1}}" autocomplete="off" required >
+                                                    <span class="help-block search_item_code_empty glyphicon" style="display: none;"> No Results Found </span>
+                                                    <input type="hidden" class="search_inventory_item_id" value="{{$row->child_inventory_id}}" id="id_{{$key+1}}" name="child_inventory_id[]">
+                                                    <input type="hidden" class="form-control" value="{{$row->child_description}}" id="description_{{$key+1}}" name="child_description[]" >
+                                                    <input type="hidden" class="form-control" value="{{$row->child_item}} " id="item_code_{{$key+1}}" name="child_item[]" >
+                                                    <input type="hidden" class="form-control" value="{{$row->child_item_type}} " id="type_code_{{$key+1}}" name="child_item_type[]">
+                                                    <input type="hidden" class="form-control" value="{{$row->item_num}} "  name="item_num[]">
+                                                    <input type="hidden" class="form-control" value="" id="sub_category_{{$key+1}}" name="sub_category[]">
+                                                </td>
+                                                <td width="10%">
+                                                    <input type="text" class="form-control" name="uom[]" id="uom_{{$key+1}}" value="{{$row->uom}}" autocomplete="off" readonly>
+                                                </td>
+                                                <td width="20%">
+                                                    <input type="text" name="usage[]" class="form-control" value="{{$row->usage}}" id="locator_{{$key+1}}" autocomplete="off" required>
+                                                </td>
+                                                <td width="15%">
+                                                    <input type="text" name="standard_cost[]" class="form-control" value="{{$row->standard_cost}}" id="rev_{{$key+1}}"  autocomplete="off">
+                                                </td>
+                                                <td width="15%">
+                                                    <input type="text" name="shipping" id="subinventoryto_{{$key+1}}" class="form-control search_subinventoryto" value="{{$row->supply_subinventory}}" />
+                                                    <input type="hidden" class="form-control subinvto_{{$key+1}}" name="supply_subinventory[]" id="subinvto_{{$key+1}}" value="{{$row->supply_subinventory}}" autocomplete="off">
+                                                </td>
+                                                <td width="5%">
+                                                    <div class="form-check form-switch form-check-primary">
+                                                        <input type="checkbox" class="form-check-input" name="organization_id" id="customSwitch10_1" value="222" checked="">
+                                                        <label class="form-check-label" for="customSwitch10_1">
+                                                            <span class="switch-icon-left"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check">
+                                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                                </svg></span>
+                                                            <span class="switch-icon-right"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x">
+                                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                                </svg></span>
+                                                        </label>
+                                                    </div>
+                                                </td>
+                                                <td width="5px">
+                                                    <button type="button" class="btn btn-danger" style="position: inherit;">&times;</button>
+                                                </td>
+                                            </tr>
+                                            @php $seq= $seq+10; @endphp
+                                            @endif
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                        <td colspan="2">
+                                            <button type="button" class="btn btn-outline-success add_bomComponent btn-sm" style="font-size: 12px;"><i data-feather='plus'></i> Add Rows</button>
+                                        </td>
+                                        <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table><br>
+                            </div>
+
+                            {{-- Tab Operation --}}
+                            <div class="tab-pane fade" id="nav-operation" role="tabpanel" aria-labelledby="nav-operation-tab">
+                                <table class="table table-striped tableFixHead">
+                                    <thead>
+                                        <th scope="col">Operation</th>
+                                        <th scope="col">Work Center</th>
+                                        <th scope="col">Item</th>
+                                        <th scope="col">Schedule Started Date</th>
+                                        <th scope="col">Expected Duration</th>
+                                        <th scope="col">Real Durtion</th>
+                                        <th scope="col"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="">
+                                        <tr class="">
+                                            {{-- <td class="">1</td> an original code --}}
+                                            {{-- <td class="rownumber" width="20%">
+                                                <input type="text" class="form-control" name="po_uom_code[]" id="uom_1" autocomplete="off" readonly>
+                                            </td>
+                                            <td width="20%">
+                                                <input type="text" class="form-control" name="po_uom_code[]" id="uom_1" autocomplete="off" readonly>
+                                            </td>
+                                            <td width="20%">
+                                                <input type="text" class="form-control  " placeholder="Type here ..." name="item_code[]" id="searchitem_1" autocomplete="off" required >
+                                                <span class="help-block search_item_code_empty glyphicon" style="display: none;"> No Results Found </span>
+                                                <input type="hidden" class="search_inventory_item_id"  id="id_1" name="inventory_item_id[]"></td>
+                                                <input type="hidden" class="form-control" value="" id="description_1" name="description_item[]" autocomplete="off">
+                                            <td width="15%">
+                                                <input type="date" name="locator[]" class="form-control" id="locator_1" autocomplete="off" required>
+                                            </td>
+                                            <td width="10%">
+                                                <input type="text" name="rev[]" class="form-control " id="rev_1"  autocomplete="off">
+                                            </td>
+                                            <td width="10%">
+                                                <input type="text" name="rev[]" class="form-control " id="rev_1"  autocomplete="off">
+                                            </td>
+                                            <td width="5%">
+                                                <button type="button" class="btn btn-danger" style="position: inherit;">&times;</button>
+                                            </td> --}}
+                                            </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                        <td colspan="2">
+                                            <button type="button" class="btn btn-outline-success add_bomComponent btn-sm" style="font-size: 12px;"><i data-feather='plus'></i> Add Rows</button>
+                                        </td>
+                                        <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            {{-- Tab Misscellaneous --}}
+                            <div class="tab-pane fade" id="nav-micellaneous" role="tabpanel" aria-labelledby="nav-micellaneous-tab">
+                                3
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="reset" class="btn btn-danger pull-left">Reset</button>
+                            <button type="submit" class="btn btn-primary pull-right "><i class="fa fa-plus"></i> Add</button>
+                        </div>
+                    </div>
+                    <!-- /.box-body -->
+                </div>
+            </form>
+        </div>
+    </div>
+
+</section>
+<!-- /.content -->
+@endsection
