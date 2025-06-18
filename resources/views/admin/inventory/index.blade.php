@@ -10,6 +10,23 @@
             <a href="{{ route("admin.inventory.index") }}" class="breadcrumbs__item">{{ trans('cruds.physic.fields.inv') }} </a>
             <a href="{{ route("admin.inventory.index") }}" class="breadcrumbs__item">{{ trans('cruds.inventory.title_singular') }} </a>
         </h6>
+        @can('price_list_create')
+            <div class="row">
+                <div class="col-lg-12">
+                    <a class="btn btn-primary" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#salesOrderModal">
+                        <span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="feather feather-plus me-50 font-small-4">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </span>
+                        {{ trans('global.add') }} Adjustment
+                    </a>
+                </div>
+            </div>
+        @endcan
     </div>
     <div class="card-body">
         <table id="report_onhand" class=" table display  w-100" class="display">
@@ -61,6 +78,50 @@
             </tfoot>
         </table>
     </div>
+    <div class="modal fade" id="salesOrderModal" tabindex="-1" aria-labelledby="salesOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="salesOrderModalLabel">Add Adjustment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <form action="{{ route('admin.inventory.store') }}" method="POST" enctype="multipart/form-data">
+
+                @csrf
+                {{ csrf_field() }}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="gudang" class="form-label">Warehouse</label>
+                        <select name="warehouse" id="warehouse" class="form-control select2" required>
+                            <option hidden disabled selected></option>
+                            @foreach($subinv as $row)
+                                <option value="{{$row->sub_inventory_name}}"> {{$row->sub_inventory_name}} - {{$row->description}} </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="gudang" class="form-label">Item</label>
+                        <select name="item_code" id="item_code" class="form-control select2" required>
+                            <option hidden disabled selected></option>
+                            @foreach($item as $row)
+                                <option value="{{$row->inventory_item_id}}"> {{$row->item_code}} - {{$row->description}} </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" name="quantities" id="quantities" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+            </div>
+        </div>
+    </div>
+
 </div>
 @endsection
 @push('script')
