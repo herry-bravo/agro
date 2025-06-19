@@ -40,10 +40,9 @@
                                 for="segment1">{{ trans('cruds.Delivery.table.shipto') }}</label>
                             <select disabled type="text" id="customer_shipto" name="customer_shipto"
                                 class="form-control select2" value="{{ $DeliveryHeader->ship_to_party_id }}" required>
-                                @foreach ($customershiipto as $row)
-                                    <option
-                                        value="{{ $row->id }}"{{ $DeliveryHeader->ship_to_party_id == $row->id ? 'selected' : '' }}>
-                                        {{ $row->site_code }} / {{ $row->address1 }}</option>
+                                 @foreach ($customershiipto as $row)
+                                    <option value="{{ $row->site_code }}" {{ $DeliveryHeader->ship_to_party_id == $row->site_code ? 'selected' : '' }}>
+                                        {{ $row->address1 }} / {{ $row->address2 }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -110,7 +109,7 @@
                                 @foreach ($freight_terms as $row)
                                     <option
                                         value="{{ $row->id }}"{{ $DeliveryHeader->freight_terms_code == $row->id ? 'selected' : '' }}>
-                                        {{ $row->term_code }}</option>
+                                        {{ $row->terms_name }}</option>
                                 @endforeach
                             </select>
                         </div>

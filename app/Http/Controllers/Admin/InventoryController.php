@@ -43,14 +43,14 @@ class InventoryController extends Controller
                 ->first();
 
             if ($onhand) {
-                $onhand->primary_transaction_quantity += (int)$request->quantities;
+                $onhand->primary_transaction_quantity = (int)$request->quantities;
                 $onhand->save();
             } else {
                 Onhand::create([
                     'inventory_item_id' => $request->item_code,
                     'subinventory_code' => $request->warehouse,
                     'primary_transaction_quantity' => (int)$request->quantities,
-                    'transaction_uom_code' => uom,
+                    'transaction_uom_code' => $uom,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

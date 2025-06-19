@@ -113,7 +113,7 @@ class ArPaymentController extends Controller
             $child2->currency_code = $salesOrder->attribute1;
             $child2->created_at = $request->accounting_date;
             $child2->updated_at = $request->accounting_date;
-            $trx = MaterialTransaction::where('trx_code',$request->attribute_category)->first();
+            $trx = AccountCode::where('account_code',$request->attribute_category)->first();
 
             $head->save();
             $child1->save();
@@ -126,7 +126,7 @@ class ArPaymentController extends Controller
                 'amount' => $request->paid_off, // atau bisa $request->payment_date
                 'payment_numstatus' => $request->bank_num,
                 'posted_flag' => 4,
-                'invoice_payment_type' => $trx->trx_types,
+                'invoice_payment_type' => $trx->description,
                 'payment_currency_code' => $salesOrder->attribute1,
                 'global_attribute_category' => 'SALES',
                 'invoice_payment_id' => $request->je_batch_id,

@@ -42,7 +42,7 @@ class InvoicesController extends Controller
 
         $so_detil = SalesOrderDetail::where('header_id','=',$header_id)->get();
         $customer = Customer::get();
-        $tax = \App\Tax::where('type_tax_use','Sales')->get();
+        $tax = \App\Tax::get();
         $faktur = Faktur::get();
         $trx = MaterialTransaction::whereIn('trx_code', [4])->select('trx_code','trx_source_types')->get();
         $ppn= AccountCode::where('account_code','3202')->first();

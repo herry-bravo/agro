@@ -1,16 +1,16 @@
-@extends('layouts.admin')
-@section('content')
-@push('script')
-<script src="{{ asset('app-assets/js/scripts/jquery-ui.js')}}"></script>
-@endpush
+
+<?php $__env->startSection('content'); ?>
+<?php $__env->startPush('script'); ?>
+<script src="<?php echo e(asset('app-assets/js/scripts/jquery-ui.js')); ?>"></script>
+<?php $__env->stopPush(); ?>
 <div class="card">
     <div class="card-header  mt-1 mb-1">
 
         <h6 class="card-title">
-            <a href="{{ route("admin.inventory.index") }}" class="breadcrumbs__item">{{ trans('cruds.physic.fields.inv') }} </a>
-            <a href="{{ route("admin.inventory.index") }}" class="breadcrumbs__item">{{ trans('cruds.inventory.title_singular') }} </a>
+            <a href="<?php echo e(route("admin.inventory.index")); ?>" class="breadcrumbs__item"><?php echo e(trans('cruds.physic.fields.inv')); ?> </a>
+            <a href="<?php echo e(route("admin.inventory.index")); ?>" class="breadcrumbs__item"><?php echo e(trans('cruds.inventory.title_singular')); ?> </a>
         </h6>
-        @can('inventory_adjustment')
+        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('inventory_adjustment')): ?>
             <div class="row">
                 <div class="col-lg-12">
                     <a class="btn btn-primary" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#salesOrderModal">
@@ -22,11 +22,11 @@
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
                         </span>
-                        {{ trans('global.add') }} Adjustment
+                        <?php echo e(trans('global.add')); ?> Adjustment
                     </a>
                 </div>
             </div>
-        @endcan
+        <?php endif; ?>
     </div>
     <div class="card-body">
         <table id="report_onhand" class=" table display  w-100" class="display">
@@ -36,19 +36,24 @@
                         #
                     </th>
                     <th>
-                        {{ trans('cruds.inventory.fields.item_number') }}
+                        <?php echo e(trans('cruds.inventory.fields.item_number')); ?>
+
                     </th>
                     <th>
-                        {{ trans('cruds.inventory.fields.description') }}
+                        <?php echo e(trans('cruds.inventory.fields.description')); ?>
+
                     </th>
                     <th class="text-center">
-                        {{ trans('cruds.inventory.fields.category') }}
+                        <?php echo e(trans('cruds.inventory.fields.category')); ?>
+
                     </th>
                     <th class="text-center">
-                        {{ trans('cruds.inventory.fields.subinventory') }}
+                        <?php echo e(trans('cruds.inventory.fields.subinventory')); ?>
+
                     </th>
                     <th class="text-center">
-                        {{ trans('cruds.inventory.fields.location') }}
+                        <?php echo e(trans('cruds.inventory.fields.location')); ?>
+
                     </th>
                     <th class="text-center">
                         UOM
@@ -58,13 +63,15 @@
                     </th>
 
                     <th class="text-end">
-                        {{ trans('cruds.inventory.fields.qty') }}
+                        <?php echo e(trans('cruds.inventory.fields.qty')); ?>
+
                     </th>
                     <th class="text-end">
                         Stock Price
                     </th>
                     <th class="text-center">
-                        {{ trans('cruds.inventory.fields.updated_at') }}
+                        <?php echo e(trans('cruds.inventory.fields.updated_at')); ?>
+
                     </th>
                 </tr>
             </thead>
@@ -85,27 +92,28 @@
                 <h5 class="modal-title" id="salesOrderModalLabel">Add Adjustment</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
-            <form action="{{ route('admin.inventory.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="<?php echo e(route('admin.inventory.store')); ?>" method="POST" enctype="multipart/form-data">
 
-                @csrf
-                {{ csrf_field() }}
+                <?php echo csrf_field(); ?>
+                <?php echo e(csrf_field()); ?>
+
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="gudang" class="form-label">Warehouse</label>
                         <select name="warehouse" id="warehouse" class="form-control select2" required>
                             <option hidden disabled selected></option>
-                            @foreach($subinv as $row)
-                                <option value="{{$row->sub_inventory_name}}"> {{$row->sub_inventory_name}} - {{$row->description}} </option>
-                            @endforeach
+                            <?php $__currentLoopData = $subinv; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($row->sub_inventory_name); ?>"> <?php echo e($row->sub_inventory_name); ?> - <?php echo e($row->description); ?> </option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label for="gudang" class="form-label">Item</label>
                         <select name="item_code" id="item_code" class="form-control select2" required>
                             <option hidden disabled selected></option>
-                            @foreach($item as $row)
-                                <option value="{{$row->inventory_item_id}}"> {{$row->item_code}} - {{$row->description}} </option>
-                            @endforeach
+                            <?php $__currentLoopData = $item; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($row->inventory_item_id); ?>"> <?php echo e($row->item_code); ?> - <?php echo e($row->description); ?> </option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -123,8 +131,8 @@
     </div>
 
 </div>
-@endsection
-@push('script')
+<?php $__env->stopSection(); ?>
+<?php $__env->startPush('script'); ?>
 <script>
     $(document).ready(function() {
         $.fn.dataTable.ext.errMode = 'none';
@@ -141,7 +149,7 @@
         const table = $('#report_onhand').DataTable({
             "bServerSide": true
             , ajax: {
-                url: '{{url("search/onhand-report") }}'
+                url: '<?php echo e(url("search/onhand-report")); ?>'
                 , type: "POST"
                 , headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -297,4 +305,6 @@
     });
 
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layouts.admin', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\nexzo\agro\resources\views/admin/inventory/index.blade.php ENDPATH**/ ?>

@@ -180,7 +180,7 @@ class SalesOrderController extends Controller
         $price = PriceList::all();
         $site = Site::all();
         $currency = CurrencyGlobal::where('currency_status', 1)->get();
-        $tax = \App\Tax::where('type_tax_use','Sales')->get();
+        $tax = \App\Tax::get();
         // dd($sales);
         return view('admin.sales.edit', compact('sales_team','site','price','salesDetail','sales', 'customer', 'currency', 'terms','tax'));
     }
