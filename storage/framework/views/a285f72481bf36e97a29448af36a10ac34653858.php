@@ -10,7 +10,7 @@
             <a href="<?php echo e(route("admin.inventory.index")); ?>" class="breadcrumbs__item"><?php echo e(trans('cruds.physic.fields.inv')); ?> </a>
             <a href="<?php echo e(route("admin.inventory.index")); ?>" class="breadcrumbs__item"><?php echo e(trans('cruds.inventory.title_singular')); ?> </a>
         </h6>
-        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('inventory_adjustment')): ?>
+        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('price_list_create')): ?>
             <div class="row">
                 <div class="col-lg-12">
                     <a class="btn btn-primary" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#salesOrderModal">
@@ -43,6 +43,9 @@
                         <?php echo e(trans('cruds.inventory.fields.description')); ?>
 
                     </th>
+                    <th>
+                        Vendor Name
+                    </th>
                     <th class="text-center">
                         <?php echo e(trans('cruds.inventory.fields.category')); ?>
 
@@ -65,6 +68,12 @@
                     <th class="text-end">
                         <?php echo e(trans('cruds.inventory.fields.qty')); ?>
 
+                    </th>
+                    <th class="text-end">
+                        In
+                    </th>
+                    <th class="text-end">
+                        Out
                     </th>
                     <th class="text-end">
                         Stock Price
@@ -264,6 +273,8 @@
                 }, {
                     data: 'description'
                 }, {
+                    data: 'vendor_name'
+                }, {
                     data: 'category'
                 }, {
                     data: 'subinventory_code'
@@ -278,6 +289,12 @@
                     , className: "text-center"
                 }, {
                     data: 'transaction_quantity'
+                    , className: "text-end"
+                }, {
+                    data: 'sales_quantity'
+                    , className: "text-end"
+                }, {
+                    data: 'delivered_quantity'
                     , className: "text-end"
                 },{
                     data: 'stock_price'

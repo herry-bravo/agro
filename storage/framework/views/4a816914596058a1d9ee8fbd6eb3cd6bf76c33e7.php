@@ -1,6 +1,6 @@
 
 <style>
-    @page {
+    @page  {
         margin: 0 !important;
         margin-top: 0 !important;
         /* padding: 5px !important; */
@@ -151,7 +151,7 @@
         <table>
             <tr style="height:90px">
                 <td style="width: 85%;">
-                    <img style="width: 12%; float:left" src="{{ asset('app-assets/images/logo/suryaagro.png') }}" alt="buana-megah">
+                    <img style="width: 12%; float:left" src="<?php echo e(asset('app-assets/images/logo/suryaagro.png')); ?>" alt="buana-megah">
                     <p style="font-size: 14px; line-height: 1.6; padding-left: 100px;">
                         <b style="color: green; display: inline-block; margin-left: 16px;">SURYA-AGRO</b><br>
                         <b style="display: inline-block; margin-left: 16px;">Head Office:</b><br>
@@ -168,15 +168,15 @@
 
                 </td>
                 <td>
-                    <img style="float:right" src="data:image/png;base64,{{DNS2D::getBarcodePNG('https://maps.app.goo.gl/ZjihaCAL3e3zYye48?g_st=iw', 'QRCODE')}}">
+                    <img style="float:right" src="data:image/png;base64,<?php echo e(DNS2D::getBarcodePNG('https://maps.app.goo.gl/ZjihaCAL3e3zYye48?g_st=iw', 'QRCODE')); ?>">
                 </td>
             </tr>
         </table>
 
             <hr>
 
-            @foreach($header as $key => $raw)
-            {{-- Body --}}
+            <?php $__currentLoopData = $header; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $raw): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            
             <div class="container ">
                 <table>
                     <tr>
@@ -189,19 +189,26 @@
                             <h4>Supplier</h4>
                         </td>
                         <td style="vertical-align: text-top; !important">
-                            <p>: ({{ $raw->vendor_id ?? '' }}) - {{ $raw->vendor->vendor_name ?? '' }}
-                                <br> {{ $raw->vendor->address1 ?? '' }}
-                                {{ $raw->vendor->city ?? '' }}, {{ $raw->vendor->province ?? '' }}
-                                <br>{{ $raw->vendor->phone ?? '' }}
+                            <p>: (<?php echo e($raw->vendor_id ?? ''); ?>) - <?php echo e($raw->vendor->vendor_name ?? ''); ?>
+
+                                <br> <?php echo e($raw->vendor->address1 ?? ''); ?>
+
+                                <?php echo e($raw->vendor->city ?? ''); ?>, <?php echo e($raw->vendor->province ?? ''); ?>
+
+                                <br><?php echo e($raw->vendor->phone ?? ''); ?>
+
                             </p>
                         </td>
                         <td style="width: 100px; vertical-align: text-top; !important">
                             <h4>Delivery To</h4>
                         </td>
                         <td style="vertical-align: text-top; !important">
-                            <p>: ({{ $raw->ship_to_location ?? '' }}) {{ $raw->site->address1}}
-                                <br> {{ $raw->site->address2}} {{ $raw->site->city ?? '' }}, {{ $raw->site->province ?? '' }}
-                                <br>{{ $raw->site->phone ?? '' }}
+                            <p>: (<?php echo e($raw->ship_to_location ?? ''); ?>) <?php echo e($raw->site->address1); ?>
+
+                                <br> <?php echo e($raw->site->address2); ?> <?php echo e($raw->site->city ?? ''); ?>, <?php echo e($raw->site->province ?? ''); ?>
+
+                                <br><?php echo e($raw->site->phone ?? ''); ?>
+
                             </p>
                         </td>
                     </tr>
@@ -210,13 +217,13 @@
                             <h4>Term</h4>
                         </td>
                         <td>
-                            <p>: {{ $raw->term_id ?? '' }} </p>
+                            <p>: <?php echo e($raw->term_id ?? ''); ?> </p>
                         </td>
                         <td>
                             <h4> Number</h4>
                         </td>
                         <td>
-                            <p>: {{ $raw->segment1 ?? '' }} </p>
+                            <p>: <?php echo e($raw->segment1 ?? ''); ?> </p>
                         </td>
                     </tr>
                     <tr>
@@ -224,13 +231,13 @@
                             <h4 style="text-align: top">Freight</h4>
                         </td>
                         <td>
-                            <p>: {{ $raw->freight ?? '' }} </p>
+                            <p>: <?php echo e($raw->freight ?? ''); ?> </p>
                         </td>
                         <td>
                             <h4> Date</h4>
                         </td>
                         <td>
-                            <p>: {{ $raw->created_at ?? '' }}</p>
+                            <p>: <?php echo e($raw->created_at ?? ''); ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -238,19 +245,19 @@
                             <h4 style="text-align: top">Carrier</h4>
                         </td>
                         <td>
-                            <p>: {{ $raw->carrier ?? '' }}</p>
+                            <p>: <?php echo e($raw->carrier ?? ''); ?></p>
                         </td>
                         <td>
                             <h4>Curenncy</h4>
                         </td>
                         <td>
-                            <p>: {{ $raw->currency_code ?? '' }}</p>
+                            <p>: <?php echo e($raw->currency_code ?? ''); ?></p>
                         </td>
                     </tr>
                 </table>
                 <table>
                     <tbody>
-                        @php $subtotal=0; @endphp
+                        <?php $subtotal=0; ?>
                         <tr>
                             <th>#</th>
                             <th>Item</th>
@@ -260,49 +267,49 @@
                             <th>Total</th>
                         </tr>
 
-                        {{-- Looping data --}}
-                        @php $line = 0; @endphp
-                        @foreach($data as $key => $row)
-                        @if ($row->po_header_id==$raw->id)
-                        @php $line ++;@endphp
+                        
+                        <?php $line = 0; ?>
+                        <?php $__currentLoopData = $data; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php if($row->po_header_id==$raw->id): ?>
+                        <?php $line ++;?>
                         <tr>
-                            <td align="center">{{ $row->line_id ?? '' }}</td>
-                            <td>{{ $row->itemMaster->item_code ?? '' }}</td>
-                            <td>{{ $row->item_description ?? '' }}</td>
-                            <td align="right"> {{ number_format($row->unit_price, 2, ',', '.') }}</td>
-                            <td align="right">{{ $row->po_quantity ?? '' }}</td>
-                            <td align="right">{{ number_format($row->unit_price * $row->po_quantity, 2, ',', '.') }}</td>
+                            <td align="center"><?php echo e($row->line_id ?? ''); ?></td>
+                            <td><?php echo e($row->itemMaster->item_code ?? ''); ?></td>
+                            <td><?php echo e($row->item_description ?? ''); ?></td>
+                            <td align="right"> <?php echo e(number_format($row->unit_price, 2, ',', '.')); ?></td>
+                            <td align="right"><?php echo e($row->po_quantity ?? ''); ?></td>
+                            <td align="right"><?php echo e(number_format($row->unit_price * $row->po_quantity, 2, ',', '.')); ?></td>
                         </tr>
-                        {{-- Count total --}}
-                        @php $subtotal+=($row->unit_price * $row->po_quantity);@endphp
+                        
+                        <?php $subtotal+=($row->unit_price * $row->po_quantity);?>
 
-                        @endif
-                        @endforeach
+                        <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </tbody>
-                    {{-- Table Footer, Total Counter --}}
+                    
                     <tfoot>
                         <tr>
                             <td colspan="3"></td>
                             <td align="left"><strong>Subtotal</strong></td>
-                            <td align="right">{{$raw->currency_code}} </td>
-                            <td align="right">{{ number_format($subtotal, 2, ',', '.') }}</td>
+                            <td align="right"><?php echo e($raw->currency_code); ?> </td>
+                            <td align="right"><?php echo e(number_format($subtotal, 2, ',', '.')); ?></td>
                         </tr>
                         <tr>
                             <td colspan="3"></td>
-                            <td align="left"><strong>{{$raw->vendor->tax->tax_name}}</strong></td>
-                            <td align="right">{{$raw->currency_code}}</td>
-                            <td align="right"> {{ number_format(($raw->attribute1-$subtotal), 2, ',', '.') }}</td>
+                            <td align="left"><strong><?php echo e($raw->vendor->tax->tax_name); ?></strong></td>
+                            <td align="right"><?php echo e($raw->currency_code); ?></td>
+                            <td align="right"> <?php echo e(number_format(($raw->attribute1-$subtotal), 2, ',', '.')); ?></td>
                         </tr>
                         <tr>
                             <td colspan="3"></td>
                             <td align="left"><strong>Total</strong></td>
-                            <td align="right">{{$raw->currency_code}} </td>
-                            <td align="right"> {{ number_format(($raw->attribute1), 2, ',', '.') }}</td>
+                            <td align="right"><?php echo e($raw->currency_code); ?> </td>
+                            <td align="right"> <?php echo e(number_format(($raw->attribute1), 2, ',', '.')); ?></td>
                         </tr>
                     </tfoot>
                 </table>
 
-                {{-- Aproval Colomn --}}
+                
                 <table class="table-footer">
                     <tr>
                         <td>Prepared By,</td>
@@ -322,19 +329,20 @@
                 </table>
                 <table style="margin-top:10%;">
                     <tr>
-                        <td style="height: 50px;">Note : <br>{{$raw->notes}}</td>
+                        <td style="height: 50px;">Note : <br><?php echo e($raw->notes); ?></td>
                     </tr>
                 </table>
             </div>
 
-            {{-- Ignore Page Break in Last Loop --}}
-            @if ($loop->last)
+            
+            <?php if($loop->last): ?>
             <div style="page-break-before: avoid"> </div>
-            @else
+            <?php else: ?>
             <div class="page_break"></div>
-            @endif
+            <?php endif; ?>
 
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
     </body>
 </page>
+<?php /**PATH C:\laragon\www\nexzo\agro\resources\views/admin/purchase/view.blade.php ENDPATH**/ ?>

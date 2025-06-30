@@ -60,10 +60,12 @@ class ItemMasterController extends Controller
         return view('admin.itemMaster.edit', compact('coa','itemMaster','Category','itemstatus','makeorbuy','agent'));
     }
 
-    public function update(Request $request, ItemMaster $itemMaster)
+    public function update(Request $request)
     {
-       // dd($request->all());
-        $itemMaster->update($request->all());
+        $item = ItemMaster::findOrFail($request->id);
+
+    // Update field-field yang diizinkan
+        $item->update($request->all());
         return back()->with('success',"Updated !!");
     }
 

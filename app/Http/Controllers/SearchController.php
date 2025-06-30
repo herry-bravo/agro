@@ -1225,7 +1225,6 @@ class SearchController extends Controller
         return json_encode($response);
     }
     public function rcv_index(Request $request) {
-        // dd('tes');
         $draw = $request->get('draw');
         $start = $request->get("start");
         $rowperpage = $request->get("length"); // total number of rows per page
@@ -1247,7 +1246,7 @@ class SearchController extends Controller
                 "category" =>$raw->category->description,
                 "uom" =>$raw->uom_code,
                 "item" => Str::limit($raw->itemmaster->description, 10, '...'),
-                "date" => $raw->created_at ? $raw->created_at->format('d-M-Y') : null,
+                "date" => $raw->created_at ? $raw->created_at->format('d-M-Y') : '-',
                 "qty" => (intval($raw->quantity_received) == $raw->quantity_received) ? intval($raw->quantity_received) : $raw->quantity_received,
                 "status" =>$raw->RcvHeader->invoice_status_code,
             );
@@ -1354,8 +1353,8 @@ class SearchController extends Controller
                 "receiving_inventory" =>  $raw->receiving_inventory?? $raw->shipping_inventory ,
                 "location" => $raw->attribute1,
                 "img_path" => $raw->img_path,
-                "created_at" => $raw->created_at?$raw->created_at->format('d-m-Y'):'NULL',
-                "updated_at" => $raw->updated_at?$raw->created_at->format('d-m-Y'):'NULL',
+                "created_at" => optional($raw->created_at)->format('d-m-Y') ?? '-',        
+                "updated_at" => optional($raw->updated_at)->format('d-m-Y') ?? '-',
             );
         }
         $response = array(
@@ -2221,14 +2220,73 @@ class SearchController extends Controller
         $totalRecordswithFilter = \App\Onhand::select('count(*) as allcount')->count();
 
         // Get records, also we have included search filter as well
-        $records = \App\Onhand::leftjoin('bm_mtl_system_item','bm_mtl_system_item.inventory_item_id','=','bm_inv_onhand_quantities_detail.inventory_item_id')
-            ->orderBy('bm_inv_onhand_quantities_detail.id','ASC')
-            ->select('bm_inv_onhand_quantities_detail.*')
-            ->skip($start)
-            ->take($rowperpage)
-            ->where([['bm_mtl_system_item.deleted_at','=',NULL],['bm_mtl_system_item.description','like', '%' . $searchValue . '%']])
-            ->Orwhere([['bm_mtl_system_item.item_code','like', '%' . $searchValue . '%']])
-            ->get();
+        // $records = \App\Onhand::leftjoin('bm_mtl_system_item','bm_mtl_system_item.inventory_item_id','=','bm_inv_onhand_quantities_detail.inventory_item_id')
+        //     ->orderBy('bm_inv_onhand_quantities_detail.id','ASC')
+        //     ->select('bm_inv_onhand_quantities_detail.*')
+        //     ->skip($start)
+        //     ->take($rowperpage)
+        //     ->where([['bm_mtl_system_item.deleted_at','=',NULL],['bm_mtl_system_item.description','like', '%' . $searchValue . '%']])
+        //     ->Orwhere([['bm_mtl_system_item.item_code','like', '%' . $searchValue . '%']])
+        //     ->get();
+        // Bagian 1: Buat subquery untuk menghitung total pengiriman.
+        // Ini adalah padanan dari "WITH DeliveryData AS (...)" dalam SQL.
+        // Subquery 1: Menghitung total pengiriman (delivery)
+        $deliveryQuery = DB::table('bm_wsh_delivery_details')
+            ->select(
+                'inventory_item_id',
+                'subinventory',
+                DB::raw('SUM(delivered_quantity) as total_delivered_quantity')
+            )
+            ->groupBy('inventory_item_id', 'subinventory');
+
+        // Subquery 2: Menghitung total penjualan (sales)
+        $salesQuery = DB::table('bm_c_rcv_shipment_header_id as h')
+            ->leftJoin('bm_c_rcv_transactions_id as t', 'h.shipment_header_id', '=', 't.shipment_header_id')
+            ->select(
+                't.item_id',
+                'h.ship_to_location_id',
+                DB::raw('SUM(t.quantity_received) as total_sales_quantity')
+            )
+            ->whereNotNull('t.item_id')
+            ->whereNull('h.deleted_at')
+            ->whereNull('t.deleted_at')
+            ->groupBy('t.item_id', 'h.ship_to_location_id');
+
+
+        // Query Utama: Menggabungkan Onhand, Item Master, Delivery, dan Sales
+        $records = \App\Onhand::leftjoin('bm_mtl_system_item', 'bm_mtl_system_item.inventory_item_id', '=', 'bm_inv_onhand_quantities_detail.inventory_item_id')
+
+        // JOIN PERTAMA: Gabungkan dengan data pengiriman (delivery)
+        ->leftJoinSub($deliveryQuery, 'delivery_data', function ($join) {
+            $join->on('bm_inv_onhand_quantities_detail.inventory_item_id', '=', 'delivery_data.inventory_item_id')
+                    ->on('bm_inv_onhand_quantities_detail.subinventory_code', '=', 'delivery_data.subinventory');
+        })
+
+        // JOIN KEDUA: Gabungkan dengan data penjualan (sales)
+        ->leftJoinSub($salesQuery, 'sales_data', function ($join) {
+            $join->on('bm_inv_onhand_quantities_detail.inventory_item_id', '=', 'sales_data.item_id')
+                    ->on('bm_inv_onhand_quantities_detail.subinventory_code', '=', 'sales_data.ship_to_location_id');
+        })
+
+        ->orderBy('bm_inv_onhand_quantities_detail.id', 'ASC')
+
+        ->select(
+            'bm_inv_onhand_quantities_detail.*',
+            'bm_mtl_system_item.description',
+            'bm_mtl_system_item.item_code',
+            DB::raw('COALESCE(delivery_data.total_delivered_quantity, 0) as delivered_quantity'),
+            DB::raw('COALESCE(sales_data.total_sales_quantity, 0) as sales_quantity') // Tambahkan kolom sales_quantity
+        )
+
+        ->skip($start)
+        ->take($rowperpage)
+        ->where(function($query) use ($searchValue) {
+            $query->where('bm_mtl_system_item.description', 'like', '%' . $searchValue . '%')
+                    ->orWhere('bm_mtl_system_item.item_code', 'like', '%' . $searchValue . '%');
+        })
+        ->where('bm_mtl_system_item.deleted_at', NULL)
+        ->get();
+
         $data_arr = array();
 
         foreach ($records as $raw) {
@@ -2242,11 +2300,13 @@ class SearchController extends Controller
                 "id" =>$raw->id,
                 "item_code" => $raw->itemmaster->item_code ?? '',
                 "item_code_desc" => $raw->itemmaster->item_code." ".$raw->itemmaster->description,
+                "vendor_name" => $raw->itemmaster->item_brand ?? '',
                 "description" =>$raw->itemmaster->description ?? '',
                 "cost" =>number_format($raw->itemmaster->item_cost,0),
-                "category" => $raw->inv_striping_category ?? $raw->itemmaster->attribute2 ,
+                // "category" => $raw->inv_striping_category ?? $raw->itemmaster->attribute2 ,
+                "category" => $raw->itemMaster->attribute1 ?? '' ,
                 "type_code" =>$raw->transaction_uom,
-                "fix_loc" => $raw->itemMaster->attribute1 ?? '',
+                "fix_loc" => $raw->subinventories->description ?? '',
                 "subinventory_code" =>$raw->subinventory_code,
                 "subinventory" =>$raw->subinventory_code." ".$raw->subinventories->description,
                 "transfer_subinventory" => "",
@@ -2254,6 +2314,8 @@ class SearchController extends Controller
                 "physical_inventory" =>$raw->secondary_transaction_quantity ?? '',
                 "task_id" =>$raw->task_id ?? '',
                 "different" => $diff ,
+                "sales_quantity" => number_format($raw->sales_quantity, 0),
+                "delivered_quantity" => number_format($raw->delivered_quantity, 0),
                 "stock_price" => number_format($raw->itemmaster->item_cost*$raw->primary_transaction_quantity,0),
                 "primary_uom_code" => $raw->transaction_uom_code,
                 "transaction_date" => date('d-M-Y',strtotime($raw->updated_at)),

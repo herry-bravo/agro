@@ -30,7 +30,7 @@
 <?php $__env->startSection('content'); ?>
 <!-- Modern Horizontal Wizard -->
 <section class="modern-horizontal-wizard">
-    <form action="<?php echo e(route("admin.item-master.update", [$itemMaster->inventory_item_id])); ?>" method="POST" class="form-horizontal" enctype="multipart/form-data">
+    <form id="itemMasterForm" action="<?php echo e(route("admin.item-master.update", [$itemMaster->inventory_item_id])); ?>" method="POST" class="form-horizontal" enctype="multipart/form-data">
         <?php echo csrf_field(); ?>
         <?php echo method_field('PUT'); ?>
         <div class="bs-stepper wizard-modern modern-wizard-example">
@@ -85,6 +85,7 @@
                         <div class="mb-25 col-md-5">
                             <label class="form-label" for="item_code"><?php echo e(trans('cruds.itemMaster.fields.item_code')); ?></label>
                             <input type="text" name="item_code" id="item_code" class="form-control" value="<?php echo e(isset($itemMaster->item_code)?$itemMaster->item_code :''); ?>" autocomplete="off" readonly required />
+                            <input type="hidden" name="id" id="id" class="form-control" value="<?php echo e(isset($itemMaster->inventory_item_id)); ?>" autocomplete="off" readonly required />
                         </div>
                         <div class="mb-25 col-md-5">
                             <label class="form-label" for="description"><?php echo e(trans('cruds.itemMaster.fields.description')); ?></label>
@@ -322,30 +323,30 @@
             <div class="row">
                 <div class="mb-25 col-md-4">
                     <label class="form-label" for="account_payable"><?php echo e(trans('cruds.itemMaster.fields.payable')); ?></label>
-                    <input type="text" id="account_payable" name="account_payable" class="form-control" value="<?php echo e($itemMaster->Category->payable_account_code); ?>">
+                    <input readonly type="text" id="account_payable" name="account_payable" class="form-control" value="<?php echo e($itemMaster->Category->payable_account_code); ?>">
                     
                 </div>
                 <div class="mb-25 col-md-4">
                     <label class="form-label" for="account_receivable"><?php echo e(trans('cruds.itemMaster.fields.receivable')); ?></label>
-                    <input type="text" id="account_receivable" name="account_receivable" class="form-control" value="<?php echo e($itemMaster->Category->receivable_account_code); ?>">
+                    <input readonly type="text" id="account_receivable" name="account_receivable" class="form-control" value="<?php echo e($itemMaster->Category->receivable_account_code); ?>">
                 </div>
                 <div class="mb-25 col-md-4">
                     <label class="form-label" for="account_inventory"><?php echo e(trans('cruds.itemMaster.fields.inventory')); ?></label>
-                    <input type="text" id="account_inventory" name="account_inventory" class="form-control" value="<?php echo e($itemMaster->Category->inventory_account_code); ?>">
+                    <input readonly type="text" id="account_inventory" name="account_inventory" class="form-control" value="<?php echo e($itemMaster->Category->inventory_account_code); ?>">
                 </div>
             </div>
             <div class="row mb-4">
                 <div class="mb-25 col-md-4">
                     <label class="form-label" for="account_consumption"><?php echo e(trans('cruds.itemMaster.fields.usage')); ?></label>
-                    <input type="text" id="account_consumption" name="account_consumption" class="form-control" value="<?php echo e($itemMaster->Category->consumption_account_code); ?>">
+                    <input readonly type="text" id="account_consumption" name="account_consumption" class="form-control" value="<?php echo e($itemMaster->Category->consumption_account_code); ?>">
                 </div>
                 <div class="mb-25 col-md-4">
                     <label class="form-label" for="attribute1"><?php echo e(trans('cruds.itemMaster.fields.salescc')); ?></label>
-                    <input type="text" id="attribute1" name="salescc" class="form-control" value="<?php echo e($itemMaster->Category->attribute1); ?>">
+                    <input readonly type="text" id="attribute1" name="salescc" class="form-control" value="<?php echo e($itemMaster->Category->attribute1); ?>">
                 </div>
                 <div class="mb-25 col-md-4">
                     <label class="form-label" for="attribute2"><?php echo e(trans('cruds.itemMaster.fields.other')); ?></label>
-                    <input type="text" name="attribute2" id="other" class="form-control"  value="<?php echo e($itemMaster->Category->attribute2); ?>" disabled />
+                    <input readonly type="text" name="attribute2" id="other" class="form-control"  value="<?php echo e($itemMaster->Category->attribute2); ?>" disabled />
                 </div>
             </div>
             <div class="d-flex justify-content-between">
@@ -353,7 +354,12 @@
                     <i data-feather="arrow-left" class="align-middle me-sm-25 me-0"></i>
                     <span class="align-middle d-sm-inline-block d-none">Previous</span>
                 </button>
-                <button type="submit" class="btn btn-info"><i data-feather='save'></i> <?php echo e(trans('global.save')); ?></button>
+                <button type="button" onclick="document.getElementById('itemMasterForm').submit()" class="btn btn-info">
+                    <i data-feather='save'></i> <?php echo e(trans('global.save')); ?>
+
+                </button>
+
+                <!-- <button type="submit" class="btn btn-info"><i data-feather='save'></i> <?php echo e(trans('global.save')); ?></button> -->
             </div>
         </div>
         </div>

@@ -90,6 +90,7 @@ class SalesOrderController extends Controller
             $header->open_flag = 14;
             $header->tax_exempt_flag =(int) $request->select_tax;
             $header->org_id = Auth::user()->org_id;
+            $header->created_by = auth()->user()->id;
             $header->faktur = $request->faktur;
             $header->save();
 

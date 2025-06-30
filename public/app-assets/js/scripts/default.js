@@ -290,7 +290,7 @@ $(document).ready(function () {
         
             // Hapus titik pemisah ribuan sebelum konversi ke angka
             var qtyValue = quantity ? parseFloat(quantity) : 0;
-            var priceValue = price ? parseFloat(price.replace(/\./g, '')) : 0;
+            var priceValue = price ? parseFloat(price) : 0;
         
             // Menjumlahkan quantity + price
             var total = qtyValue * priceValue;
@@ -804,7 +804,7 @@ $(document).ready(function () {
                     <input type="number" id="harga_'+ index + '" step=0.000001 required class="form-control harga text-end"  name="unit_selling_price[]" >\
                 </td>\
                <td width="auto">\
-                    <input type="number" id="discount_'+ index + '" min="1" max="100" class="form-control recount text-end" oninput=validity.valid||(value="") min=1 name="disc[]">\
+                    <input type="number" id="discount_'+ index + '" min="1" class="form-control recount text-end" oninput=validity.valid||(value="") min=1 name="disc[]">\
                 </td>\
                 <td width="auto"><input type="date" id=""  name="schedule_ship_date[]" class="form-control text-end" required></td>\
                 <td width="auto">\
@@ -826,13 +826,16 @@ $(document).ready(function () {
             var discount = parseFloat($('#discount_' + index).val().replace(/\./g, '').replace(',', '.')) || 0;
             var selectedTaxId = document.getElementById('select_tax').value;
         
-            // Hitung subtotal dengan rumus yang benar
-            var disc =  discount/100;
+           // Hitung subtotal dengan rumus yang benar
+            // var disc =  discount/100;
+            var disc =  discount;
             var unitprices1 =  jumlah * harga;
-            var unitprice =  unitprices1 - (unitprices1*disc);
+            // var unitprice =  unitprices1 - (unitprices1*disc); //untuk persen
+            var unitprice =  unitprices1 - disc; //pengurangan biasa
             var sutot1 = (jumlah * harga)*(1 - selectedTaxId / 100);
-            var sutot = sutot1 - (sutot1*disc);
-            console.log(discount);
+            // var sutot = sutot1 - (sutot1*disc); //untuk persen
+            var sutot = sutot1 - disc; //pengurangan biasa
+            // console.log(sutot);
             // Jika subtotal negatif, set ke 0 (opsional, tergantung kebutuhan)
             // if (unitprice < 0) {
             //     unitprice = 0;

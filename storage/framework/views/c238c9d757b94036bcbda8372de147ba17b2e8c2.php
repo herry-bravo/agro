@@ -49,12 +49,20 @@
                             <h6 class="mb-25"><?php echo e(trans('cruds.Delivery.fields.currency')); ?>: <i class="text-primary"><?php echo e($DeliveryHeader->currency->currency_name); ?></i></h6>
                             <h6 class="mb-25"><?php echo e(trans('cruds.Delivery.fields.createdby')); ?>: <i class="text-primary"><?php echo e($DeliveryHeader->name); ?></i></h6>
                             <h6 class="mb-25"><?php echo e(trans('cruds.Delivery.fields.status')); ?>: <i class="text-primary"><?php echo e($DeliveryHeader->trxstatus->trx_name); ?></i></h6>
-
-                        </div>
-                        <div class="mt-md-0 mt-2 me-5">
                             <h4 class="invoice-title">
                                 <span class="invoice-number"><?php echo e(trans('cruds.Delivery.fields.actualdate')); ?> : <i class="text-primary"> <?php echo e(\Carbon\Carbon::parse($DeliveryHeader->actual_ship_date)->format('d/M/Y')); ?></i> </span>
                             </h4>
+                        </div>
+                        <div class="mt-md-0 mt-2 me-5">
+                            <a class="btn btn-primary" href="#" id="printButton"data-delivery-date="<?php echo e(date('d/m/Y')); ?>"
+   data-delivery-number="<?php echo e($do->number ?? ''); ?>">
+                                <span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-printer me-50 font-small-4">
+                                        <path d="M19 8h-2V5a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v3H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM9 5h6v3H9V5zM5 10h14v9H5v-9z"></path>
+                                    </svg>
+                                </span>
+                                Print Delivery Order
+                            </a>
                         </div>
                     </div>
                     <!-- Header ends -->
@@ -330,6 +338,134 @@
     })
 
 </script>
+   
+    <script>
+        const deliveryItems = <?php echo json_encode($DeliveryDetail, 15, 512) ?>;
+    </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+    document.getElementById('printButton').addEventListener('click', function (e) {
+        e.preventDefault();
+        const deliveryDate = "<?php echo e(\Carbon\Carbon::parse($DeliveryHeader->actual_ship_date)->format('d/M/Y')); ?>";
+        const deliveryNumber = "<?php echo e($DeliveryHeader->delivery_id); ?>";
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const margin = 15;
+        const contentWidth = pageWidth - margin * 2;
+        const lineHeight = 7;
+
+        const companyName = "CV SURYA AGRO PRADHANA";
+        const companyAddress = "Jl. Peterongan-Sumobito, Jombang";
+        const noPolisi = "..............................";
+
+        // Header
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text(companyName, margin, 15);
+        doc.setFont("helvetica", "normal");
+        doc.text(companyAddress, margin, 21);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("DELIVERY ORDER", pageWidth / 2, 35, { align: "center" });
+
+        // Detail Info
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        let y = 45;
+        const labelX = margin;
+        const valueX = labelX + 30;
+
+        doc.text("Tanggal", labelX, y);
+        doc.text(": " + deliveryDate, valueX, y);
+        y += lineHeight;
+        doc.text("No. DO", labelX, y);
+        doc.text(": " + deliveryNumber, valueX, y);
+        y += lineHeight;
+        doc.text("No Polisi", labelX, y);
+        doc.text(": " + noPolisi, valueX, y);
+
+        // Table data
+        y += 10;
+        const body = deliveryItems.map((item, index) => [
+            index + 1,
+            item.item_description ?? '',
+            item.requested_quantity ?? '',
+            item.subinventory ?? ''
+        ]);
+
+        doc.autoTable({
+            startY: y,
+            head: [['No', 'Item', 'Qty', 'Warehouse']],
+            body: body,
+            styles: {
+                fontSize: 10,
+                cellPadding: 3,
+                halign: 'center',
+                valign: 'middle',
+                textColor: [0, 0, 0],
+                lineColor: [0, 0, 0],
+                lineWidth: 0.2,
+            },
+            headStyles: {
+                fillColor: [255, 255, 255],
+                textColor: [0, 0, 0],
+                fontStyle: 'bold',
+                lineColor: [0, 0, 0],
+                lineWidth: 0.5,
+            },
+            columnStyles: {
+                0: { cellWidth: contentWidth * 0.1 },
+                1: { cellWidth: contentWidth * 0.5, halign: 'left' },
+                2: { cellWidth: contentWidth * 0.2 },
+                3: { cellWidth: contentWidth * 0.2 }
+            },
+            tableLineColor: [0, 0, 0],
+        });
+
+        const tableEndY = doc.lastAutoTable.finalY;
+
+        // Signature block
+        const signatureY = tableEndY + 20;
+        const sectionWidth = contentWidth / 3;
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+
+        doc.text("Checker,", margin + sectionWidth * 0, signatureY);
+        doc.text("Gudang,", margin + sectionWidth * 1, signatureY);
+        doc.text("Sopir,", margin + sectionWidth * 2, signatureY);
+
+        doc.text("(....................)", margin + sectionWidth * 0, signatureY + 20);
+        doc.text("(....................)", margin + sectionWidth * 1, signatureY + 20);
+        doc.text("(....................)", margin + sectionWidth * 2, signatureY + 20);
+
+        // Show and Print
+        const pdfData = doc.output('blob');
+        const blobURL = URL.createObjectURL(pdfData);
+        const pdfWindow = window.open('', '', 'width=600,height=400');
+        const iframe = pdfWindow.document.createElement('iframe');
+        iframe.style.position = 'absolute';
+        iframe.style.top = '0';
+        iframe.style.left = '0';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        pdfWindow.document.body.appendChild(iframe);
+        iframe.src = blobURL;
+
+        iframe.onload = function () {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        };
+    });
+</script>
+
+
+
 <?php $__env->stopPush(); ?>
 
 <?php echo $__env->make('layouts.admin', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\nexzo\agro\resources\views/admin/deliveries/show.blade.php ENDPATH**/ ?>

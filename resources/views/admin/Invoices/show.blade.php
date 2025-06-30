@@ -54,7 +54,7 @@
                     <hr>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="mb-1">
                                 <label class="form-label" for="bill_to">{{ trans('cruds.Invoice.field.cust') }}</label>
                                 <select name="bill_to" id="customer" class="form-control select2" required>
@@ -62,7 +62,7 @@
                                 </select>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="mb-1">
                                     <label class="form-label" for="segment1">{{ trans('cruds.Invoice.field.faktur_no') }}</label>
                                     <select name="faktur" id="faktur" class="form-control select2" required value="{{$sales->faktur}}">
@@ -77,22 +77,17 @@
                                     <input type="number" hidden id="status " name="je_batch_id" value="{{random_int(0, 999999)}}" class="form-control">
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="mb-1">
                                     <label class="form-label" for="segment1">{{ trans('cruds.Invoice.field.so_number') }}</label>
                                     <input type="text" readonly id="segment1" name="so_number" class="form-control" value="{{$sales->order_number}}" required>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="mb-1">
-                                    <label class="form-label" for="segment1">{{ trans('cruds.Invoice.field.tax_date') }}</label>
-                                    <input type="text" id="segment1" name="segment1" class="form-control datepicker" value="{{ $sales->tax_date && $sales->tax_date instanceof \Carbon\Carbon ? $sales->tax_date->format('d-M-Y') : '' }}" required>
-                                </div>
-                            </div>
+                           
                         </div>
 
                         <div class="row">
-                            <div class="col-md-1">
+                            <div class="col-md-2">
                                 <div class="mb-1">
                                     <label class="form-label" for="segment1">{{ trans('cruds.Invoice.field.currency') }}</label>
                                     <select name="customer_currency" id="customer_currency" class="form-control select2" required value="{{$sales->attribute1}}">
@@ -112,7 +107,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="mb-1">
                                     <label class="form-label" for="segment1">{{ trans('cruds.Invoice.field.journal') }}</label>
                                     <select name="je_category" id="je_category" class="form-control select2" required>
@@ -122,18 +117,13 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="mb-1">
                                     <label class="form-label" for="segment1">{{ trans('cruds.Invoice.field.noinv') }}</label>
                                     <input type="text" id="noinv" name="noinv" class="form-control" value="{{$sales->inv_number}}" readonly required>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="mb-1">
-                                    <label class="form-label" for="segment1">{{ trans('cruds.Invoice.field.invdate') }}</label>
-                                    <input type="text" id="tgl_invoice" name="tgl_invoice" value="{{ $sales->tax_date && $sales->tax_date instanceof \Carbon\Carbon ? $sales->tax_date->format('d-M-Y') : '' }}" class="form-control" required>
-                                </div>
-                            </div>
+                            
                             <br>
                             <div class="col-md-3">
                                 <div class="mb-1">
@@ -206,6 +196,7 @@
                                                 @php
                                                     $unitprice = 0; // Variabel untuk menyimpan total
                                                     $total = 0; // Variabel untuk menyimpan total
+                                                    $disc = 0; // Variabel untuk menyimpan total
                                                     $tax = 0; // Variabel untuk menyimpan total
                                                 @endphp
                                                 @foreach($so_detil as $row)
@@ -237,6 +228,7 @@
                                                             // Tambahkan hasil perkalian ke total
                                                             $unitprice += $row->unit_percent_base_price ?? 0;
                                                             $total += $row->unit_list_price ?? 0;
+                                                            $disc += $row->disc ?? 0;
                                                             $tax = $unitprice - $total;
                                                         @endphp
                                                     </tr>
@@ -513,7 +505,7 @@
 
             // Data toko
             const storeName = "TOKO PERTANIAN SURYA";
-            const storeAddress = "SUMOBITO - JOMBANG";
+            const storeAddress = "DESA SEGODOREJO - SUMOBITO JOMBANG";
             const cashierName = "Cashier: {{$user}}";
             const transactionId = "{{$sales->order_number}}";
             const purchaseDate = new Date().toLocaleDateString();
@@ -525,7 +517,7 @@
                     name : "{{ $row->user_description_item ?? '' }}",
                     qty  : "{{ number_format($row->ordered_quantity ?? 0) }}",
                     price: "{{ number_format($row->unit_selling_price ?? 0) }}",
-                    total: "{{ number_format($row->unit_list_price ?? 0) }}"
+                    total: "{{ number_format($unitprice ?? 0) }}"
                 },
                 @endforeach
             ];
@@ -664,136 +656,156 @@
         });
     </script>
     <script>
-        document.getElementById('printButton').addEventListener('click', async function(e) {
+        document.getElementById('printButton').addEventListener('click', async function (e) {
             e.preventDefault();
 
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'mm', 'a4');
+            const doc = new jsPDF('p', 'mm', 'a4'); // portrait
+            const pageWidth = doc.internal.pageSize.getWidth();
             const margin = 15;
+            const contentWidth = pageWidth - margin * 2;
+            const lineHeight = 6;
 
-            // Ambil data dari Laravel Blade
-            const customerName = "{{ $sales->customer->party_name ?? '' }}";
-            const customerAddress = "{{ $sales->customer->address1 ?? '' }}, {{ $sales->customer->city ?? '' }}";
+            const companyName = "CV SURYA AGRO PRADHANA";
+            const companyAddress = "Jl. Peterongan-Sumobito, Jombang";
+
+            const customerName = `{!! $sales->customer->party_name ?? '' !!}`;
+            const customerAddress = `{!! $sales->customer->address1 ?? '' !!}, {!! $sales->customer->city ?? '' !!}`;
             const invoiceNumber = "{{ $sales->inv_number ?? '' }}";
-            const soNumber = "{{ $sales->order_number ?? '' }}";
-            const invDate = "{{ $sales->inv_date ?? '' }}";
-            const taxDate = "{{ $sales->tax_date ?? '' }}";
-            const taxType = "{{ $sales->tax->tax_name ?? '' }}";
-            const subTotal = {{ $unitprice ?? 0 }};
-            const total = {{ $total ?? 0 }};
-            const tax = {{ $tax ?? 0 }};
-            const companyName = "TOKO PERTANIAN SURYA";
+            const invoiceDate = "{{ $sales->updated_at ?? '' }}";
+            const paymentTerm = "{{ isset($sales->payment_due_date) ? date('d/m/Y', strtotime($sales->payment_due_date)) : '' }}";
+            const cashier = "{{ $cashier->name ?? '' }}";
 
-            // Format tanggal ke d-m-Y
-            function formatDate(dateString) {
-                if (!dateString) return '';
-                const dateObj = new Date(dateString);
-                const day = String(dateObj.getDate()).padStart(2, '0');
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                const year = dateObj.getFullYear();
-                return `${day}-${month}-${year}`;
+            const subTotal = {{ $total ?? 0 }};
+            const totalDiscount = {{ $disc ?? 0 }};
+            const tax = {{ $tax ?? 0 }};
+            const total = {{ $unitprice ?? 0 }};
+
+            function formatDate(dateStr) {
+                if (!dateStr) return '';
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('id-ID');
             }
 
-            const formattedInvDate = formatDate(invDate);
-            const formattedTaxDate = formatDate(taxDate);
-
             // Header
-            doc.setFont("helvetica");
-            doc.setFontSize(18);
-            doc.text('Invoice', margin, 20);
+            doc.setFont('helvetica', 'bold');
             doc.setFontSize(12);
-            doc.text(invoiceNumber, 170, 20);
-            doc.line(margin, 25, 200, 25);
+            doc.text(companyName, margin, 15);
+            doc.setFont('helvetica', 'normal');
+            doc.text(companyAddress, margin, 21);
 
-            const infoLabelX = margin;
-            const infoValueX = margin + 30;
-            let infoY = 30;
-            const infoGapY = 6;
-
+            // Info Customer
+            let infoY = 20;
+            const infoX = pageWidth - 95;
             doc.setFontSize(10);
-            doc.setFont("helvetica", "normal");
+            doc.text("Kepada :", infoX, infoY);
+            infoY += lineHeight;
+            doc.text(customerName, infoX, infoY);
+            infoY += lineHeight;
 
-            doc.text('Customer:', infoLabelX, infoY);
-            doc.text(customerName, infoValueX, infoY);
-
-            infoY += infoGapY;
-            doc.text('Address:', infoLabelX, infoY);
-            doc.text(customerAddress, infoValueX, infoY);
-
-            infoY += infoGapY;
-            doc.text('Tax:', infoLabelX, infoY);
-            doc.text(taxType, infoValueX, infoY);
-
-
-            // Gunakan autoTable untuk tabel item
-            doc.autoTable({
-                head: [['Item', 'Quantity', 'Price', 'Unit Price', 'Sub Total']],
-                body: invoiceItems.map(item => {
-                    const qty = Number(item.ordered_quantity || 0);
-                    const price = Number(item.unit_selling_price || 0);            // Harga awal per unit
-                    const unitPrice = Number(item.unit_percent_base_price || 0);   // Harga diskon per unit
-                    const subTotal = Number(item.unit_list_price || 0);            // Nilai akhir
-
-                    return [
-                        item.user_description_item || '',
-                        qty.toLocaleString('id-ID'),
-                        price.toLocaleString('id-ID'),
-                        unitPrice.toLocaleString('id-ID'),
-                        subTotal.toLocaleString('id-ID')
-                    ];
-                }),
-                startY: 50,
-                styles: {
-                    fontSize: 10,
-                    overflow: 'linebreak',
-                    cellPadding: 3,
-                    halign: 'center',
-                },
-                columnStyles: {
-                    0: { cellWidth: 60, halign: 'left'   }, // Item
-                    1: { cellWidth: 25, halign: 'center' }, // Quantity
-                    2: { cellWidth: 30, halign: 'center' }, // Price (unit_selling_price)
-                    3: { cellWidth: 30, halign: 'center' }, // Unit Price (unit_percent_base_price)
-                    4: { cellWidth: 35, halign: 'center' }  // Sub Total (unit_list_price)
-                }
+            const splitAddress = doc.splitTextToSize(customerAddress, 80);
+            splitAddress.forEach(line => {
+                doc.text(line, infoX, infoY);
+                infoY += lineHeight;
             });
 
+            // Format paragraf info
+            infoY += 2;
+            doc.setFont('helvetica', 'normal');
+            const labelWidth = 35;
 
+            doc.text(`Tanggal Inv`, infoX, infoY);
+            doc.text(`: ${formatDate(invoiceDate)}`, infoX + labelWidth, infoY);
+            infoY += lineHeight;
 
-            // Tambahkan Total
-            const finalY = doc.lastAutoTable.finalY + 10;
-            const gapY = 8;
-            const labelX = 140; // Kolom label
-            const valueX = 195; // Kolom angka rata kanan
+            doc.text(`Tgl tempo / Tunai`, infoX, infoY);
+            doc.text(`: ${paymentTerm}`, infoX + labelWidth, infoY);
+            infoY += lineHeight;
 
+            doc.text(`Kasir`, infoX, infoY);
+            doc.text(`: ${cashier}`, infoX + labelWidth, infoY);
+
+            // Invoice Number
+            let y = 55;
+            doc.setFont('helvetica', 'bold');
+            doc.text("NO INVOICE", margin, y);
+            y += lineHeight;
+            doc.text(invoiceNumber, margin, y);
+
+            // Tabel
+            doc.autoTable({
+                startY: y + 5,
+                head: [['No', 'Item', 'Qty', 'Price', 'Disc', 'Total']],
+                body: invoiceItems.map((item, index) => [
+                    index + 1,
+                    item.user_description_item || '',
+                    item.ordered_quantity || '',
+                    item.unit_selling_price || '',
+                    item.disc || '',
+                    item.unit_percent_base_price || ''
+                ]),
+                styles: {
+                    fontSize: 10,
+                    cellPadding: 3,
+                    halign: 'center',
+                    fillColor: false,
+                    textColor: [0, 0, 0],
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.2
+                },
+                headStyles: {
+                    fillColor: [255, 255, 255],
+                    textColor: [0, 0, 0],
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.5
+                },
+                columnStyles: {
+                    0: { cellWidth: contentWidth * 0.08 }, // No
+                    1: { cellWidth: contentWidth * 0.37, halign: 'left' }, // Item
+                    2: { cellWidth: contentWidth * 0.15 },
+                    3: { cellWidth: contentWidth * 0.13 },
+                    4: { cellWidth: contentWidth * 0.13 },
+                    5: { cellWidth: contentWidth * 0.14 },
+                },
+                tableLineColor: [0, 0, 0],
+            });
+
+            const tableEnd = doc.lastAutoTable.finalY;
+
+            // Note
             doc.setFontSize(10);
-            doc.setFont("helvetica", "normal");
+            doc.setFont('helvetica', 'normal');
+            doc.text('Note : Barang yang sudah dibeli tidak dapat dikembalikan', margin, tableEnd + 5);
 
-            // Baris PPN
-            doc.text('PPN', labelX, finalY + gapY);
-            doc.text(tax.toLocaleString('id-ID'), valueX, finalY + gapY, { align: 'right' });
+            // Total info
+            const labelX = pageWidth - 70;
+            const valueX = pageWidth - 15;
+            let tY = tableEnd + 5;
 
-            // Baris Total
-            doc.text('Sub Total', labelX, finalY + gapY * 2);
-            doc.text(total.toLocaleString('id-ID'), valueX, finalY + gapY * 2, { align: 'right' });
-            doc.setFont("helvetica", "normal");
-            
-            doc.setFont("helvetica", "bold");
-            doc.text('Total', labelX, finalY);
-            doc.text(subTotal.toLocaleString('id-ID'), valueX, finalY, { align: 'right' });
+            doc.setFont('helvetica', 'bold');
+            doc.text('SUB TOTAL', labelX, tY += lineHeight);
+            doc.text(subTotal.toLocaleString('id-ID'), valueX, tY, { align: 'right' });
 
-            // Footer kiri
-            doc.setFont("helvetica", "bold");
-            doc.text(companyName, margin, finalY + 25);
+            doc.text('TOTAL DISKON', labelX, tY += lineHeight);
+            doc.text(totalDiscount.toLocaleString('id-ID'), valueX, tY, { align: 'right' });
 
-            // Footer kanan: waktu pembelian
-            const purchaseTime = new Date().toLocaleString('id-ID');
-            const pageWidth = doc.internal.pageSize.width;
-            const purchaseTimeWidth = doc.getTextWidth(purchaseTime);
-            const xPosition = pageWidth - purchaseTimeWidth - margin;
-            doc.text(purchaseTime, xPosition, finalY + 25);
+            doc.text('PPN', labelX, tY += lineHeight);
+            doc.text(tax.toLocaleString('id-ID'), valueX, tY, { align: 'right' });
 
-            // Cetak otomatis
+            doc.text('TOTAL', labelX, tY += lineHeight);
+            doc.text(total.toLocaleString('id-ID'), valueX, tY, { align: 'right' });
+
+            // Signature
+            let footerY = tY + 25;
+            doc.text('Mengetahui', margin, footerY);
+            doc.text('Penerima', pageWidth / 2 - 20, footerY);
+            doc.text('Pengirim', pageWidth - 50, footerY);
+
+            doc.text('(............................)', margin, footerY + 20);
+            doc.text('(............................)', pageWidth / 2 - 25, footerY + 20);
+            doc.text('(............................)', pageWidth - 55, footerY + 20);
+
+            // Show and Print
             const pdfData = doc.output('blob');
             const blobURL = URL.createObjectURL(pdfData);
             const pdfWindow = window.open('', '', 'width=600,height=400');
@@ -813,5 +825,6 @@
             };
         });
     </script>
+
 
 @endpush

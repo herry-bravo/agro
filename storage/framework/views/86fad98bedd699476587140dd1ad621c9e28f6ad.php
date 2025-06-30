@@ -1,6 +1,6 @@
  <!-- Start Modal GRN -->
- <form action="{{ route("admin.grn.index") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-     @csrf
+ <form action="<?php echo e(route("admin.grn.index")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+     <?php echo csrf_field(); ?>
      <div class="modal fade" id="demoModal" tabindex="-1" role="dialog" aria-labelledby="demoModalLabel" aria-hidden="true">
 
          <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -16,13 +16,13 @@
                          <div class="row">
                              <div class="col-md-6 col-12">
                                  <div class="mb-1">
-                                     <label class="col-sm-0 control-label" for="number">{{ trans('cruds.rcv.fields.grnfrom') }}</label>
+                                     <label class="col-sm-0 control-label" for="number"><?php echo e(trans('cruds.rcv.fields.grnfrom')); ?></label>
                                      <input type="number" class="form-control search_supplier_name" name="grnfrom" autocomplete="off">
                                  </div>
                              </div>
                              <div class="col-md-6 col-12">
                                  <div class="mb-1">
-                                     <label class="col-sm-0 control-label" for="site">{{ trans('cruds.rcv.fields.grnto') }}</label>
+                                     <label class="col-sm-0 control-label" for="site"><?php echo e(trans('cruds.rcv.fields.grnto')); ?></label>
                                      <input type="number" name="grnto" class="form-control datepicker">
                                  </div>
                              </div>
@@ -30,13 +30,13 @@
                          <div class="row">
                              <div class="col-md-6 col-12">
                                  <div class="mb-1">
-                                     <label class="col-sm-0 control-label" for="number">{{ trans('cruds.rcv.fields.transactiondate') }}</label>
+                                     <label class="col-sm-0 control-label" for="number"><?php echo e(trans('cruds.rcv.fields.transactiondate')); ?></label>
                                      <input type="date" class="form-control search_supplier_name" name="transaction_datefrom" autocomplete="off">
                                  </div>
                              </div>
                              <div class="col-md-6 col-12">
                                  <div class="mb-1">
-                                     <label class="col-sm-0 control-label" for="rate">{{ trans('cruds.rcv.fields.orderto') }}</label>
+                                     <label class="col-sm-0 control-label" for="rate"><?php echo e(trans('cruds.rcv.fields.orderto')); ?></label>
                                      <input type="date" class="form-control search_supplier_name" name="transaction_dateto" autocomplete="off">
                                  </div>
                              </div>
@@ -53,8 +53,8 @@
  <!-- END  Modal GRN -->
 
  <!-- Start Modal PO -->
- <form action="{{ route("admin.reportPDF.index") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+ <form action="<?php echo e(route("admin.reportPDF.index")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
 
     <div class="modal fade" id="poModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -121,8 +121,8 @@
 <!-- END  Modal PO -->
 
  <!-- Start Modal PR -->
- <form action="{{ route("admin.pr-report.index") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+ <form action="<?php echo e(route("admin.pr-report.index")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
 
     <div class="modal fade" id="pr" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -186,8 +186,8 @@
 <!-- END  Modal PR -->
 
 <!-- Start Modal Surat Jalan -->
-<form action="{{ route("admin.suratJalan.index") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+<form action="<?php echo e(route("admin.suratJalan.index")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
 
     <div class="modal fade" id="suratJalan" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -254,9 +254,9 @@
 </form>
 <!-- End Modal Surat Jalan -->
 
-{{-- Start Modal Packing List --}}
-<form action="{{ route("admin.packingList.index") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+
+<form action="<?php echo e(route("admin.packingList.index")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
 
     <div class="modal fade" id="packingList" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -330,11 +330,11 @@
         </div>
     </div>
 </form>
-{{-- End Modal Packing List --}}
 
-{{-- Start Modal Invoicing --}}
-<form action="{{ route("admin.salesInvoicing.index") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+
+
+<form action="<?php echo e(route("admin.salesInvoicing.index")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
 
     <div class="modal fade" id="salesInvoicing" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -371,11 +371,11 @@
         </div>
     </div>
 </form>
-{{-- End Modal Invoicing --}}
 
-{{-- Start Modal Inventory --}}
-<form action="{{ route("admin.inv-report.index") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+
+
+<form action="<?php echo e(route("admin.inv-report.index")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
 
     <div class="modal fade" id="inventoryReport" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -410,12 +410,12 @@
         </div>
     </div>
 </form>
-{{-- End Modal Invoicing --}}
 
 
-{{-- Start Modal Miscellaneous Expenses --}}
-<form action="{{ route("admin.missExpenses-report.index") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+
+
+<form action="<?php echo e(route("admin.missExpenses-report.index")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
 
     <div class="modal fade" id="missExpenses" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -427,14 +427,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="card-body">
-                        {{-- <div class="row mt-1">
-                            <div class="col-md-12 col-12">
-                                <div class="mb-1">
-                                    <label class="col-sm-0 control-label" for="number">Aju :</label>
-                                    <input type="text" class="form-control " name="aju" autocomplete="off">
-                                </div>
-                            </div>
-                        </div> --}}
+                        
                         <div class="row mt-1">
                             <div class="col-md-6 col-12">
                                 <div class="mb-1">
@@ -458,11 +451,11 @@
         </div>
     </div>
 </form>
-{{-- End Modal Miscellaneous Expenses --}}
+
 
  <!-- Start Modal AP -->
- <form action="{{ route("admin.apreport.index") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+ <form action="<?php echo e(route("admin.apreport.index")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
     <div class="modal fade" id="apModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
@@ -499,8 +492,8 @@
 </form>
 <!-- END  Modal AP -->
  <!-- Start Modal PAYMENT -->
- <form action="{{ route("admin.paymentreport.index") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+ <form action="<?php echo e(route("admin.paymentreport.index")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
     <div class="modal fade" id="paymentsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
@@ -538,9 +531,9 @@
 <!-- END  Modal PAYMENT -->
 
 
-{{-- Start Modal Work Order Document --}}
-<form action="{{ route("admin.woPrint.index") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+
+<form action="<?php echo e(route("admin.woPrint.index")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
 
     <div class="modal fade" id="woDoc" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
@@ -575,11 +568,11 @@
         </div>
     </div>
 </form>
-{{-- End Modal WO Doc --}}
 
-{{-- Gl Modal --}}
-<form action="{{ route("admin.paymentreport.glReport") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+
+
+<form action="<?php echo e(route("admin.paymentreport.glReport")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
     <div class="modal fade" id="glModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
@@ -594,14 +587,14 @@
                                 <div class="mb-1">
                                 <br>
                                     <label class="col-sm-0 control-label" for="number">Period Form</label>
-                                    <input type="date" class="form-control datepicker" id="datepicker" name="from" value="{{date('Y-m-d')}}">
+                                    <input type="date" class="form-control datepicker" id="datepicker" name="from" value="<?php echo e(date('Y-m-d')); ?>">
                                 </div>
                             </div>
                             <div class="col-md-6 col-12">
                                 <div class="mb-1">
                                 <br>
                                     <label class="col-sm-0 control-label" for="number">Period To</label>
-                                    <input type="date" class="form-control datepicker" id="datepicker" name="to" value="{{date('Y-m-d')}}">
+                                    <input type="date" class="form-control datepicker" id="datepicker" name="to" value="<?php echo e(date('Y-m-d')); ?>">
                                 </div>
                             </div>
                         </div>
@@ -615,9 +608,9 @@
     </div>
 </form>
 
-{{-- Bank Modal --}}
-<form action="{{ route("admin.paymentreport.bankReport") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+
+<form action="<?php echo e(route("admin.paymentreport.bankReport")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
     <div class="modal fade" id="bankModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
@@ -632,14 +625,14 @@
                                 <div class="mb-1">
                                 <br>
                                     <label class="col-sm-0 control-label" for="number">Period Form</label>
-                                    <input type="date" class="form-control datepicker" id="datepicker" name="from" value="{{date('Y-m-d')}}">
+                                    <input type="date" class="form-control datepicker" id="datepicker" name="from" value="<?php echo e(date('Y-m-d')); ?>">
                                 </div>
                             </div>
                             <div class="col-md-6 col-12">
                                 <div class="mb-1">
                                 <br>
                                     <label class="col-sm-0 control-label" for="number">Period To</label>
-                                    <input type="date" class="form-control datepicker" id="datepicker" name="to" value="{{date('Y-m-d')}}">
+                                    <input type="date" class="form-control datepicker" id="datepicker" name="to" value="<?php echo e(date('Y-m-d')); ?>">
                                 </div>
                             </div>
                         </div>
@@ -653,9 +646,9 @@
     </div>
 </form>
 
-{{-- Cash Modal --}}
-<form action="{{ route("admin.paymentreport.cashReport") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
-    @csrf
+
+<form action="<?php echo e(route("admin.paymentreport.cashReport")); ?>" method="GET" enctype="multipart/form-data" class="form-horizontal">
+    <?php echo csrf_field(); ?>
     <div class="modal fade" id="cashModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
@@ -670,14 +663,14 @@
                                 <div class="mb-1">
                                 <br>
                                     <label class="col-sm-0 control-label" for="number">Period Form</label>
-                                    <input type="date" class="form-control datepicker" id="datepicker" name="from" value="{{date('Y-m-d')}}">
+                                    <input type="date" class="form-control datepicker" id="datepicker" name="from" value="<?php echo e(date('Y-m-d')); ?>">
                                 </div>
                             </div>
                             <div class="col-md-6 col-12">
                                 <div class="mb-1">
                                 <br>
                                     <label class="col-sm-0 control-label" for="number">Period To</label>
-                                    <input type="date" class="form-control datepicker" id="datepicker" name="to" value="{{date('Y-m-d')}}">
+                                    <input type="date" class="form-control datepicker" id="datepicker" name="to" value="<?php echo e(date('Y-m-d')); ?>">
                                 </div>
                             </div>
                         </div>
@@ -690,3 +683,4 @@
         </div>
     </div>
 </form>
+<?php /**PATH C:\laragon\www\nexzo\agro\resources\views/admin/stdReports/globalFilter.blade.php ENDPATH**/ ?>

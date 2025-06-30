@@ -13,6 +13,7 @@ use App\MaterialTransaction;
 use App\AccountCode;
 use App\GlHeader;
 use App\GlLines;
+use App\User;
 use App\Faktur;
 use App\Terms;
 use DB;
@@ -63,11 +64,11 @@ class InvoicesController extends Controller
         $termMaster = Terms::where('id',$request->term)->get()->first();
         
         if($termMaster->term_code==0){
-            $soupdate = SalesOrder::where('order_number', '=', $request->so_number)->update(['inv_number' => $request->noinv,'faktur'=>$request->faktur,'updated_at'=>date('Y-m-d H:i:s')]);
+            $soupdate = SalesOrder::where('order_number', '=', $request->so_number)->update(['inv_number' => $request->noinv,'updated_by'=>auth()->user()->id,'faktur'=>$request->faktur,'updated_at'=>date('Y-m-d H:i:s')]);
         }
         $dueDate = Carbon::now()->addDays($termMaster->term_code)->format('Y-m-d H:i:s');
         // dd($dueDate);
-        $soupdate = SalesOrder::where('order_number', '=', $request->so_number)->update(['inv_number' => $request->noinv,'faktur'=>$request->faktur,'updated_at'=>date('Y-m-d H:i:s'),'payment_due_date'=>$dueDate]);
+        $soupdate = SalesOrder::where('order_number', '=', $request->so_number)->update(['inv_number' => $request->noinv,'updated_by'=>auth()->user()->id,'faktur'=>$request->faktur,'updated_at'=>$request->tgl_invoice,'payment_due_date'=>$dueDate]);
         
         $fakturdelete = Faktur::where('faktur_code', '=', $request->faktur)
         ->update(['deleted_at' => date('Y-m-d H:i:s')]);
@@ -137,15 +138,19 @@ class InvoicesController extends Controller
         // $header_id = request()->get('header_id');
         $so = SalesOrder::where('header_id','=',$header_id)->get();
         $sales = SalesOrder::where('header_id','=',$header_id)->first();
+        // dd($sales->order_number);
         $so_detil = SalesOrderDetail::where('header_id','=',$header_id)->get();
         $customer = Customer::get();
-        $tax = \App\Tax::where('type_tax_use','Sales')->get();
+        $tax = \App\Tax::get();
         $trx = MaterialTransaction::whereIn('trx_code', [4])->select('trx_code','trx_source_types')->get();
         $ppn= AccountCode::where('account_code','21050800')->first();
         $user=Auth::user()->name;
-        // dd($so);
+        $created_by = DB::table('bm_gl_je_headers')
+        ->where('external_reference', 'like', "%{$sales->order_number}")
+        ->value('created_by');
+        $cashier = User::find($created_by);
 // dd($ppn);
-        return view('admin.invoices.show',compact('user','so','so_detil','customer','sales','trx','ppn','tax'));
+        return view('admin.invoices.show',compact('cashier','user','so','so_detil','customer','sales','trx','ppn','tax'));
 
     }
 
