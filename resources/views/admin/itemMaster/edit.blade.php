@@ -192,12 +192,18 @@
             </div>
 
             <div class="row mb-4">
-                <div class="mt-2 col-12">
+                <div class="mt-2 col-6">
                     <div class="form-floating mb-0">
                         <textarea data-length="100" class="form-control char-textarea" id="textarea-counter" name="item_note" rows="1" placeholder="Counter">{{$itemMaster->item_note}}</textarea>
                         <label for="form-label textarea-counter">Notes</label>
                     </div>
                     <small class="textarea-counter-value float-end">This Note Only For Internal Purposes, <b>Char Left : <span class="char-count">0</span> / 100 </b></small> </br>
+                </div>
+                <div class="mt-2 col-6">
+                    <div class="form-floating mb-0">
+                        <textarea data-length="100" class="form-control char-textarea" id="textarea-counter" name="item_brand" rows="1" placeholder="Counter">{{$itemMaster->item_brand}}</textarea>
+                        <label for="form-label textarea-counter">Item Brand</label>
+                    </div>
                 </div>
 
             </div>
