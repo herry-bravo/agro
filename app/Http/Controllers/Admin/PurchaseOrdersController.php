@@ -80,7 +80,7 @@ class PurchaseOrdersController extends Controller
             $head->payment_due_date=Carbon::now()->addDays($termMaster->term_code)->format('Y-m-d H:i:s');
         }
         // dd(intval($request->purchase_total + ($request->purchase_total * ($request->select_tax / 100))));
-        if ($request->checked="on"){
+        if ($isChecked = $request->has('checked')==true){
             $head->attribute1 = intval($request->purchase_total + ($request->purchase_total * ($request->select_tax / 100)));
         }else{
             $head->attribute1 = intval($request->purchase_total - ($request->purchase_total * ($request->select_tax / 100)));
@@ -164,7 +164,7 @@ class PurchaseOrdersController extends Controller
                         $base_qty = $request->quantity;
                     }
                 }
-                if ($request->checked == "on") {
+                if ($isChecked = $request->has('checked')==true) {
                     $cost =$request->purchase_cost[$key];
                     $qty = $request->purchase_quantity[$key];
                     $subtot = $cost * $qty;
@@ -175,6 +175,7 @@ class PurchaseOrdersController extends Controller
                     $subtot = $cost * $qty;
                     $attribute2 = $subtot - ($subtot * ($request->select_tax / 100));
                 }
+                
                 $data = array(
                     'po_header_id'=>$head->po_head_id,
                     'line_id'=> $line_number,
