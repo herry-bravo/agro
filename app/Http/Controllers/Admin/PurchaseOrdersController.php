@@ -83,7 +83,7 @@ class PurchaseOrdersController extends Controller
         if ($isChecked = $request->has('checked')==true){
             $head->attribute1 = intval($request->purchase_total + ($request->purchase_total * ($request->select_tax / 100)));
         }else{
-            $head->attribute1 = intval($request->purchase_total - ($request->purchase_total * ($request->select_tax / 100)));
+            $head->attribute1 = intval($request->purchase_total / (1 + ($request->select_tax / 100)));
         }
         switch ($request->input('action')) {
         case 'new':
@@ -170,10 +170,13 @@ class PurchaseOrdersController extends Controller
                     $subtot = $cost * $qty;
                     $attribute2 = $subtot + ($subtot * ($request->select_tax / 100));
                 } else {
-                    $cost =$request->purchase_cost[$key];
+                    $cost = $request->purchase_cost[$key];
                     $qty = $request->purchase_quantity[$key];
                     $subtot = $cost * $qty;
-                    $attribute2 = $subtot - ($subtot * ($request->select_tax / 100));
+
+                    // DPP dari subtotal yang sudah termasuk PPN
+                    $attribute2 = intval($subtot / (1 + ($request->select_tax / 100)));
+
                 }
                 
                 $data = array(
