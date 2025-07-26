@@ -75,16 +75,18 @@ class PurchaseOrdersController extends Controller
         $head->notes=$request->checked;
         $head->rate=intval($request->select_tax);
         $head->term_id=$request->payment_method;
+        $head->attribute1 = intval($request->purchase_total);
+        $head->carrier = $request->faktur;
         $termMaster = Terms::where('id',$request->payment_method)->get()->first();
         if($termMaster->term_code!=0){
             $head->payment_due_date=Carbon::now()->addDays($termMaster->term_code)->format('Y-m-d H:i:s');
         }
         // dd(intval($request->purchase_total + ($request->purchase_total * ($request->select_tax / 100))));
-        if ($isChecked = $request->has('checked')==true){
-            $head->attribute1 = intval($request->purchase_total + ($request->purchase_total * ($request->select_tax / 100)));
-        }else{
-            $head->attribute1 = intval($request->purchase_total / (1 + ($request->select_tax / 100)));
-        }
+        // if ($isChecked = $request->has('checked')==true){
+        //     $head->attribute1 = intval($request->purchase_total + ($request->purchase_total * ($request->select_tax / 100)));
+        // }else{
+        //     $head->attribute1 = intval($request->purchase_total / (1 + ($request->select_tax / 100)));
+        // }
         switch ($request->input('action')) {
         case 'new':
 		try {
@@ -192,7 +194,7 @@ class PurchaseOrdersController extends Controller
                     'attribute2'=>$request->attribute2[$key] ?? '',
                     'line_type_id'=>1,
                     'line_status'=>1,
-                    'attribute1' => $subtot,
+                    'attribute1' => $request->sub_total[$key],
                     'attribute2' => $attribute2,
                     'quantity_receive'=>0,
                     'organization_id'=>222,

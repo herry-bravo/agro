@@ -46,11 +46,12 @@ class ApPayementController extends Controller
         $vendor = Vendor::All();
         $curr = Currency::All();
         $ba = BankAccount::All();
-        $invoice = PurchaseOrder::whereRaw("
-            ISNULL(LTRIM(RTRIM(LOWER(attribute1))), '') 
-            <> 
-            ISNULL(LTRIM(RTRIM(LOWER(attribute2))), '')
-        ")->get();
+        $invoice = PurchaseOrder::where('source',1)->get();
+        // $invoice = PurchaseOrder::whereRaw("
+        //     ISNULL(LTRIM(RTRIM(LOWER(attribute1))), '') 
+        //     <> 
+        //     ISNULL(LTRIM(RTRIM(LOWER(attribute2))), '')
+        // ")->get();
 
         return view('admin.apPayment.create',compact('invoice','journal','vendor','curr','ba','acc'));
 
@@ -121,12 +122,14 @@ class ApPayementController extends Controller
             $child2->currency_code = $salesOrder->currency_code;
             $child2->created_at = $request->accounting_date;
             $child2->updated_at = $request->accounting_date;
+            // dd($request->attribute_category);
             $trx = MaterialTransaction::where('trx_code',$request->attribute_category)->first();
-
+            // dd($trx);
             $head->save();
             $child1->save();
             $child2->save();
             //Status update
+            // dd($trx);
             ApPayment::create([
                 'invoice_id' => $salesOrder->id,
                 'accounting_date' => $request->accounting_date,

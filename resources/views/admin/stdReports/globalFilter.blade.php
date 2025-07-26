@@ -53,32 +53,18 @@
  <!-- END  Modal GRN -->
 
  <!-- Start Modal PO -->
- <form action="{{ route("admin.reportPDF.index") }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
+  <form action="{{ route('admin.reportPDF.index') }}" method="GET" enctype="multipart/form-data" class="form-horizontal">
     @csrf
 
     <div class="modal fade" id="poModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
-                <div class="modal-header  bg-primary">
+                <div class="modal-header ">
                     <h4 class="modal-title text-white" id="exampleModalLongTitle">Purchase Order</h4>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 col-12">
-                                <div class="mb-1">
-                                    <label class="col-sm-0 control-label" for="number">PO Number From :</label>
-                                    <input type="text" class="form-control" name="poFrom" autocomplete="off">
-                                </div>
-                            </div>
-                            <div class="col-md-6 col-12">
-                                <div class="mb-1">
-                                    <label class="col-sm-0 control-label" for="site">PO Number To :</label>
-                                    <input type="text" name="poTo" class="form-control datepicker" >
-                                </div>
-                            </div>
-                        </div><br>
                         <div class="row">
                             <div class="col-md-6 col-12">
                                 <div class="mb-1">
@@ -93,22 +79,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="mt-2 col-md-12 form-check-primary">
-                                <label class="form-check-label mb-50" for="modern-last-name">Header</label>
-                                <div class="form-check">
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="logo" id="inlineRadio1" value="1" checked="">
-                                        <label class="form-check-label" for="inlineRadio1">With</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="logo" id="inlineRadio2" value="2">
-                                        <label class="form-check-label" for="inlineRadio2">Without</label>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
+                        
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary" name="action">View</button>

@@ -109,7 +109,7 @@
                             <div class="col-md-2">
                                 <div class="mb-25">
                                     <label class="col-sm-0 form-label" for="site">Creation Date</label>
-                                    <input readonly type="text" id="datepicker-1_" name="created_at" class="form-control form-control flatpickr-basic flatpickr-input" value=" {{$purchaseorder->created_at->format('d-M-Y H:i:s')}}" required>
+                                    <input readonly type="text" id="datepicker-1_" name="created_at" class="form-control form-control flatpickr-basic flatpickr-input" value=" {{$purchaseorder->created_at}}" required>
                                 </div>
                             </div>
                             
@@ -195,7 +195,7 @@
                                                     <input readonly type="date" name="need_by_date[]" value="{{$raw->need_by_date}}" class="form-control">
                                                 </td>
                                                 <td width="15%">
-                                                    <input type="text" class="form-control stock_total text-end" name="sub_total[]" value="{{number_format(($raw->attribute2), 2, ',', '.') }}" id="total_1"="" readonly="">
+                                                    <input type="text" class="form-control stock_total text-end" name="sub_total[]" value="{{number_format(($raw->attribute1), 2, ',', '.') }}" id="total_1"="" readonly="">
                                                 </td>
                                                 <!-- <td>
                                                     @if($raw->line_status !=1 && $raw->quantity_receive !=0 )

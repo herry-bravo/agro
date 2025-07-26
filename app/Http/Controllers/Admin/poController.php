@@ -14,42 +14,43 @@ use LaravelDaily\Invoices\Classes\Party;
 use LaravelDaily\Invoices\Classes\InvoiceItem;
 use DB;
 use PDF;
+use App\Exports\PoReport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class poController extends Controller
 {
     public function index(Request $request){
-        $lg = $request->logo;
-        $tax =  $request->input('tax');
-        $supplierFrom =  $request->input('supplierFrom');
-        $poFrom = $request->input('poFrom');
-        $poTo = $request->input('poTo');
-        $createFrom = $request->input('createFrom');
-        $createTo = $request->input('createTo');
+        $purchase = PurchaseOrder::whereBetween('created_at', [$request->createFrom, $request->createTo])
+        ->get();
+        // dd($purchase);
 
-        $header = PurchaseOrder::whereBetween('segment1',[$poFrom,$poTo])
-                                ->where('type_lookup_code',1)
-                                ->where('status',2)
-                                ->where('ship_to_location','!=',null)
-                                ->get();
-        foreach($header as $key => $value)
-        {
-            $qry[$key] = $value->po_head_id;
-            $qry1[$key]= 1;
-        }
-        if(empty($qry)){
-            return back()->with('error', 'Field (From / To) is required | Or Purchase dont Exist');
-        }
+        $data_arr = [];
+        foreach ($purchase as $row) {
+            $items = $row->purchaseOrderDet; // asumsi hasMany
 
-        $data = PurchaseOrderDet::whereIn('po_header_id',$qry)->where('deleted_at',NULL)->get();
-        // dd($data);
-        $counter = DB::table('bm_po_lines_all')
-                    ->select('po_header_id',DB::raw('count(po_header_id) as pgs' ))
-                    ->whereIn('po_header_id',$qry)
-                    ->where('deleted_at',NULL)
-                    ->groupBy('po_header_id')
-                    ->get();
-        // dd($counter);
-        $pdf = PDF::loadview('admin.stdReports.poReport', compact('data','header','counter','lg'))->setPaper('A4');
-        return $pdf->stream('PO Report'.$poFrom.'-'.$poTo.'.pdf');
+            $isFirst = true;
+            foreach ($items as $item) {
+                $data_arr[] = [
+                    "po_number" => $isFirst ? ($row->segment1 ?? '-') : '',
+                    "vendor"    => $isFirst ? ($row->Vendor->vendor_name ?? '-') : '',
+                    "currency"  => $isFirst ? ($row->currency_code ?? '-') : '',
+                    "date"  => $isFirst ? ($row->created_date ?? '-') : '',
+                    "item"      => $item->item_description ?? '-',
+                    "uom"      => $item->po_uom_code ?? '-',
+                    "qty"      => number_format($item->po_quantity, 0, ',', '.'),
+                    "price"      => number_format($item->unit_price, 0, ',', '.'),
+                    "total"      => number_format($item->attribute1, 0, ',', '.'),
+                    "needbydate"      => $item->need_by_date ?? '-',
+                ];
+                $isFirst = false;
+            }
+        }
+        // dd($data_arr);
+            
+        // Baris ini akan langsung memicu unduhan file 
+        return Excel::download(new PoReport($data_arr), 'PurchaseOrders.xlsx');
+
+
     }
+    
 }

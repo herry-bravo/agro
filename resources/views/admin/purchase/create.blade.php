@@ -71,11 +71,13 @@
                             <div class="col-md-3">
                                 <div class="mb-25">
                                     <label class="col-sm-0 form-label" for="number">Seller</label>
-                                    <select name="agent_id" id="agent_id" class="form-control select2" required>
+                                    <input type="text" class="form-control" readonly autocomplete="off" maxlength="10" value="{{auth()->user()->name}}" required>
+
+                                    <!-- <select name="agent_id" id="agent_id" class="form-control select2" required>
                                         @foreach($users as $id => $users)
                                         <option value="{{ $id }}" {{ (in_array($id, old('users', [])) || isset($role) && $users->contains($id)) ? 'selected' : '' }}>{{ $users->name }}</option>
                                         @endforeach
-                                    </select>
+                                    </select> -->
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -96,13 +98,23 @@
                                     </select>
                                 </div>
                             </div>
+                            <div class="col-md-1">
+                                <div class="mb-2">
+                                    <label class="col-sm-0 form-label" for="site">Faktur</label>
+                                    <select name="faktur" id="faktur" class="form-control select2">
+                                            <option value="1"> 01</option>
+                                            <option value="8"> 08</option>
+                                            <option value="non"> Non</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="col-md-2">
                                 <div class="mb-2">
                                     <label class="col-sm-0 form-label" for="site">Creation Date</label>
                                     <input type="date" id="created_at" name="created_at" class="form-control" value="{{ date('d-M-Y H:i:s'); }}" required>
                                 </div>
                             </div>
-                            <div class="col-md-1">
+                            <!-- <div class="col-md-1">
                                 <div class="mb-2">
                                     <label class="form-check-label mb-50" for="customSwitch10">Action</label>
                                     <div class="form-check form-switch form-check-primary">
@@ -118,7 +130,7 @@
                                         </label>
                                     </div>    
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                         <div class="row">
                             <div class="box box-default">

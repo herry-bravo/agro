@@ -188,7 +188,7 @@ class ReceivesController extends Controller
             DB::table('bm_mtl_system_item')
             ->where('inventory_item_id', $item_code)
             ->update([
-                'item_cost' => $new_item_cost,
+                'item_cost' => $purchase_cost,
             ]);
             // Average
             // Simpan ke RcvDetail
@@ -221,6 +221,10 @@ class ReceivesController extends Controller
                 ->update([
                     'base_qty' => $sisa_qty,
                     'quantity_receive' => $quantities[$i]
+                ]);
+            PurchaseOrder::where('po_head_id', $request->po_head)
+                ->update([
+                    'source' => 1,
                 ]);
 
                 // Jika quantity > 0, update ke Onhand
