@@ -283,22 +283,22 @@
                     <tfoot>
                         <tr>
                             <td colspan="3"></td>
-                            <td align="left"><strong>Subtotal</strong></td>
+                            <td align="left"><strong>Total</strong></td>
                             <td align="right">{{$raw->currency_code}} </td>
                             <td align="right">{{ number_format($subtotal, 2, ',', '.') }}</td>
                         </tr>
                         <tr>
                             <td colspan="3"></td>
                             <td align="left"><strong>{{$raw->vendor->tax->tax_name}}</strong></td>
-                            <td align="right">{{$raw->currency_code}}</td>
-                            <td align="right"> {{ number_format(($raw->attribute1-$subtotal), 2, ',', '.') }}</td>
+                            <!-- <td align="right">{{$raw->currency_code}}</td>
+                            <td align="right"> {{ number_format(($raw->attribute1-$subtotal), 2, ',', '.') }}</td> -->
                         </tr>
-                        <tr>
+                        <!-- <tr>
                             <td colspan="3"></td>
                             <td align="left"><strong>Total</strong></td>
                             <td align="right">{{$raw->currency_code}} </td>
                             <td align="right"> {{ number_format(($raw->attribute1), 2, ',', '.') }}</td>
-                        </tr>
+                        </tr> -->
                     </tfoot>
                 </table>
 
