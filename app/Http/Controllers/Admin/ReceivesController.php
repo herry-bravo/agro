@@ -207,7 +207,7 @@ class ReceivesController extends Controller
                 'vendor_lot_num' => $request->vendor_site_id,
                 'po_header_id' => $shipmentHeaderId,
                 'po_line_id' => $po_line_id[$i],
-                'amount' => intval( $attribute2),
+                'amount' => intval( $subtot),
                 'requested_amount' => intval( $purchase_cost),
                 'created_at' => $dates[$i],                
                 'updated_at' => $dates[$i],
