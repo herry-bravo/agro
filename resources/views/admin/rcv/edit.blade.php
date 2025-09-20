@@ -176,32 +176,35 @@
                                     </div>
                                 </div>
 								<!-- Tab Journal  -->
- 								<div class="tab-pane fade" id="nav-journal" role="tabpanel" aria-labelledby="nav-journal-tab">
+ 								<div class="tab-pane fade show active" id="nav-journal" role="tabpanel" aria-labelledby="nav-journal-tab">
                                     <div class="box-body scrollx" style="height: 300px;overflow: scroll;">
-                                        <table class="table table-fixed  table-borderless">
-											<thead>
-												<tr>
-													<th></th>
-                                                    <th scope="col">{{ trans('cruds.Invoice.field.account')}}</th>
+                                        <table class="table table-fixed table-borderless">
+                                            <thead>
+                                                <tr>
+                                                    <th></th>
+                                                    <th scope="col">{{ trans('cruds.Invoice.field.account') }}</th>
                                                     <th scope="col">{{ trans('cruds.Invoice.field.label') }}</th>
-                                                    <th scope="col">{{ trans('cruds.Invoice.field.debit')}}</th>
-                                                    <th scope="col">{{ trans('cruds.Invoice.field.credit')}}</th>
-												</tr>
-											</thead>
-											@php
+                                                    <th scope="col">{{ trans('cruds.Invoice.field.debit') }}</th>
+                                                    <th scope="col">{{ trans('cruds.Invoice.field.credit') }}</th>
+                                                </tr>
+                                            </thead>
+                                            @php
                                                 $totalDr = 0;
                                                 $totalCr = 0;
+
+                                                // Hitung total transaksi dari semua detail
+                                                $grandTotal = 0;
+                                                foreach($detail as $row) {
+                                                    $grandTotal += $row->amount;
+                                                }
+
+                                                // Asumsi PPN 11%, nilai bersih dihitung dari grand total
+                                                $baseAmount = $grandTotal / (1 + ($parent->conversion_rate / 100));
+                                                $ppnValue = $grandTotal - $baseAmount;
                                             @endphp
-											<tbody class="purchase_container">
-												@foreach($detail as $row)
-                                                   @php
-                                                        $subtot = $row->amount;
-                                                        $potongan = $subtot*($parent->conversion_rate/100);
-                                                        $drValue = $subtot-$potongan;
-                                                        $crValue = 0; // CR pada loop kedua selalu 0
-                                                        $totalDr += $drValue;
-                                                        $totalCr += $crValue;
-                                                    @endphp
+                                            <tbody class="purchase_container">
+                                                {{-- Baris Jurnal untuk Akun Persediaan/Beban (Debit) --}}
+                                                @foreach($detail as $row)
                                                     <tr>
                                                         <td></td>
                                                         <td>
@@ -214,92 +217,79 @@
                                                             <input type="hidden" name="desc[]" value="{{ $row->user_description_item ?? '' }}">
                                                         </td>
                                                         <td>
-                                                            {{ number_format($drValue) }}
-                                                            <input type="hidden" name="dr[]" value="{{ $drValue }}">
+                                                            {{ number_format($baseAmount, 2) }}
+                                                            <input type="hidden" name="dr[]" value="{{ number_format($baseAmount, 2, '.', '') }}">
                                                         </td>
                                                         <td>
-                                                            {{ number_format($crValue) }}
-                                                            <input type="hidden" name="cr[]" value="{{ $crValue }}">
+                                                            {{ number_format(0, 2) }}
+                                                            <input type="hidden" name="cr[]" value="0">
                                                         </td>
                                                     </tr>
                                                 @endforeach
-                                                @foreach($detail as $row)
-                                                   @php
-                                                        $subtot = $row->amount;
-                                                        $potongan = $subtot*($parent->conversion_rate/100);
-                                                        $drValue = $potongan;
-                                                      
-                                                        $crValue = 0; // CR pada loop kedua selalu 0
-                                                        $totalDr += $drValue;
-                                                        $totalCr += $crValue;
-                                                    @endphp
-                                                    <tr>
-                                                        <td></td>
-                                                        <td>
-                                                            {{ $ppn->account_code ?? '' }} - {{ $ppn->description ?? '' }}
-                                                            <input type="hidden" name="accDes[]" value="{{$ppn->account_code}}">
-                                                            <input type="hidden" name="code_combinations[]" value="" class="form-control datepicker" id="acc_1" autocomplete="off">
-                                                        </td>
-                                                        <td>
-                                                            {{ $row->itemmaster->description ?? '' }}
-                                                            <input type="hidden" name="desc[]" value="{{ $row->user_description_item ?? '' }}">
-                                                        </td>
-                                                        <td>
-                                                            {{ number_format($drValue) }}
-                                                            <input type="hidden" name="dr[]" value="{{ $drValue }}">
-                                                        </td>
-                                                        <td>
-                                                            {{ number_format($crValue) }}
-                                                            <input type="hidden" name="cr[]" value="{{ $crValue }}">
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-												@foreach($detail as $row)
-                                                   @php
-                                                        $drValue = 0;
-                                                        $crValue =  $row->amount; // CR pada loop kedua selalu 0
-                                                        $totalDr += $drValue;
-                                                        $totalCr += $crValue;
-                                                    @endphp
-                                                    <tr>
-                                                        <td></td>
-                                                        <td>
-                                                            {{ $row->itemmaster->category->payable->account_code ?? '' }} - {{ $row->itemmaster->category->payable->description ?? '' }}
-                                                            <input type="hidden" name="accDes[]" value="{{ $row->itemmaster->category->payable->account_code ?? '' }}">
-                                                            <input type="hidden" name="code_combinations[]" value="" class="form-control datepicker" id="acc_1" autocomplete="off">
-                                                        </td>
-                                                        <td>
-                                                            {{ $row->itemmaster->description ?? '' }}
-                                                            <input type="hidden" name="desc[]" value="{{ $row->user_description_item ?? '' }}">
-                                                        </td>
-                                                        <td>
-                                                            {{ number_format($drValue) }}
-                                                            <input type="hidden" name="dr[]" value="{{ $drValue }}">
-                                                        </td>
-                                                        <td>
-                                                            {{ number_format($crValue) }}
-                                                            <input type="hidden" name="cr[]" value="{{ $crValue }}">
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
+                                                
+                                                {{-- Baris Jurnal untuk PPN Masukan (Debit) --}}
+                                                <tr>
+                                                    <td></td>
+                                                    <td>
+                                                        {{ $ppn->account_code ?? '' }} - {{ $ppn->description ?? '' }}
+                                                        <input type="hidden" name="accDes[]" value="{{ $ppn->account_code ?? '' }}">
+                                                        <input type="hidden" name="code_combinations[]" value="" class="form-control datepicker" id="acc_2" autocomplete="off">
+                                                    </td>
+                                                    <td>
+                                                        PPN atas pembelian barang
+                                                        <input type="hidden" name="desc[]" value="PPN atas pembelian barang">
+                                                    </td>
+                                                    <td>
+                                                        {{ number_format($ppnValue, 2) }}
+                                                        <input type="hidden" name="dr[]" value="{{ number_format($ppnValue, 2, '.', '') }}">
+                                                    </td>
+                                                    <td>
+                                                        {{ number_format(0, 2) }}
+                                                        <input type="hidden" name="cr[]" value="0">
+                                                    </td>
+                                                </tr>
 
-											</tbody>
-											<tfoot>
+                                                {{-- Baris Jurnal untuk Hutang Usaha (Kredit) --}}
+                                                <tr>
+                                                    <td></td>
+                                                    <td>
+                                                        {{ $row->itemmaster->category->payable->account_code ?? '' }} - {{ $row->itemmaster->category->payable->description ?? '' }}
+                                                        <input type="hidden" name="accDes[]" value="{{ $row->itemmaster->category->payable->account_code ?? '' }}">
+                                                        <input type="hidden" name="code_combinations[]" value="" class="form-control datepicker" id="acc_3" autocomplete="off">
+                                                    </td>
+                                                    <td>
+                                                        {{ $row->user_description_item ?? '' }}
+                                                        <input type="hidden" name="desc[]" value="{{ $row->user_description_item ?? '' }}">
+                                                    </td>
+                                                    <td>
+                                                        {{ number_format(0, 2) }}
+                                                        <input type="hidden" name="dr[]" value="0">
+                                                    </td>
+                                                    <td>
+                                                        {{ number_format($grandTotal, 2) }}
+                                                        <input type="hidden" name="cr[]" value="{{ number_format($grandTotal, 2, '.', '') }}">
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                            <tfoot>
+                                                @php
+                                                    // Hitung ulang total Dr dan Cr
+                                                    $totalDr = $baseAmount + $ppnValue;
+                                                    $totalCr = $grandTotal;
+                                                @endphp
                                                 <tr>
                                                     <td colspan="3" class="text-right"><strong>Total</strong></td>
                                                     <td>
-                                                        <strong>{{ number_format($totalDr) }}</strong>
-                                                        <input type="hidden" name="running_total_dr" value="{{ $totalDr }}">
+                                                        <strong>{{ number_format($totalDr, 2) }}</strong>
+                                                        <input type="hidden" name="running_total_dr" value="{{ number_format($totalDr, 2, '.', '') }}">
                                                     </td>
                                                     <td>
-                                                        <strong>{{ number_format($totalCr) }}</strong>
-                                                        <input type="hidden" name="running_total_cr" value="{{ $totalCr }}">
+                                                        <strong>{{ number_format($totalCr, 2) }}</strong>
+                                                        <input type="hidden" name="running_total_cr" value="{{ number_format($totalCr, 2, '.', '') }}">
                                                     </td>
                                                 </tr>
                                             </tfoot>
-
-
-										</table>
+                                        </table>
                                     </div>
                                 </div>
                                 <br>

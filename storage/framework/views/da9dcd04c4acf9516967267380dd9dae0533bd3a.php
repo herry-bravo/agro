@@ -307,7 +307,7 @@
                             <td align="right"> <?php echo e(number_format(($raw->attribute1), 2, ',', '.')); ?></td>
                         </tr> -->
                         <tr>
-                            <td>Note:</td>
+                            <td>Note: Total harga sudah termasuk PPN</td>
                         </tr>
                     </tfoot>
                 </table>

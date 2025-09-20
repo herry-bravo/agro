@@ -176,144 +176,133 @@
                                     </div>
                                 </div>
 								<!-- Tab Journal  -->
- 								<div class="tab-pane fade" id="nav-journal" role="tabpanel" aria-labelledby="nav-journal-tab">
-                                    <div class="box-body scrollx" style="height: 300px;overflow: scroll;">
-                                        <table class="table table-fixed  table-borderless">
-											<thead>
-												<tr>
-													<th></th>
-                                                    <th scope="col"><?php echo e(trans('cruds.Invoice.field.account')); ?></th>
-                                                    <th scope="col"><?php echo e(trans('cruds.Invoice.field.label')); ?></th>
-                                                    <th scope="col"><?php echo e(trans('cruds.Invoice.field.debit')); ?></th>
-                                                    <th scope="col"><?php echo e(trans('cruds.Invoice.field.credit')); ?></th>
-												</tr>
-											</thead>
-											<?php
-                                                $totalDr = 0;
-                                                $totalCr = 0;
-                                            ?>
-											<tbody class="purchase_container">
-												<?php $__currentLoopData = $detail; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                   <?php
-                                                        $subtot = $row->amount;
-                                                        $potongan = $subtot*($parent->conversion_rate/100);
-                                                        $drValue = $subtot-$potongan;
-                                                        $crValue = 0; // CR pada loop kedua selalu 0
-                                                        $totalDr += $drValue;
-                                                        $totalCr += $crValue;
-                                                    ?>
-                                                    <tr>
-                                                        <td></td>
-                                                        <td>
-                                                            <?php echo e($row->itemmaster->category->inventory->account_code ?? ''); ?> - <?php echo e($row->itemmaster->category->inventory->description ?? ''); ?>
+ 								<div class="tab-pane fade show active" id="nav-journal" role="tabpanel" aria-labelledby="nav-journal-tab">
+    <div class="box-body scrollx" style="height: 300px;overflow: scroll;">
+        <table class="table table-fixed table-borderless">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th scope="col"><?php echo e(trans('cruds.Invoice.field.account')); ?></th>
+                    <th scope="col"><?php echo e(trans('cruds.Invoice.field.label')); ?></th>
+                    <th scope="col"><?php echo e(trans('cruds.Invoice.field.debit')); ?></th>
+                    <th scope="col"><?php echo e(trans('cruds.Invoice.field.credit')); ?></th>
+                </tr>
+            </thead>
+            <?php
+                $totalDr = 0;
+                $totalCr = 0;
 
-                                                            <input type="hidden" name="accDes[]" value="<?php echo e($row->itemmaster->category->inventory->account_code ?? ''); ?>">
-                                                            <input type="hidden" name="code_combinations[]" value="" class="form-control datepicker" id="acc_1" autocomplete="off">
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e($row->itemmaster->description ?? ''); ?>
+                // Hitung total transaksi dari semua detail
+                $grandTotal = 0;
+                foreach($detail as $row) {
+                    $grandTotal += $row->amount;
+                }
 
-                                                            <input type="hidden" name="desc[]" value="<?php echo e($row->user_description_item ?? ''); ?>">
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e(number_format($drValue)); ?>
+                // Asumsi PPN 11%, nilai bersih dihitung dari grand total
+                $baseAmount = $grandTotal / (1 + ($parent->conversion_rate / 100));
+                $ppnValue = $grandTotal - $baseAmount;
+            ?>
+            <tbody class="purchase_container">
+                
+                <?php $__currentLoopData = $detail; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <tr>
+                        <td></td>
+                        <td>
+                            <?php echo e($row->itemmaster->category->inventory->account_code ?? ''); ?> - <?php echo e($row->itemmaster->category->inventory->description ?? ''); ?>
 
-                                                            <input type="hidden" name="dr[]" value="<?php echo e($drValue); ?>">
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e(number_format($crValue)); ?>
+                            <input type="hidden" name="accDes[]" value="<?php echo e($row->itemmaster->category->inventory->account_code ?? ''); ?>">
+                            <input type="hidden" name="code_combinations[]" value="" class="form-control datepicker" id="acc_1" autocomplete="off">
+                        </td>
+                        <td>
+                            <?php echo e($row->itemmaster->description ?? ''); ?>
 
-                                                            <input type="hidden" name="cr[]" value="<?php echo e($crValue); ?>">
-                                                        </td>
-                                                    </tr>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                <?php $__currentLoopData = $detail; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                   <?php
-                                                        $subtot = $row->amount;
-                                                        $potongan = $subtot*($parent->conversion_rate/100);
-                                                        $drValue = $potongan;
-                                                      
-                                                        $crValue = 0; // CR pada loop kedua selalu 0
-                                                        $totalDr += $drValue;
-                                                        $totalCr += $crValue;
-                                                    ?>
-                                                    <tr>
-                                                        <td></td>
-                                                        <td>
-                                                            <?php echo e($ppn->account_code ?? ''); ?> - <?php echo e($ppn->description ?? ''); ?>
+                            <input type="hidden" name="desc[]" value="<?php echo e($row->user_description_item ?? ''); ?>">
+                        </td>
+                        <td>
+                            <?php echo e(number_format($baseAmount, 2)); ?>
 
-                                                            <input type="hidden" name="accDes[]" value="<?php echo e($ppn->account_code); ?>">
-                                                            <input type="hidden" name="code_combinations[]" value="" class="form-control datepicker" id="acc_1" autocomplete="off">
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e($row->itemmaster->description ?? ''); ?>
+                            <input type="hidden" name="dr[]" value="<?php echo e(number_format($baseAmount, 2, '.', '')); ?>">
+                        </td>
+                        <td>
+                            <?php echo e(number_format(0, 2)); ?>
 
-                                                            <input type="hidden" name="desc[]" value="<?php echo e($row->user_description_item ?? ''); ?>">
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e(number_format($drValue)); ?>
+                            <input type="hidden" name="cr[]" value="0">
+                        </td>
+                    </tr>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                
+                
+                <tr>
+                    <td></td>
+                    <td>
+                        <?php echo e($ppn->account_code ?? ''); ?> - <?php echo e($ppn->description ?? ''); ?>
 
-                                                            <input type="hidden" name="dr[]" value="<?php echo e($drValue); ?>">
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e(number_format($crValue)); ?>
+                        <input type="hidden" name="accDes[]" value="<?php echo e($ppn->account_code ?? ''); ?>">
+                        <input type="hidden" name="code_combinations[]" value="" class="form-control datepicker" id="acc_2" autocomplete="off">
+                    </td>
+                    <td>
+                        PPN atas pembelian barang
+                        <input type="hidden" name="desc[]" value="PPN atas pembelian barang">
+                    </td>
+                    <td>
+                        <?php echo e(number_format($ppnValue, 2)); ?>
 
-                                                            <input type="hidden" name="cr[]" value="<?php echo e($crValue); ?>">
-                                                        </td>
-                                                    </tr>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-												<?php $__currentLoopData = $detail; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                   <?php
-                                                        $drValue = 0;
-                                                        $crValue =  $row->amount; // CR pada loop kedua selalu 0
-                                                        $totalDr += $drValue;
-                                                        $totalCr += $crValue;
-                                                    ?>
-                                                    <tr>
-                                                        <td></td>
-                                                        <td>
-                                                            <?php echo e($row->itemmaster->category->payable->account_code ?? ''); ?> - <?php echo e($row->itemmaster->category->payable->description ?? ''); ?>
+                        <input type="hidden" name="dr[]" value="<?php echo e(number_format($ppnValue, 2, '.', '')); ?>">
+                    </td>
+                    <td>
+                        <?php echo e(number_format(0, 2)); ?>
 
-                                                            <input type="hidden" name="accDes[]" value="<?php echo e($row->itemmaster->category->payable->account_code ?? ''); ?>">
-                                                            <input type="hidden" name="code_combinations[]" value="" class="form-control datepicker" id="acc_1" autocomplete="off">
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e($row->itemmaster->description ?? ''); ?>
+                        <input type="hidden" name="cr[]" value="0">
+                    </td>
+                </tr>
 
-                                                            <input type="hidden" name="desc[]" value="<?php echo e($row->user_description_item ?? ''); ?>">
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e(number_format($drValue)); ?>
+                
+                <tr>
+                    <td></td>
+                    <td>
+                        <?php echo e($row->itemmaster->category->payable->account_code ?? ''); ?> - <?php echo e($row->itemmaster->category->payable->description ?? ''); ?>
 
-                                                            <input type="hidden" name="dr[]" value="<?php echo e($drValue); ?>">
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e(number_format($crValue)); ?>
+                        <input type="hidden" name="accDes[]" value="<?php echo e($row->itemmaster->category->payable->account_code ?? ''); ?>">
+                        <input type="hidden" name="code_combinations[]" value="" class="form-control datepicker" id="acc_3" autocomplete="off">
+                    </td>
+                    <td>
+                        <?php echo e($row->user_description_item ?? ''); ?>
 
-                                                            <input type="hidden" name="cr[]" value="<?php echo e($crValue); ?>">
-                                                        </td>
-                                                    </tr>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        <input type="hidden" name="desc[]" value="<?php echo e($row->user_description_item ?? ''); ?>">
+                    </td>
+                    <td>
+                        <?php echo e(number_format(0, 2)); ?>
 
-											</tbody>
-											<tfoot>
-                                                <tr>
-                                                    <td colspan="3" class="text-right"><strong>Total</strong></td>
-                                                    <td>
-                                                        <strong><?php echo e(number_format($totalDr)); ?></strong>
-                                                        <input type="hidden" name="running_total_dr" value="<?php echo e($totalDr); ?>">
-                                                    </td>
-                                                    <td>
-                                                        <strong><?php echo e(number_format($totalCr)); ?></strong>
-                                                        <input type="hidden" name="running_total_cr" value="<?php echo e($totalCr); ?>">
-                                                    </td>
-                                                </tr>
-                                            </tfoot>
+                        <input type="hidden" name="dr[]" value="0">
+                    </td>
+                    <td>
+                        <?php echo e(number_format($grandTotal, 2)); ?>
 
-
-										</table>
-                                    </div>
-                                </div>
+                        <input type="hidden" name="cr[]" value="<?php echo e(number_format($grandTotal, 2, '.', '')); ?>">
+                    </td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <?php
+                    // Hitung ulang total Dr dan Cr
+                    $totalDr = $baseAmount + $ppnValue;
+                    $totalCr = $grandTotal;
+                ?>
+                <tr>
+                    <td colspan="3" class="text-right"><strong>Total</strong></td>
+                    <td>
+                        <strong><?php echo e(number_format($totalDr, 2)); ?></strong>
+                        <input type="hidden" name="running_total_dr" value="<?php echo e(number_format($totalDr, 2, '.', '')); ?>">
+                    </td>
+                    <td>
+                        <strong><?php echo e(number_format($totalCr, 2)); ?></strong>
+                        <input type="hidden" name="running_total_cr" value="<?php echo e(number_format($totalCr, 2, '.', '')); ?>">
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
                                 <br>
                                
                                
