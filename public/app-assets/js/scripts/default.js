@@ -828,14 +828,16 @@ $(document).ready(function () {
         
            // Hitung subtotal dengan rumus yang benar
             // var disc =  discount/100;
+            var taxMultiplier = 1 + (selectedTaxId / 100);
             var disc =  discount;
             var unitprices1 =  jumlah * harga;
             // var unitprice =  unitprices1 - (unitprices1*disc); //untuk persen
             var unitprice =  unitprices1 - disc; //pengurangan biasa
             var sutot1 = (jumlah * harga)*(1 - selectedTaxId / 100);
             // var sutot = sutot1 - (sutot1*disc); //untuk persen
-            var sutot = sutot1 - disc; //pengurangan biasa
-            // console.log(sutot);
+            var sutot = unitprice / taxMultiplier; //pengurangan biasa
+            console.log(selectedTaxId);
+            console.log(taxMultiplier);
             // Jika subtotal negatif, set ke 0 (opsional, tergantung kebutuhan)
             // if (unitprice < 0) {
             //     unitprice = 0;
