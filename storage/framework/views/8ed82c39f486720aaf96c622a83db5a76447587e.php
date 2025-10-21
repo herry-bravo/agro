@@ -816,10 +816,10 @@
             // Note
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text('Note : Barang yang sudah dibeli tidak dapat dikembalikan', margin, tableEnd + 5);
+            doc.text('Note : Harga sudah termasuk PPN 11%,', margin, tableEnd + 5);
             // Hitung atau perkirakan jumlah spasi yang dibutuhkan
             // untuk membuat 'Harga' sejajar di bawah teks sebelumnya
-            doc.text('           Harga Sudah termasuk pajak', margin, tableEnd + 9);
+            doc.text('           Barang yang sudah dibeli tidak dapat ditukar/dikembalikan.', margin, tableEnd + 9);
 
             // Total info
             const labelX = pageWidth - 70;
