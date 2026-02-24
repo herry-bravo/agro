@@ -120,12 +120,13 @@ class DeliveriesController extends Controller
         
         switch ($request->input('action')) {
             case 'return':
+                // dd('masuk return');
                 $id = $request->delivery_id;
                 $dlvr = DeliveryHeader::where('id', $id)->first();
                 // $dlvr->update(['status_code' => 15]);
                 
                 $dlvrdetail = DeliveryDetail::where('delivery_detail_id', $dlvr->delivery_id)->get();
-                dd($dlvr);
+                // dd($dlvr);
                 try {
                     \DB::beginTransaction();
                     $details = [];
@@ -171,13 +172,14 @@ class DeliveriesController extends Controller
                     'accepted_date'=>date('Y-m-d H:i:s'),
                     'status_code'=>12,
                     'acceptance_flag'=>1,
+                    // 'on_or_about_date'=>date('Y-m-d', strtotime($request->invoice_date)),
                     'lvl'=>12,
                 ]);
                 return redirect()->route('admin.deliveries.index')->with('success', 'Fullfillment Successed');
             
             break;
             case 'pick':
-                dd('masuk pice');
+                // dd('masuk pice');
                 $xhead =DeliveryHeader::where('delivery_id','=',$request->delivery_id)
                 ->where('delivery_id','=',$request->delivery_id)->first();
                 $alert=$request->customer;
@@ -270,6 +272,7 @@ class DeliveriesController extends Controller
                 return back()->with('success', 'Stock is picked release');
             break;
             case 'shipconfirmanddelete':
+                // dd('masuk ship confirm and delete');
                 // dd($request['radio']);
 
                 if ($request->actualdate==null){
@@ -283,6 +286,7 @@ class DeliveriesController extends Controller
                     $xhead->lvl=8;
                     $xhead->status_code=8;
                     $xhead->actual_ship_date=$request->actualdate;
+                    $xhead->on_or_about_date=$request->invoice_date;
                     $xdetil = DeliveryDetail::where('delivery_detail_id',$request->delivery_id)->first();
                     foreach ($request->inventory_item_id as $key => $value){
                         $qty=$request->roll_qty[$key];

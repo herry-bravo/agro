@@ -1,59 +1,60 @@
-@extends('layouts.admin')
-@section('content')
-    @push('script')
-        <script src="{{ asset('app-assets/js/scripts/default.js') }}"></script>
-        <script src="{{ asset('app-assets/js/scripts/currency.min.js') }}"></script>
-        <script src="{{ asset('app-assets/vendors/js/extensions/sweetalert2.all.min.js') }}"></script>
-    @endpush
 
-@section('content')
+<?php $__env->startSection('content'); ?>
+    <?php $__env->startPush('script'); ?>
+        <script src="<?php echo e(asset('app-assets/js/scripts/default.js')); ?>"></script>
+        <script src="<?php echo e(asset('app-assets/js/scripts/currency.min.js')); ?>"></script>
+        <script src="<?php echo e(asset('app-assets/vendors/js/extensions/sweetalert2.all.min.js')); ?>"></script>
+    <?php $__env->stopPush(); ?>
+
+<?php $__env->startSection('content'); ?>
     <section id="multiple-column-form">
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header  mt-1 mb-25">
                         <h6 class="card-title">
-                            <a href="{{ route('admin.deliveries.index') }}"
-                                class="breadcrumbs__item">{{ trans('cruds.OrderManagement.title') }} </a>
-                            <a href="{{ route('admin.deliveries.index') }}"
-                                class="breadcrumbs__item">{{ trans('cruds.Delivery.title') }} </a>
-                            <a href="" class="breadcrumbs__item">{{ trans('cruds.Delivery.fields.create') }}</a>
+                            <a href="<?php echo e(route('admin.deliveries.index')); ?>"
+                                class="breadcrumbs__item"><?php echo e(trans('cruds.OrderManagement.title')); ?> </a>
+                            <a href="<?php echo e(route('admin.deliveries.index')); ?>"
+                                class="breadcrumbs__item"><?php echo e(trans('cruds.Delivery.title')); ?> </a>
+                            <a href="" class="breadcrumbs__item"><?php echo e(trans('cruds.Delivery.fields.create')); ?></a>
                     </div>
                     <hr>
                     <br>
-                    <form id="formship" action="{{ route('admin.deliveries.update', $DeliveryHeader->delivery_id) }}"
+                    <form id="formship" action="<?php echo e(route('admin.deliveries.update', $DeliveryHeader->delivery_id)); ?>"
                         method="POST" enctype="multipart/form-data">
                         <div class="card-body">
 
-                            @csrf
-                            @method('PUT')
+                            <?php echo csrf_field(); ?>
+                            <?php echo method_field('PUT'); ?>
                             <div class="form-group">
                                 <div class="form-group row">
                                     <div class="col-md-4">
                                         <div class="mb-2">
                                             <label class="form-label"
-                                                for="segment1">{{ trans('cruds.shiping.fields.customer_name') }}</label>
-                                            {{-- <input readonly id="customer" name="customer" class="form-control" value="{{$DeliveryHeader->sold_to_party_id}}"> --}}
+                                                for="segment1"><?php echo e(trans('cruds.shiping.fields.customer_name')); ?></label>
+                                            
                                             <select type="text" id="customer" name="customer"
                                                 class="form-control select2"
-                                                value="{{ $DeliveryHeader->sold_to_party_id }}" required>
-                                                <option value="{{ $DeliveryHeader->sold_to_party_id }}" selected>
-                                                    {{ $DeliveryHeader->sold_to_party_id }}
-                                                    -{{ $DeliveryHeader->customer->party_name }} </option>
+                                                value="<?php echo e($DeliveryHeader->sold_to_party_id); ?>" required>
+                                                <option value="<?php echo e($DeliveryHeader->sold_to_party_id); ?>" selected>
+                                                    <?php echo e($DeliveryHeader->sold_to_party_id); ?>
+
+                                                    -<?php echo e($DeliveryHeader->customer->party_name); ?> </option>
                                             </select>
-                                            <input type="hidden" value="{{ $DeliveryHeader->sold_to_party_id }}">
+                                            <input type="hidden" value="<?php echo e($DeliveryHeader->sold_to_party_id); ?>">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="mb-2">
                                             <label class="form-label"
-                                                for="segment1">{{ trans('cruds.shiping.fields.customer_shipto') }}</label>
+                                                for="segment1"><?php echo e(trans('cruds.shiping.fields.customer_shipto')); ?></label>
                                             <select disabled type="text" id="customer_shipto" name="customer_shipto"
                                                 class="form-control select2"
-                                                value="{{ $DeliveryHeader->ship_to_party_id }}" required>
-                                                <option selected value="{{ $DeliveryHeader->ship_to_party_id }}">
-                                                    {{ $DeliveryHeader->party_site->site_code }}/
-                                                    {{ $DeliveryHeader->party_site->address1 }}</option>
+                                                value="<?php echo e($DeliveryHeader->ship_to_party_id); ?>" required>
+                                                <option selected value="<?php echo e($DeliveryHeader->ship_to_party_id); ?>">
+                                                    <?php echo e($DeliveryHeader->party_site->site_code); ?>/
+                                                    <?php echo e($DeliveryHeader->party_site->address1); ?></option>
                                             </select>
                                         </div>
                                     </div>
@@ -68,69 +69,55 @@
                                     <div class="col-md-3">
                                         <div class="mb-3">
                                             <label class="form-label"
-                                                for="segment1">{{ trans('cruds.shiping.fields.surat_jalan') }}</label>
+                                                for="segment1"><?php echo e(trans('cruds.shiping.fields.surat_jalan')); ?></label>
                                             <input readonly type="text" id="invoice_no" name="invoice_no"
-                                                class="form-control" value="{{ $DeliveryHeader->dock_code }}" required>
+                                                class="form-control" value="<?php echo e($DeliveryHeader->dock_code); ?>" required>
                                         </div>
                                     </div>
                                     <div class="col-md-2">
                                         <div class="mb-2">
                                             <label class="form-label"
-                                                for="segment1">{{ trans('cruds.shiping.fields.order_letter_no') }}</label>
+                                                for="segment1"><?php echo e(trans('cruds.shiping.fields.order_letter_no')); ?></label>
                                             <input readonly="readonly" id="delivery_name" name="delivery_name"
-                                                class="form-control text-end" value="{{ $DeliveryHeader->delivery_id }}">
+                                                class="form-control text-end" value="<?php echo e($DeliveryHeader->delivery_id); ?>">
                                             <input type="hidden" id="id" name="id"
-                                                value="{{ $DeliveryHeader->id }}">
+                                                value="<?php echo e($DeliveryHeader->id); ?>">
                                             <input type="hidden" id="delivery_id" name="delivery_id"
-                                                value="{{ $DeliveryHeader->delivery_id }}">
+                                                value="<?php echo e($DeliveryHeader->delivery_id); ?>">
 
                                         </div>
                                     </div>
                                     <div class="col-md-3">
                                         <div class="mb-3">
                                             <label class="form-label"
-                                                for="segment1">{{ trans('cruds.shiping.fields.note') }}</label>
+                                                for="segment1"><?php echo e(trans('cruds.shiping.fields.note')); ?></label>
                                             <input readonly type="text" id="note" name="note"
-                                                class="form-control" value="{{ $DeliveryHeader->attribute2 }}" required>
+                                                class="form-control" value="<?php echo e($DeliveryHeader->attribute2); ?>" required>
 
                                         </div>
                                     </div>
-                                    {{-- <div class="col-md-2">
-                                    <div class="mb-2">
-                                        <label class="form-label" for="segment1">{{ trans('cruds.shiping.fields.freight_term') }}</label>
-
-                                        <select disabled type="text" id="freight_term" name="freight_term" class="form-control select2" value="{{$DeliveryHeader->freight_terms_code}}" required>
-                                            @foreach ($freight_terms as $row)
-                                                <option value="{{$row->id}}"{{$DeliveryHeader->freight_terms_code== $row->id ? 'selected' : '' }}>{{$row->term_code}}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div> --}}
+                                    
                                     <div class="col-md-2">
                                         <div class="mb-2">
                                             <label class="form-label" for="segment1">
-                                                {{ trans('cruds.shiping.fields.invoice_date') }}
+                                                <?php echo e(trans('cruds.shiping.fields.invoice_date')); ?>
+
                                             </label>
                                             <input id="invoice_date" name="invoice_date" type="date"
                                                 class="form-control text-end" >
                                         </div>
                                     </div>
-                                    {{-- <div class="col-md-2">
-                                    <div class="mb-2">
-                                        <label class="form-label" for="segment1">{{ trans('cruds.shiping.fields.gross_weight') }}</label>
-                                        <input readonly type="number" id="gross_weight" name="gross_weight" class="form-control" value="{{$DeliveryHeader->gross_weight}}" required>
-                                    </div>
-                                </div> --}}
+                                    
                                     <div class="col-md-2">
                                         <div class="mb-2">
                                             <label class="form-label"
-                                                for="segment1">{{ trans('cruds.shiping.fields.status') }}</label>
-                                            {{-- <input readonly id="status" name="status" class="form-control" value="{{$DeliveryHeader->status_code}}"> --}}
+                                                for="segment1"><?php echo e(trans('cruds.shiping.fields.status')); ?></label>
+                                            
                                             <select disabled type="text" id="status" name="status"
-                                                class="form-control select2" value="{{ $DeliveryHeader->status_code }}"
+                                                class="form-control select2" value="<?php echo e($DeliveryHeader->status_code); ?>"
                                                 required>
-                                                <option value="{{ $DeliveryHeader->status_code }}}">
-                                                    {{ $DeliveryHeader->trx_name }}</option>
+                                                <option value="<?php echo e($DeliveryHeader->status_code); ?>}">
+                                                    <?php echo e($DeliveryHeader->trx_name); ?></option>
                                             </select>
                                         </div>
                                     </div>
@@ -161,7 +148,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="tab-content" id="nav-tabContent">
-                                    {{-- Tab sales --}}
+                                    
                                     <div class="tab-pane fade show active" id="nav-sales" role="tabpanel"
                                         aria-labelledby="nav-sales-tab">
                                         <div class="box-body scrollx" style="height: 300px;overflow: scroll;">
@@ -175,192 +162,185 @@
                                                         <th>
                                                             NO
                                                         </th>
-                                                        <th style="width: 10%">{{ trans('cruds.shiping.table.sn') }}</th>
-                                                        <th>{{ trans('cruds.Delivery.table.line') }}</th>
-                                                        <th>{{ trans('cruds.shiping.table.custpo') }}</th>
-                                                        <th>{{ trans('cruds.shiping.table.item_no') }}</th>
-                                                        <th>{{ trans('cruds.shiping.table.item_desc') }}</th>
-                                                        <th>{{ trans('cruds.Delivery.table.qty') }}</th>
-                                                        <!-- <th>{{ trans('cruds.shiping.table.uom') }}</th> -->
-                                                        <th style="width: 0%">{{ trans('cruds.Delivery.table.inv') }}</th>
-                                                        @if ($DeliveryHeader->lvl == 7)
-                                                        @else
+                                                        <th style="width: 10%"><?php echo e(trans('cruds.shiping.table.sn')); ?></th>
+                                                        <th><?php echo e(trans('cruds.Delivery.table.line')); ?></th>
+                                                        <th><?php echo e(trans('cruds.shiping.table.custpo')); ?></th>
+                                                        <th><?php echo e(trans('cruds.shiping.table.item_no')); ?></th>
+                                                        <th><?php echo e(trans('cruds.shiping.table.item_desc')); ?></th>
+                                                        <th><?php echo e(trans('cruds.Delivery.table.qty')); ?></th>
+                                                        <!-- <th><?php echo e(trans('cruds.shiping.table.uom')); ?></th> -->
+                                                        <th style="width: 0%"><?php echo e(trans('cruds.Delivery.table.inv')); ?></th>
+                                                        <?php if($DeliveryHeader->lvl == 7): ?>
+                                                        <?php else: ?>
                                                             <th></th>
-                                                        @endif
+                                                        <?php endif; ?>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @foreach ($DeliveryDetail as $key => $deliveryDetail)
+                                                    <?php $__currentLoopData = $DeliveryDetail; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $deliveryDetail): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                         <tr>
-                                                            {{-- <td style="display:none">
-                                                            {{$deliveryDetail->id}}
-                                                            <input type="checkbox" class="form-check-input sub_chk" name="id[]" id="${deliveryDetail.id}"value="${deliveryDetail.id}">
-                                                        </td> --}}
+                                                            
                                                             <td></td>
                                                             <td style="width: 0%">
                                                                 <h6>
-                                                                    {{ $no++ }}
+                                                                    <?php echo e($no++); ?>
+
                                                                 </h6>
                                                             </td>
                                                             <td style='font-size:11px'>
                                                                 <h6>
-                                                                    {{ $deliveryDetail->source_header_number ?? '' }}
+                                                                    <?php echo e($deliveryDetail->source_header_number ?? ''); ?>
+
                                                                 </h6>
                                                             </td>
                                                             <td style="width: 0%">
                                                                 <h6>
-                                                                    {{ (float) $deliveryDetail->source_line_id ?? '' }}
+                                                                    <?php echo e((float) $deliveryDetail->source_line_id ?? ''); ?>
+
                                                                 </h6>
                                                             </td>
                                                             <td>
 
-                                                                {{ $deliveryDetail->cust_po_number ?? '' }}
+                                                                <?php echo e($deliveryDetail->cust_po_number ?? ''); ?>
+
 
                                                             </td>
                                                             <td>
-                                                                <h6>{{ $deliveryDetail->ItemMaster->item_code ?? '' }}</h6>
-                                                                <input type="hidden" value="{{ $deliveryDetail->id }}"
+                                                                <h6><?php echo e($deliveryDetail->ItemMaster->item_code ?? ''); ?></h6>
+                                                                <input type="hidden" value="<?php echo e($deliveryDetail->id); ?>"
                                                                     name="id[]" class="detilchbx"
-                                                                    data-id="{{ $deliveryDetail->id }}">
+                                                                    data-id="<?php echo e($deliveryDetail->id); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $deliveryDetail->delivery_detail_id }}"
+                                                                    value="<?php echo e($deliveryDetail->delivery_detail_id); ?>"
                                                                     name="delivery_detail_id[]" class="detilchbx"
-                                                                    data-id="{{ $deliveryDetail->delivery_detail_id }}">
+                                                                    data-id="<?php echo e($deliveryDetail->delivery_detail_id); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $deliveryDetail->inventory_item_id }}"
+                                                                    value="<?php echo e($deliveryDetail->inventory_item_id); ?>"
                                                                     name="inventory_item_id[]" class="detilchbx"
-                                                                    data-id="{{ $deliveryDetail->inventory_item_id }}">
+                                                                    data-id="<?php echo e($deliveryDetail->inventory_item_id); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $deliveryDetail->requested_quantity }}"
+                                                                    value="<?php echo e($deliveryDetail->requested_quantity); ?>"
                                                                     name="requested_quantity[]" class="detilchbx"
-                                                                    data-id="{{ $deliveryDetail->requested_quantity }}">
+                                                                    data-id="<?php echo e($deliveryDetail->requested_quantity); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $deliveryDetail->roll_qty }}"
+                                                                    value="<?php echo e($deliveryDetail->roll_qty); ?>"
                                                                     name="roll_qty[]" class="detilchbx"
-                                                                    data-id="{{ $deliveryDetail->roll_qty }}">
+                                                                    data-id="<?php echo e($deliveryDetail->roll_qty); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $deliveryDetail->requested_quantity_uom }}"
+                                                                    value="<?php echo e($deliveryDetail->requested_quantity_uom); ?>"
                                                                     name="requested_quantity_uom[]" class="detilchbx"
-                                                                    data-id="{{ $deliveryDetail->requested_quantity_uom }}">
+                                                                    data-id="<?php echo e($deliveryDetail->requested_quantity_uom); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $deliveryDetail->subinventory }}"
+                                                                    value="<?php echo e($deliveryDetail->subinventory); ?>"
                                                                     name="subinventory[]" class="detilchbx"
-                                                                    data-id="{{ $deliveryDetail->subinventory }}">
+                                                                    data-id="<?php echo e($deliveryDetail->subinventory); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $deliveryDetail->source_line_id }}"
+                                                                    value="<?php echo e($deliveryDetail->source_line_id); ?>"
                                                                     name="source_line_id[]" class="detilchbx"
-                                                                    data-id="{{ $deliveryDetail->source_line_id }}">
+                                                                    data-id="<?php echo e($deliveryDetail->source_line_id); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $deliveryDetail->attribute1 }}"
+                                                                    value="<?php echo e($deliveryDetail->attribute1); ?>"
                                                                     name="attribute1[]" class="detilchbx"
-                                                                    data-id="{{ $deliveryDetail->attribute1 }}">
+                                                                    data-id="<?php echo e($deliveryDetail->attribute1); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $deliveryDetail->source_header_id }}"
+                                                                    value="<?php echo e($deliveryDetail->source_header_id); ?>"
                                                                     name="source_header_id[]" class="detilchbx"
-                                                                    data-id="{{ $deliveryDetail->source_header_id }}">
+                                                                    data-id="<?php echo e($deliveryDetail->source_header_id); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $DeliveryHeader->created_by }}"
+                                                                    value="<?php echo e($DeliveryHeader->created_by); ?>"
                                                                     name="created_by" class="detilchbx"
-                                                                    data-id="{{ $DeliveryHeader->created_by }}">
+                                                                    data-id="<?php echo e($DeliveryHeader->created_by); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $DeliveryHeader->on_or_about_date }}"
+                                                                    value="<?php echo e($DeliveryHeader->on_or_about_date); ?>"
                                                                     name="on_or_about_date" class="detilchbx"
-                                                                    data-id="{{ $DeliveryHeader->on_or_about_date }}">
+                                                                    data-id="<?php echo e($DeliveryHeader->on_or_about_date); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $DeliveryHeader->currency_code }}"
+                                                                    value="<?php echo e($DeliveryHeader->currency_code); ?>"
                                                                     name="currency_code" class="detilchbx"
-                                                                    data-id="{{ $DeliveryHeader->currency_code }}">
+                                                                    data-id="<?php echo e($DeliveryHeader->currency_code); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $DeliveryHeader->packing_slip_number }}"
+                                                                    value="<?php echo e($DeliveryHeader->packing_slip_number); ?>"
                                                                     name="packing_slip_number" class="detilchbx"
-                                                                    data-id="{{ $DeliveryHeader->packing_slip_number }}">
+                                                                    data-id="<?php echo e($DeliveryHeader->packing_slip_number); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $DeliveryHeader->attribute_category }}"
+                                                                    value="<?php echo e($DeliveryHeader->attribute_category); ?>"
                                                                     name="attribute_category" class="detilchbx"
-                                                                    data-id="{{ $DeliveryHeader->attribute_category }}">
+                                                                    data-id="<?php echo e($DeliveryHeader->attribute_category); ?>">
                                                                 <input type="hidden"
-                                                                    value="{{ $DeliveryHeader->dock_code }}"
+                                                                    value="<?php echo e($DeliveryHeader->dock_code); ?>"
                                                                     name="dock_code" class="detilchbx"
-                                                                    data-id="{{ $DeliveryHeader->dock_code }}">
+                                                                    data-id="<?php echo e($DeliveryHeader->dock_code); ?>">
                                                             </td>
 
                                                             <td>
                                                                 <h6>
-                                                                    {{ $deliveryDetail->item_description ?? '' }}
+                                                                    <?php echo e($deliveryDetail->item_description ?? ''); ?>
+
                                                                 </h6>
                                                             </td>
 
                                                             <td style="width: 0%">
                                                                 <h6>
-                                                                    {{ (float) $deliveryDetail->requested_quantity ?? '' }}
+                                                                    <?php echo e((float) $deliveryDetail->requested_quantity ?? ''); ?>
+
                                                                 </h6>
                                                             </td>
 
                                                             <!-- <td style="width: 0%">
                                                                 <h6>
-                                                                    {{ $deliveryDetail->requested_quantity_uom ?? '' }}
+                                                                    <?php echo e($deliveryDetail->requested_quantity_uom ?? ''); ?>
+
                                                                 </h6>
                                                             </td> -->
                                                             <td>
-                                                                @if ($deliveryDetail->subinventory == null)
+                                                                <?php if($deliveryDetail->subinventory == null): ?>
                                                                     <h6>
 
                                                                     </h6>
-                                                                @else
+                                                                <?php else: ?>
                                                                     <h6>
-                                                                        {{ $deliveryDetail->subinventory ?? '' }}
+                                                                        <?php echo e($deliveryDetail->subinventory ?? ''); ?>
+
                                                                     </h6>
-                                                                @endif
+                                                                <?php endif; ?>
 
                                                             </td>
 
-                                                            @if ($DeliveryHeader->lvl == 7)
-                                                            @else
+                                                            <?php if($DeliveryHeader->lvl == 7): ?>
+                                                            <?php else: ?>
                                                                 <td style="width: 0%">
-                                                                    {{-- <a class="btn btn-sm btn-primary" id="editDetil" data-toggle="modal" data-target="#modaladd{{$deliveryDetail->id}}">
-                                                                    +
-                                                                </a> --}}
-                                                                    {{-- <input type="hidden" id="iddetil{{$deliveryDetail->id}}" name="iddetil[]" value="{{$deliveryDetail->id}}"> --}}
+                                                                    
+                                                                    
                                                                     <input type="hidden" id="iddetil" name="iddetil[]"
-                                                                        value="{{ $deliveryDetail->id }}">
-                                                                    {{-- <a class="btn btn-sm btn-primary" href="{{ route('admin.deliveriesdetail.edit', $deliveryDetail->id,$deliveryDetail->delivery_detail_id) }}">
-                                                                    +
-                                                                </a> --}}
-                                                                    {{-- @if ($DeliveryHeader->lvl == 7)
-                                                                    <a class="btn btn-sm btn-secondary">
-                                                                        +
-                                                                    </a>
-                                                                @elseif ($DeliveryHeader->lvl==8)
-                                                                    <a class="btn btn-sm btn-secondary">
-                                                                        +
-                                                                    </a>
-                                                                @else --}}
+                                                                        value="<?php echo e($deliveryDetail->id); ?>">
+                                                                    
+                                                                    
 
                                                                     <button type='button'
                                                                         class="btn btn-sm btn-mod btn-primary getDetail"
-                                                                        id="getDetail" value="{{ $deliveryDetail->id }}"
+                                                                        id="getDetail" value="<?php echo e($deliveryDetail->id); ?>"
                                                                         data-bs-toggle="modal"
                                                                         data-bs-target="#modaladdinv"
-                                                                        value="{{ $deliveryDetail->id }}"
-                                                                        data-id="{{ $deliveryDetail->id }}"
-                                                                        data-head_id="{{ $deliveryDetail->delivery_detail_id }}"
-                                                                        data-panjang="{{ $deliveryDetail->intattribute1 }}"
-                                                                        data-lebar="{{ $deliveryDetail->intattribute2 }}"
-                                                                        data-gsm="{{ $deliveryDetail->intattribute3 }}"
-                                                                        data-xnet_weight="{{ $deliveryDetail->net_weight }}"
-                                                                        data-subinventory_from="{{ $deliveryDetail->subinventory }}"
-                                                                        data-shipping_inventory="{{ $deliveryDetail->subinventory }}"
-                                                                        data-source_header="{{ $deliveryDetail->source_header_id }}"
-                                                                        data-source_line="{{ $deliveryDetail->source_line_id }}"
-                                                                        data-inventory_item="{{ $deliveryDetail->inventory_item_id }}">
+                                                                        value="<?php echo e($deliveryDetail->id); ?>"
+                                                                        data-id="<?php echo e($deliveryDetail->id); ?>"
+                                                                        data-head_id="<?php echo e($deliveryDetail->delivery_detail_id); ?>"
+                                                                        data-panjang="<?php echo e($deliveryDetail->intattribute1); ?>"
+                                                                        data-lebar="<?php echo e($deliveryDetail->intattribute2); ?>"
+                                                                        data-gsm="<?php echo e($deliveryDetail->intattribute3); ?>"
+                                                                        data-xnet_weight="<?php echo e($deliveryDetail->net_weight); ?>"
+                                                                        data-subinventory_from="<?php echo e($deliveryDetail->subinventory); ?>"
+                                                                        data-shipping_inventory="<?php echo e($deliveryDetail->subinventory); ?>"
+                                                                        data-source_header="<?php echo e($deliveryDetail->source_header_id); ?>"
+                                                                        data-source_line="<?php echo e($deliveryDetail->source_line_id); ?>"
+                                                                        data-inventory_item="<?php echo e($deliveryDetail->inventory_item_id); ?>">
                                                                         +
                                                                     </button>
-                                                                    {{-- @endif --}}
+                                                                    
 
                                                                 </td>
-                                                            @endif
+                                                            <?php endif; ?>
                                                         </tr>
-                                                    @endforeach
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </tbody>
                                             </table>
                                         </div>
@@ -381,20 +361,7 @@
                                                         <th scope="col">Status</th>
                                                     </tr>
                                                 </thead>
-                                                {{-- <tbody>
-                                                    @php $no = 1; @endphp
-                                                    @foreach ($deliverydisturb as $key => $row)
-                                                        <tr class="tr_input">
-                                                            <td class="rownumber" style="width:10%">{{ $row->container_item_id }}</td>
-                                                            <td style="width:10%">{{ $row->attribute1 }}</td>
-                                                            <td style="width:10%">{{ $row->attribute3 }}</td>
-                                                            <td style="width:10%">{{ $row->attribute_number1 }}</td>
-                                                            <td style="width:10%">{{ $row->attribute_number1 }}</td>
-                                                            <td style="width:10%">{{ $row->created_at }}</td>
-                                                            <td style="width:10%"><button type='button'class="btn btn-sm btn-mod btn-primary">OK</button></td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody> --}}
+                                                
                                             </table>
                                         </div>
                                     </div>
@@ -405,22 +372,15 @@
 
                                 <a href="" class="btn btn-sm btn-info" data-bs-toggle="modal"
                                     data-bs-target="#modaladdterm"><i
-                                        data-feather='file-text'></i>{{ trans('cruds.Delivery.fields.term') }}</a>
-                                {{-- @if ($DeliveryHeader->lvl == 6)
-                                    <button class="btn btn-sm btn-secondary" name='action' value="pick" type="submit">{{ trans('cruds.Delivery.fields.pickrelease') }}</button>
-                                    <input type="hidden" value="{{$DeliveryHeader->ship_method_code}}" name="ship_method_code[]" class="detilchbx" data-id="{{$DeliveryHeader->ship_method_code}}">
-                                --}}
-                                @if ($DeliveryHeader->lvl == 7 || $DeliveryHeader->lvl == 6)
+                                        data-feather='file-text'></i><?php echo e(trans('cruds.Delivery.fields.term')); ?></a>
+                                
+                                <?php if($DeliveryHeader->lvl == 7 || $DeliveryHeader->lvl == 6): ?>
                                     <button class="btn btn-sm btn-warning" type="button"
-                                        data-bs-toggle="modal"data-bs-target="#shipconfm">{{ trans('cruds.Delivery.fields.shipconfirm') }}</button>
-                                @endif
+                                        data-bs-toggle="modal"data-bs-target="#shipconfm"><?php echo e(trans('cruds.Delivery.fields.shipconfirm')); ?></button>
+                                <?php endif; ?>
 
 
-                                {{-- @if ($DeliveryHeader->lvl == 6)
-                                    <button class="btn btn-sm btn-primary btn-submit" name='action' value="save" id="add_all" type="submit"><i data-feather='save'></i> {{ trans('global.save') }}</button>
-                                @elseif ($DeliveryHeader->lvl==7)
-                                    <div></div>
-                                @endif --}}
+                                
                             </div>
                         </div>
                 </div>
@@ -430,7 +390,7 @@
                         <div class="modal-content">
                             <!-- Modal Header -->
                             <div class="modal-header bg-primary">
-                                <h4 class="modal-title text-white">{{ trans('cruds.Delivery.fields.shipconfirm') }}</h4>
+                                <h4 class="modal-title text-white"><?php echo e(trans('cruds.Delivery.fields.shipconfirm')); ?></h4>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <!-- Modal body -->
@@ -440,7 +400,8 @@
                                         <input type="radio" class="form-check-input" id="radio1" name="radio"
                                             value="confirm" checked>
                                         <label class="form-check-label">
-                                            {{ trans('cruds.Delivery.fields.ship') }}
+                                            <?php echo e(trans('cruds.Delivery.fields.ship')); ?>
+
                                         </label>
                                     </div>
                                     <br>
@@ -448,14 +409,15 @@
                                         <input type="radio" class="form-check-input" id="radio2" name="radio"
                                             value="delete">
                                         <label class="form-check-label">
-                                            {{ trans('cruds.Delivery.fields.back') }}
+                                            <?php echo e(trans('cruds.Delivery.fields.back')); ?>
+
                                         </label>
                                     </div>
                                     <br>
                                     <div class="form-group row">
                                         <label class="col-sm-2 control-label"></label>
                                         <label class="col-sm-4 control-label"
-                                            for="header_id">{{ trans('cruds.Delivery.fields.actual') }}</label>
+                                            for="header_id"><?php echo e(trans('cruds.Delivery.fields.actual')); ?></label>
                                         <div class="col-sm-4">
                                             <input required autocomplete="off" type="text" id="fp-default"
                                                 name="actualdate" class="form-control flatpickr-basic flatpickr-input">
@@ -484,71 +446,71 @@
                     <div class="modal-content">
                         <!-- Modal Header -->
                         <div class="modal-header bg-primary">
-                            <h4 class="modal-title text-white">{{ trans('cruds.Delivery.fields.deliveryterm') }}</h4>
+                            <h4 class="modal-title text-white"><?php echo e(trans('cruds.Delivery.fields.deliveryterm')); ?></h4>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <!-- Modal body -->
                         <div class="modal-body">
-                            <form action="{{ route('admin.deliveriesterms.update', $DeliveryHeader->delivery_id) }}"
+                            <form action="<?php echo e(route('admin.deliveriesterms.update', $DeliveryHeader->delivery_id)); ?>"
                                 method="POST" enctype="multipart/form-data">
-                                @csrf
-                                @method('PUT')
+                                <?php echo csrf_field(); ?>
+                                <?php echo method_field('PUT'); ?>
                                 <div class="form-group">
                                     <div class="form-group row">
                                         <div class="col-md-6">
                                             <div class="mb-1">
                                                 <label class="form-label"
-                                                    for="segment1">{{ trans('cruds.Delivery.fields.shihpmethodcode') }}</label>
-                                                @if ($DeliveryHeader->lvl == 6)
+                                                    for="segment1"><?php echo e(trans('cruds.Delivery.fields.shihpmethodcode')); ?></label>
+                                                <?php if($DeliveryHeader->lvl == 6): ?>
                                                     <input placeholder="Input Ship Method Code..." type="text"
                                                         id="ship_method_code" name="ship_method_code"
                                                         class="form-control"
-                                                        value="{{ $DeliveryHeader->ship_method_code }}" required>
+                                                        value="<?php echo e($DeliveryHeader->ship_method_code); ?>" required>
                                                     <input type="hidden" id="id" name="id"
-                                                        class="form-control" value="{{ $DeliveryHeader->id }}" required>
-                                                    {{-- <input type="hidden" id="headid" name="headid" class="form-control" value="{{$deliveryDetail->delivery_detail_id}}" required> --}}
+                                                        class="form-control" value="<?php echo e($DeliveryHeader->id); ?>" required>
+                                                    
                                                     <input type="hidden" id="created_by" name="created_by"
-                                                        class="form-control" value="{{ $DeliveryHeader->created_by }}"
+                                                        class="form-control" value="<?php echo e($DeliveryHeader->created_by); ?>"
                                                         required>
                                                     <input type="hidden" id="updated_by" name="updated_by"
                                                         class="form-control"
-                                                        value="{{ $DeliveryHeader->last_updated_by }}" required>
-                                                @else
+                                                        value="<?php echo e($DeliveryHeader->last_updated_by); ?>" required>
+                                                <?php else: ?>
                                                     <input readonly placeholder="Input Ship Method Code..." type="text"
                                                         id="ship_method_code" name="ship_method_code"
                                                         class="form-control"
-                                                        value="{{ $DeliveryHeader->ship_method_code }}" required>
+                                                        value="<?php echo e($DeliveryHeader->ship_method_code); ?>" required>
                                                     <input type="hidden" id="created_by" name="created_by"
-                                                        class="form-control" value="{{ $DeliveryHeader->created_by }}"
+                                                        class="form-control" value="<?php echo e($DeliveryHeader->created_by); ?>"
                                                         required>
                                                     <input type="hidden" id="updated_by" name="updated_by"
                                                         class="form-control"
-                                                        value="{{ $DeliveryHeader->last_updated_by }}" required>
-                                                @endif
+                                                        value="<?php echo e($DeliveryHeader->last_updated_by); ?>" required>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="mb-1">
                                                 <label class="form-label"
-                                                    for="segment1">{{ trans('cruds.Delivery.fields.fobcode') }}</label>
-                                                @if ($DeliveryHeader->lvl == 6)
+                                                    for="segment1"><?php echo e(trans('cruds.Delivery.fields.fobcode')); ?></label>
+                                                <?php if($DeliveryHeader->lvl == 6): ?>
                                                     <input placeholder="Input Fob Code..." type="text" id="fob_code"
                                                         name="fob_code" class="form-control"
-                                                        value="{{ $DeliveryHeader->fob_code }}" required>
-                                                @else
+                                                        value="<?php echo e($DeliveryHeader->fob_code); ?>" required>
+                                                <?php else: ?>
                                                     <input readonly placeholder="Input Fob Code..." type="text"
                                                         id="fob_code" name="fob_code" class="form-control"
-                                                        value="{{ $DeliveryHeader->fob_code }}" required>
-                                                @endif
+                                                        value="<?php echo e($DeliveryHeader->fob_code); ?>" required>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between">
-                                    @if ($DeliveryHeader->lvl == 6)
+                                    <?php if($DeliveryHeader->lvl == 6): ?>
                                         <button type="submit" class="btn btn-primary pull-right"><i
-                                                class="fa fa-plus"></i>{{ trans('cruds.Delivery.fields.addterm') }}</button>
-                                    @endif
+                                                class="fa fa-plus"></i><?php echo e(trans('cruds.Delivery.fields.addterm')); ?></button>
+                                    <?php endif; ?>
                                 </div>
                             </form>
                         </div>
@@ -561,24 +523,24 @@
                     <div class="modal-content">
                         <!-- Modal Header -->
                         <div class="modal-header bg-primary">
-                            <h4 class="modal-title text-white">{{ trans('cruds.Delivery.fields.addweight') }}</h4>
+                            <h4 class="modal-title text-white"><?php echo e(trans('cruds.Delivery.fields.addweight')); ?></h4>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <!-- Modal body -->
                         <hr>
                         <div class="modal-body">
                             <form id="formship"
-                                action="{{ route('admin.deliveriesdetail.update', $deliveryDetail->id, $deliveryDetail->delivery_detail_id) }}"
+                                action="<?php echo e(route('admin.deliveriesdetail.update', $deliveryDetail->id, $deliveryDetail->delivery_detail_id)); ?>"
                                 method="POST" enctype="multipart/form-data">
-                                @csrf
-                                @method('PUT')
+                                <?php echo csrf_field(); ?>
+                                <?php echo method_field('PUT'); ?>
                                 <div class="form-group">
                                     <div class="form-group row">
                                         <!-- <div class="col-md-4">
                                             <div class="mb-1">
                                                 <label class="form-label"
-                                                    for="segment1">{{ trans('cruds.Delivery.fields.gsm') }}</label>
-                                                <input autocomplete="off" value="{{ $deliveryDetail->subinventory }}"
+                                                    for="segment1"><?php echo e(trans('cruds.Delivery.fields.gsm')); ?></label>
+                                                <input autocomplete="off" value="<?php echo e($deliveryDetail->subinventory); ?>"
                                                     placeholder="Input Gsm..." type="number" name="gsm"
                                                     class="form-control" required>
                                             </div>
@@ -586,7 +548,7 @@
                                         <!-- <div class="col-md-4">
                                             <div class="mb-1">
                                                 <label class="form-label"
-                                                    for="segment1">{{ trans('cruds.Delivery.fields.pjg') }}</label>
+                                                    for="segment1"><?php echo e(trans('cruds.Delivery.fields.pjg')); ?></label>
                                                 <input autocomplete="off" placeholder="Input Length..." type="number"
                                                     name="panjang" class="form-control" required>
                                                 <input type="hidden" id="id" name="id"
@@ -600,7 +562,7 @@
                                         <!-- <div class="col-md-4">
                                             <div class="mb-1">
                                                 <label class="form-label"
-                                                    for="segment1">{{ trans('cruds.Delivery.fields.lbr') }}</label>
+                                                    for="segment1"><?php echo e(trans('cruds.Delivery.fields.lbr')); ?></label>
                                                 <input autocomplete="off" placeholder="Input Width..." type="number"
                                                     name="lebar" class="form-control" required>
                                             </div>
@@ -619,7 +581,7 @@
                                         <div class="col-md-6">
                                             <div class="mb-1">
                                                 <label class="form-label"
-                                                    for="segment1">{{ trans('cruds.shiping.fields.gross_weight') }}</label>
+                                                    for="segment1"><?php echo e(trans('cruds.shiping.fields.gross_weight')); ?></label>
                                                 <input autocomplete="off" value="" id="QtyCounter"
                                                     placeholder="Input Weight..." type="text" name="roll_qty"
                                                     class="form-control QtyCounter" required>
@@ -630,41 +592,35 @@
                                         <div class="col-md-12">
                                             <div class="mb-1">
                                                 <label class="form-label"
-                                                    for="segment1">{{ trans('cruds.Delivery.fields.sub') }}</label>
-                                                {{-- <select type="text" name="shipping_inventory" id="subinventoryfrom_1" class="form-control select2" value="{{$deliveryDetail->subinventory}}" >
-                                                            @foreach ($Subinventories as $row)
-                                                                <option name="shipping_inventory"id="subinventoryfrom_1"class="form-control subinvfrom_1"{{$deliveryDetail->subinventory == $row->id?'selected':''}}>
-                                                                    {{$row->sub_inventory_name}} - {{$row->description}}
-                                                                </option>
-                                                            @endforeach
-                                                        </select> --}}
+                                                    for="segment1"><?php echo e(trans('cruds.Delivery.fields.sub')); ?></label>
+                                                
 
 
                                                 <select type="text" id="subinventoryfrom_1"
                                                     name="shipping_inventory"class="form-control select2"
-                                                    value="{{ $deliveryDetail->subinventory }}" required>
-                                                    @foreach ($Subinventories as $row)
+                                                    value="<?php echo e($deliveryDetail->subinventory); ?>" required>
+                                                    <?php $__currentLoopData = $Subinventories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                         <option
-                                                            value="{{ $row->sub_inventory_name }}"{{ $deliveryDetail->subinventory == $row->id ? 'selected' : '' }}>
-                                                            {{ $row->sub_inventory_name }}-{{ $row->description }}
+                                                            value="<?php echo e($row->sub_inventory_name); ?>"<?php echo e($deliveryDetail->subinventory == $row->id ? 'selected' : ''); ?>>
+                                                            <?php echo e($row->sub_inventory_name); ?>-<?php echo e($row->description); ?>
+
                                                         </option>
-                                                    @endforeach
+                                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                                 </select>
                                                 <input type="hidden" id="id" name="id" class="form-control">
-                                                {{-- <input type="text" class="form-control search_subinventory" name="subinventory_from" id="subinventoryfrom_1" autocomplete="off" >
-                                                    <input type="hidden" class="form-control subinvfrom_1" name="ship" id="subinvfrom_1"  > --}}
+                                                
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="d-flex justify-content-between mb-50">
-                                    @if ($DeliveryHeader->lvl == 6)
+                                    <?php if($DeliveryHeader->lvl == 6): ?>
                                         <button class="btn btn-warning resetbtn" type="button"><i
                                                 data-feather='refresh-ccw'></i>
-                                            {{ trans('cruds.Delivery.button.reset') }}</button>
+                                            <?php echo e(trans('cruds.Delivery.button.reset')); ?></button>
                                         <button class="btn btn-primary btn-submit" id="add_all" type="submit"><i
-                                                data-feather='save'></i> {{ trans('global.save') }}</button>
-                                    @endif
+                                                data-feather='save'></i> <?php echo e(trans('global.save')); ?></button>
+                                    <?php endif; ?>
                                 </div>
                             </form>
                         </div>
@@ -675,8 +631,8 @@
         </div>
         </div>
     </section>
-@endsection
-@push('script')
+<?php $__env->stopSection(); ?>
+<?php $__env->startPush('script'); ?>
     <script>
         function shipconfirm(id) {
             var check = confirm("Are you sure you want to CONFIRM this SHIPMENT?");
@@ -690,7 +646,7 @@
             if (check == true) {
                 console.log(check);
                 $.ajax({
-                    url: "{{ route('admin.deliveries.destroy', $DeliveryHeader->delivery_id) }}",
+                    url: "<?php echo e(route('admin.deliveries.destroy', $DeliveryHeader->delivery_id)); ?>",
                     type: "GET",
                     data: {
                         id: id,
@@ -719,7 +675,7 @@
             $(".getDetail").click(function() {
                 var id
                 $.ajax({
-                    url: '{{ url('search/rollCounter') }}',
+                    url: '<?php echo e(url('search/rollCounter')); ?>',
                     type: 'GET',
                     data: {
                         id: $(this).attr('data-id'),
@@ -877,4 +833,6 @@
             })
         });
     </script>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layouts.admin', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\agro\resources\views/admin/deliveries/create.blade.php ENDPATH**/ ?>
