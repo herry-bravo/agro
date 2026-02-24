@@ -108,12 +108,19 @@
                                 </div> --}}
                                     <div class="col-md-2">
                                         <div class="mb-2">
-                                            <label class="form-label"
-                                                for="segment1">{{ trans('cruds.shiping.fields.invoice_date') }}</label>
-                                            {{-- <input readonly type="date" id="invoice_date" name="invoice_date" class="form-control datepicker" value="{{$DeliveryHeader->on_or_about_date}}" required> --}}
-                                            <input readonly type="text" id="datepicker-1" name="invoice_date"
-                                                value="<?= date('d-M-Y', strtotime($DeliveryHeader->on_or_about_date)) ?>"
-                                                class="form-control datepicker text-end" autocomplete="off" required>
+                                            <label class="form-label" for="segment1">
+                                                {{ trans('cruds.shiping.fields.invoice_date') }}
+                                            </label>
+                                            <input readonly
+                                                type="text"
+                                                id="datepicker-1"
+                                                name="invoice_date"
+                                                value="<?= $DeliveryHeader->on_or_about_date
+                                                    ? date('d-M-Y', strtotime($DeliveryHeader->on_or_about_date))
+                                                    : date('d-M-Y') ?>"
+                                                class="form-control datepicker text-end"
+                                                autocomplete="off"
+                                                required>
                                         </div>
                                     </div>
                                     {{-- <div class="col-md-2">
