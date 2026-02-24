@@ -77,6 +77,7 @@ class PurchaseOrdersController extends Controller
         $head->term_id=$request->payment_method;
         $head->attribute1 = intval($request->purchase_total);
         $head->carrier = $request->faktur;
+        $head->created_at = $request->created_at;
         $termMaster = Terms::where('id',$request->payment_method)->get()->first();
         if($termMaster->term_code!=0){
             $head->payment_due_date=Carbon::now()->addDays($termMaster->term_code)->format('Y-m-d H:i:s');
@@ -91,7 +92,7 @@ class PurchaseOrdersController extends Controller
         case 'new':
 		try {
 			\DB::beginTransaction();
-            dd($head);
+            // dd($head);
 		   $head->save();
 		   $line_number=1;
 
