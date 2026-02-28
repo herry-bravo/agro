@@ -1,23 +1,23 @@
-@extends('layouts.admin')
-@section('content')
+
+<?php $__env->startSection('content'); ?>
 <div class="card">
     <div class="card-header  mt-1 mb-25">
         <h6 class="card-title">
-           <a href="" class="breadcrumbs__item">Account Payable </a>
-            <a href="{{ route("admin.ap-payment.index") }}" class="breadcrumbs__item"> AP-Invoice </a>
+            <a href="" class="breadcrumbs__item"><?php echo e(trans('cruds.aReceivable.title')); ?> </a>
+            <a href="<?php echo e(route("admin.credit-note.index")); ?>" class="breadcrumbs__item"> <?php echo e(trans('cruds.aReceivable.title')); ?> </a>
         </h6>
-        @can('role_create')
+        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('role_create')): ?>
         <!-- <div class="row">
             <div class="col-lg-12">
-                <a class="btn btn-primary" href="{{ route("admin.ar.create") }}">
+                <a class="btn btn-primary" href="<?php echo e(route("admin.ar.create")); ?>">
                     <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus me-50 font-small-4">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg></span>
-                    {{ trans('cruds.aReceivable.title_singular') }}</a>
+                    <?php echo e(trans('cruds.aReceivable.title_singular')); ?></a>
             </div>
         </div> -->
-        @endcan
+        <?php endif; ?>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -25,20 +25,25 @@
                 <thead>
                     <tr>
                         <th>
-                            PO Number
+                            <?php echo e(trans('cruds.aReceivable.ar.trx_number')); ?>
+
                         </th>
 
                         <th>
-                            Vendor
+                            Date
                         </th>
                         <th>
-                           Invoice number
+                            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <?php echo e(trans('cruds.aReceivable.ar.bill_to')); ?>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
                         </th>
                         <th>
-                           Term
+                            Shipto
+                        </th>     
+                        <th>
+                            <?php echo e(trans('cruds.aReceivable.ar.term_id')); ?>
+
                         </th>
                         <th>
-                           Currency
+                            Currency
                         </th>
                         <th>
                             Tax
@@ -64,8 +69,8 @@
         </div>
     </div>
 </div>
-@endsection
-@push('script')
+<?php $__env->stopSection(); ?>
+<?php $__env->startPush('script'); ?>
 <script>
     $(document).ready(function() {
         //$.fn.dataTable.ext.errMode = 'none';
@@ -78,7 +83,7 @@
         const table = $('#ar-table').DataTable({
             "bServerSide": true
             , ajax: {
-                url: '{{url("search/ap-index") }}'
+                url: '<?php echo e(url("search/ar-index")); ?>'
                 , type: "POST"
                 , headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -150,25 +155,38 @@
             , ]
             
             , columns: [{
-                    data: 'po'
-                },{
-                    data: 'vendor'
-                },{
-                    data: 'inv_num'
-                },{
+                    data: 'inv_number'
+                }, {
+                    data: 'date'
+                    , className: "text-start"
+                }, {
+                    data: 'billto'
+                }, {
+                    data: 'shipto'
+                }, {
                     data: 'term'
-                },{
+                    , className: "text-center"
+                }, {
                     data: 'currency'
-                },{
+                    , className: "text-end"
+                }, {
                     data: 'tax'
-                },{
+                    , className: "text-end"
+                }, {
                     data: 'amount'
-                },{
+                    , className: "text-center"
+                },
+                {
                     data: 'paid'
-                },{
+                    , className: "text-center"
+                },
+                {
                     data: 'not_paid'
-                },{
+                    , className: "text-center"
+                },
+                {
                     data: 'duedate'
+                    , className: "text-end"
                 }
             , ]
 
@@ -177,4 +195,6 @@
     });
 
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layouts.admin', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\agro\resources\views/admin/arReceivable/index.blade.php ENDPATH**/ ?>
