@@ -197,46 +197,28 @@
                                             </thead>
                                             <tbody>
                                                 <?php
-                                                    $unitprice = 0; // Variabel untuk menyimpan total
-                                                    $total = 0; // Variabel untuk menyimpan total
-                                                    $tax = 0; // Variabel untuk menyimpan total
+                                                    $taxMult   = $sales->tax_exempt_flag > 0 ? (1 + $sales->tax_exempt_flag / 100) : 1;
+                                                    $unitprice = 0;
+                                                    $total     = 0;
+                                                    $tax       = 0;
                                                 ?>
                                                 <?php $__currentLoopData = $so_detil; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php
+                                                        $calcUnit  = ($row->ordered_quantity * $row->unit_selling_price) - ($row->disc ?? 0);
+                                                        $calcSutot = $calcUnit / $taxMult;
+                                                    ?>
                                                     <tr>
-                                                        <td>
-
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e($row->user_description_item ?? ''); ?>
-
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e(number_format($row->ordered_quantity ?? '')); ?>
-
-
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e(number_format($row->unit_selling_price ?? '')); ?>
-
-
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e(\Carbon\Carbon::parse($row->schedule_ship_date)->format('d-m-Y') ?? ''); ?>
-
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e(number_format($row->unit_percent_base_price ?? '')); ?>
-
-                                                        </td>
-                                                        <td>
-                                                            <?php echo e(number_format($row->unit_list_price ?? '')); ?>
-
-                                                        </td>
+                                                        <td></td>
+                                                        <td><?php echo e($row->user_description_item ?? ''); ?></td>
+                                                        <td><?php echo e(number_format((float)($row->ordered_quantity ?? 0))); ?></td>
+                                                        <td><?php echo e(number_format((float)($row->unit_selling_price ?? 0))); ?></td>
+                                                        <td><?php echo e(\Carbon\Carbon::parse($row->schedule_ship_date)->format('d-m-Y')); ?></td>
+                                                        <td><?php echo e(number_format($calcUnit, 2, ',', '.')); ?></td>
+                                                        <td><?php echo e(number_format($calcSutot, 2, ',', '.')); ?></td>
                                                         <?php
-                                                            // Tambahkan hasil perkalian ke total
-                                                            $unitprice += $row->unit_percent_base_price ?? 0;
-                                                            $total += $row->unit_list_price ?? 0;
-                                                            $tax = $unitprice - $total;
+                                                            $unitprice += $calcUnit;
+                                                            $total     += $calcSutot;
+                                                            $tax        = $unitprice - $total;
                                                         ?>
                                                     </tr>
                                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -290,8 +272,10 @@
                                             <tbody class="sales_order_shipment_container">
                                                 <?php $__currentLoopData = $so_detil; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <?php
-                                                        $drValue = 0; // Karena DR pada loop pertama selalu 0
-                                                        $crValue = $row->unit_list_price;
+                                                        $calcUnit2  = ($row->ordered_quantity * $row->unit_selling_price) - ($row->disc ?? 0);
+                                                        $calcSutot2 = $calcUnit2 / $taxMult;
+                                                        $drValue = 0;
+                                                        $crValue = $calcSutot2;
                                                         $totalDr += $drValue;
                                                         $totalCr += $crValue;
                                                     ?>
@@ -422,7 +406,7 @@
 
                                                 <?php $__currentLoopData = $so_detil; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                     <?php
-                                                        $drValue = $row->unit_percent_base_price; // DR pada loop ketiga selalu 0
+                                                        $drValue = ($row->ordered_quantity * $row->unit_selling_price) - ($row->disc ?? 0);
                                                         $crValue = 0;
                                                         $totalDr += $drValue;
                                                         $totalCr += $crValue;

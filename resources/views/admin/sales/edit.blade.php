@@ -74,6 +74,7 @@
                                         <input type="hidden" name="flag" class="form-control" value="{{ $sales->open_flag }}" readonly>
                                         <input type="hidden" name="booked" class="form-control" value="{{ $sales->booked_flag }}" readonly>
                                         <input type="hidden" name="org" class="form-control" value="{{ $sales->org_id }}" readonly>
+                                        <input type="hidden" id="select_tax" value="{{ $sales->tax_exempt_flag ?? 0 }}">
                                         @if($errors->has('order_number'))
                                         <em class="invalid-feedback">
                                             {{ $errors->first('order_number') }}
@@ -277,7 +278,8 @@
                         </nav>
 
                         <div class="text-right">
-                            <!-- <button type="button" class="btn btn btn-outline-success float-right dropdown-toggle " data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            @if(is_null($sales->inv_number))
+                            <button type="button" class="btn btn btn-outline-success float-right dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 {{ trans('cruds.OrderManagement.field.action') }}
                             </button>
                             <div class="dropdown-menu dropdown-menu-end">
@@ -291,7 +293,8 @@
                                     {{ trans('cruds.OrderManagement.field.splitline') }}
                                 </a>
                                 <div role="separator" class="dropdown-divider"></div>
-                            </div> -->
+                            </div>
+                            @endif
                         </div>
                     </div>
                     <hr>
@@ -342,7 +345,7 @@
                                                 </td>
                                                 <td class="rownumber text-center" width="3%">{{$no}}</td>
                                                 <td width="30%">
-                                                    <input type="hidden" class="line_id" value="{{$row->line_id}}" name="line_id[]">
+                                                    <input type="hidden" class="line_id" id="line_id_{{$row->line_id}}" value="{{$row->line_id}}" name="line_id[]">
                                                     <input type="hidden" value="{{$row->id}}" name="id_line[]">
                                                     <input type="hidden" value="{{$row->split_line_id}}" name="split_line_id[]">
                                                     <input type="text" readonly class="form-control search_sales" value="{{$row->itemMaster->item_code}} {{$row->user_description_item}}" name="item_sales[]" autocomplete="off">
@@ -354,36 +357,49 @@
                                                
                                                 <td width="auto">
                                                     @if(($row->flow_status_code) ==5 || ($row->flow_status_code)==6)
-                                                    <input type="number" class="form-control recount text-end" readonly value="{{(float)$row->ordered_quantity}}" name="ordered_quantity[]" oninput="validity.valid||(value='');" min=1 >
+                                                    <input type="number" class="form-control recount text-end" {{ !is_null($sales->inv_number) ? 'readonly' : '' }} value="{{(float)$row->ordered_quantity}}" name="ordered_quantity[]" oninput="validity.valid||(value='');" min=1 >
                                                     @else
-                                                    <input type="number" class="form-control recount text-end" readonly value="{{(float)$row->ordered_quantity}}" name="ordered_quantity[]" >
+                                                    <input type="number" class="form-control recount text-end" {{ !is_null($sales->inv_number) ? 'readonly' : '' }} value="{{(float)$row->ordered_quantity}}" name="ordered_quantity[]" >
                                                     @endif
                                                 </td>
 
                                                 <td width="auto">
-                                                    <input type="text" style="text-align: right" readonly  class="form-control harga text-end" value="{{number_format($row->unit_selling_price, 2, ',', '.')}}" name="unit_selling_price[]">
+                                                    @if(is_null($sales->inv_number))
+                                                    <input type="number" step="0.01" class="form-control harga text-end" value="{{$row->unit_selling_price}}" name="unit_selling_price[]">
+                                                    @else
+                                                    <input type="text" style="text-align: right" readonly class="form-control harga text-end" value="{{number_format($row->unit_selling_price, 2, ',', '.')}}" name="unit_selling_price[]">
+                                                    @endif
                                                 </td>
                                                 <td width="auto">
-                                                    <input type="text" style="text-align: right" readonly  class="form-control harga text-end" value="{{number_format($row->disc)}}" name="disc[]">
+                                                    @if(is_null($sales->inv_number))
+                                                    <input type="number" step="0.01" class="form-control harga text-end" value="{{$row->disc}}" name="disc[]">
+                                                    @else
+                                                    <input type="text" style="text-align: right" readonly class="form-control harga text-end" value="{{number_format($row->disc)}}" name="disc[]">
+                                                    @endif
                                                 </td>
                                                 <td width="auto">
                                                     @if(($row->flow_status_code) ==5 || ($row->flow_status_code)==6)
-                                                    <input type="date" readonly value="{{$row->schedule_ship_date->format ('Y-m-d')}}" name="schedule_ship_date[]" class="form-control text-end">
+                                                    <input type="date" {{ !is_null($sales->inv_number) ? 'readonly' : '' }} value="{{$row->schedule_ship_date->format ('Y-m-d')}}" name="schedule_ship_date[]" class="form-control text-end">
                                                     @else
-                                                    <input type="date" class="form-control text-end" readonly value="{{$row->schedule_ship_date->format ('Y-m-d')}}" name="schedule_ship_date[]">
+                                                    <input type="date" {{ !is_null($sales->inv_number) ? 'readonly' : '' }} value="{{$row->schedule_ship_date->format ('Y-m-d')}}" name="schedule_ship_date[]" class="form-control text-end">
                                                     @endif
                                                 </td>
 
-                                                @php $taxAfter = (($row->unit_selling_price * $row->ordered_quantity)*($row->tax->tax_rate ?? 0)); @endphp
-                                                <input type="hidden" style="text-align: right" readonly id="pajak_hasil_{{$key+1}}" class="form-control pajak_hasil" value="{{number_format($taxAfter, 2, ',', '.') }}" name="pajak_hasil[]">
+                                                @php
+                                                    $taxMult    = $sales->tax_exempt_flag > 0 ? (1 + $sales->tax_exempt_flag / 100) : 1;
+                                                    $calcUnit   = ($row->ordered_quantity * $row->unit_selling_price) - ($row->disc ?? 0);
+                                                    $calcSutot  = $calcUnit / $taxMult;
+                                                    $taxAfter   = $calcUnit - $calcSutot;
+                                                    $subtotal   = $calcUnit;
+                                                @endphp
+                                                <input type="hidden" readonly id="pajak_hasil_{{$key+1}}" class="form-control pajak_hasil" value="{{number_format($taxAfter, 2, ',', '.')}}" name="pajak_hasil[]">
 
-                                                @php $subtotal =($row->unit_selling_price * $row->ordered_quantity + $taxAfter); @endphp
                                                 <td width="auto">
-                                                    <input type="text" readonly class="form-control search_sales" value="{{number_format($row->unit_percent_base_price, 2, ',', '.')}}" name="unitprice[]" autocomplete="off">
+                                                    <input type="text" readonly class="form-control search_sales" value="{{number_format($calcUnit, 2, ',', '.')}}" name="unitprice[]" autocomplete="off">
                                                 </td>
                                                 <td width="auto">
-                                                    <input type="text" style="text-align: right" readonly id="subtotal1_{{$key+1}}" class="form-control" name="subtotal[]" value="{{ number_format($row->unit_list_price, 2, ',', '.') }}">
-                                                    <input type="hidden" style="text-align: right" readonly id="subtotal_{{$key+1}}" class="form-control subtotal123" name="" value="{{ $subtotal}}">
+                                                    <input type="text" style="text-align: right" readonly id="subtotal1_{{$key+1}}" class="form-control" name="subtotal[]" value="{{ number_format($calcSutot, 2, ',', '.') }}">
+                                                    <input type="hidden" readonly id="subtotal_{{$key+1}}" class="form-control subtotal123" name="" value="{{ $calcUnit }}">
                                                 </td>
                                                 <!-- <td>
                                                     @if ($row->flow_status_code==12 || $row->flow_status_code==11 )
@@ -407,13 +423,15 @@
                                             @php $no++; @endphp
                                             @endforeach
                                         </tbody>
-                                        <!-- <tfoot>
+                                        @if(is_null($sales->inv_number))
+                                        <tfoot>
                                             <tr>
-                                                <td colspan="4">
+                                                <td colspan="9">
                                                     <button type="button" class="btn btn-light add_sales_order btn-sm" style="font-size: 12px;"><i data-feather='plus'></i> {{ trans('cruds.OrderManagement.field.addrow') }}</button>
                                                 </td>
                                             </tr>
-                                        </tfoot> -->
+                                        </tfoot>
+                                        @endif
                                     </table>
                                 </div>
                             </div>
@@ -650,8 +668,80 @@
     // jQuery for opening the modal when the button is clicked
     $(document).ready(function () {
         $('#createInvoiceBtn').on('click', function () {
-            $('#invoiceModal').modal('show'); // Show the modal
+            $('#invoiceModal').modal('show');
         });
+    });
+
+    // Patch: tambahkan id_line[] kosong ke setiap baris baru agar array tetap sinkron
+    $(document).on('click', '.add_sales_order', function () {
+        setTimeout(function () {
+            var lastRow = $('.sales_order_container tr.tr_input:last');
+            if (lastRow.find('input[name="id_line[]"]').length === 0) {
+                lastRow.find('td:first').append('<input type="hidden" name="id_line[]" value="">');
+            }
+            // Update nomor baris
+            $('.sales_order_container tr.tr_input').each(function (i) {
+                $(this).find('.rownumber').text(i + 1);
+            });
+        }, 50);
+    });
+
+    // ── Auto-kalkulasi harga pada edit SO ──────────────────────────────────────
+    var taxRateSO      = {{ (float)($sales->tax_exempt_flag ?? 0) }};
+    var taxMultiplierSO = taxRateSO > 0 ? (1 + taxRateSO / 100) : 1;
+
+    function fmtID(num) {
+        return num.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function recalcSORow($tr) {
+        var qty   = parseFloat($tr.find('input[name="ordered_quantity[]"]').val())    || 0;
+        var price = parseFloat($tr.find('input[name="unit_selling_price[]"]').val())  || 0;
+        var disc  = parseFloat($tr.find('input[name="disc[]"]').val())                || 0;
+
+        var unitprice = (qty * price) - disc;           // total dengan pajak
+        var sutot     = unitprice / taxMultiplierSO;    // dasar tanpa pajak
+
+        // Existing rows pakai name="unitprice[]", baris baru pakai name="unitprice_[]"
+        $tr.find('input[name="unitprice[]"], input[name="unitprice_[]"]').val(fmtID(unitprice));
+        // Existing rows pakai name="subtotal[]", baris baru pakai name="sutot[]"
+        $tr.find('input[name="subtotal[]"], input[name="sutot[]"]').val(fmtID(sutot));
+        $tr.find('.subtotal123').val(unitprice);
+    }
+
+    function recalcSOFooter() {
+        var total     = 0;
+        var sutotSum  = 0;
+
+        $('.sales_order_container tr.tr_input').each(function () {
+            var $tr   = $(this);
+            var qty   = parseFloat($tr.find('input[name="ordered_quantity[]"]').val())   || 0;
+            var price = parseFloat($tr.find('input[name="unit_selling_price[]"]').val()) || 0;
+            var disc  = parseFloat($tr.find('input[name="disc[]"]').val())               || 0;
+
+            var unitprice = (qty * price) - disc;
+            var sutot     = unitprice / taxMultiplierSO;
+
+            total    += unitprice;
+            sutotSum += sutot;
+        });
+
+        var ppn = total - sutotSum;
+
+        $('#tax_amount').val(fmtID(sutotSum));
+        $('#ppn').val(fmtID(ppn));
+        $('#total').val(fmtID(total));
+        $('.purchase_total').val(fmtID(total));
+    }
+
+    // Trigger kalkulasi saat nilai berubah
+    $(document).on('input', [
+        '.sales_order_container input[name="ordered_quantity[]"]',
+        '.sales_order_container input[name="unit_selling_price[]"]',
+        '.sales_order_container input[name="disc[]"]'
+    ].join(','), function () {
+        recalcSORow($(this).closest('tr'));
+        recalcSOFooter();
     });
 
     $(document).ready(function() {

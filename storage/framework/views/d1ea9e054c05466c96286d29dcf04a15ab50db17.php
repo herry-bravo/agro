@@ -75,6 +75,7 @@
                                         <input type="hidden" name="flag" class="form-control" value="<?php echo e($sales->open_flag); ?>" readonly>
                                         <input type="hidden" name="booked" class="form-control" value="<?php echo e($sales->booked_flag); ?>" readonly>
                                         <input type="hidden" name="org" class="form-control" value="<?php echo e($sales->org_id); ?>" readonly>
+                                        <input type="hidden" id="select_tax" value="<?php echo e($sales->tax_exempt_flag ?? 0); ?>">
                                         <?php if($errors->has('order_number')): ?>
                                         <em class="invalid-feedback">
                                             <?php echo e($errors->first('order_number')); ?>
@@ -280,7 +281,8 @@
                         </nav>
 
                         <div class="text-right">
-                            <!-- <button type="button" class="btn btn btn-outline-success float-right dropdown-toggle " data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <?php if(is_null($sales->inv_number)): ?>
+                            <button type="button" class="btn btn btn-outline-success float-right dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <?php echo e(trans('cruds.OrderManagement.field.action')); ?>
 
                             </button>
@@ -298,7 +300,8 @@
 
                                 </a>
                                 <div role="separator" class="dropdown-divider"></div>
-                            </div> -->
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <hr>
@@ -349,7 +352,7 @@
                                                 </td>
                                                 <td class="rownumber text-center" width="3%"><?php echo e($no); ?></td>
                                                 <td width="30%">
-                                                    <input type="hidden" class="line_id" value="<?php echo e($row->line_id); ?>" name="line_id[]">
+                                                    <input type="hidden" class="line_id" id="line_id_<?php echo e($row->line_id); ?>" value="<?php echo e($row->line_id); ?>" name="line_id[]">
                                                     <input type="hidden" value="<?php echo e($row->id); ?>" name="id_line[]">
                                                     <input type="hidden" value="<?php echo e($row->split_line_id); ?>" name="split_line_id[]">
                                                     <input type="text" readonly class="form-control search_sales" value="<?php echo e($row->itemMaster->item_code); ?> <?php echo e($row->user_description_item); ?>" name="item_sales[]" autocomplete="off">
@@ -361,36 +364,49 @@
                                                
                                                 <td width="auto">
                                                     <?php if(($row->flow_status_code) ==5 || ($row->flow_status_code)==6): ?>
-                                                    <input type="number" class="form-control recount text-end" readonly value="<?php echo e((float)$row->ordered_quantity); ?>" name="ordered_quantity[]" oninput="validity.valid||(value='');" min=1 >
+                                                    <input type="number" class="form-control recount text-end" <?php echo e(!is_null($sales->inv_number) ? 'readonly' : ''); ?> value="<?php echo e((float)$row->ordered_quantity); ?>" name="ordered_quantity[]" oninput="validity.valid||(value='');" min=1 >
                                                     <?php else: ?>
-                                                    <input type="number" class="form-control recount text-end" readonly value="<?php echo e((float)$row->ordered_quantity); ?>" name="ordered_quantity[]" >
+                                                    <input type="number" class="form-control recount text-end" <?php echo e(!is_null($sales->inv_number) ? 'readonly' : ''); ?> value="<?php echo e((float)$row->ordered_quantity); ?>" name="ordered_quantity[]" >
                                                     <?php endif; ?>
                                                 </td>
 
                                                 <td width="auto">
-                                                    <input type="text" style="text-align: right" readonly  class="form-control harga text-end" value="<?php echo e(number_format($row->unit_selling_price, 2, ',', '.')); ?>" name="unit_selling_price[]">
+                                                    <?php if(is_null($sales->inv_number)): ?>
+                                                    <input type="number" step="0.01" class="form-control harga text-end" value="<?php echo e($row->unit_selling_price); ?>" name="unit_selling_price[]">
+                                                    <?php else: ?>
+                                                    <input type="text" style="text-align: right" readonly class="form-control harga text-end" value="<?php echo e(number_format($row->unit_selling_price, 2, ',', '.')); ?>" name="unit_selling_price[]">
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td width="auto">
-                                                    <input type="text" style="text-align: right" readonly  class="form-control harga text-end" value="<?php echo e(number_format($row->disc)); ?>" name="disc[]">
+                                                    <?php if(is_null($sales->inv_number)): ?>
+                                                    <input type="number" step="0.01" class="form-control harga text-end" value="<?php echo e($row->disc); ?>" name="disc[]">
+                                                    <?php else: ?>
+                                                    <input type="text" style="text-align: right" readonly class="form-control harga text-end" value="<?php echo e(number_format($row->disc)); ?>" name="disc[]">
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td width="auto">
                                                     <?php if(($row->flow_status_code) ==5 || ($row->flow_status_code)==6): ?>
-                                                    <input type="date" readonly value="<?php echo e($row->schedule_ship_date->format ('Y-m-d')); ?>" name="schedule_ship_date[]" class="form-control text-end">
+                                                    <input type="date" <?php echo e(!is_null($sales->inv_number) ? 'readonly' : ''); ?> value="<?php echo e($row->schedule_ship_date->format ('Y-m-d')); ?>" name="schedule_ship_date[]" class="form-control text-end">
                                                     <?php else: ?>
-                                                    <input type="date" class="form-control text-end" readonly value="<?php echo e($row->schedule_ship_date->format ('Y-m-d')); ?>" name="schedule_ship_date[]">
+                                                    <input type="date" <?php echo e(!is_null($sales->inv_number) ? 'readonly' : ''); ?> value="<?php echo e($row->schedule_ship_date->format ('Y-m-d')); ?>" name="schedule_ship_date[]" class="form-control text-end">
                                                     <?php endif; ?>
                                                 </td>
 
-                                                <?php $taxAfter = (($row->unit_selling_price * $row->ordered_quantity)*($row->tax->tax_rate ?? 0)); ?>
-                                                <input type="hidden" style="text-align: right" readonly id="pajak_hasil_<?php echo e($key+1); ?>" class="form-control pajak_hasil" value="<?php echo e(number_format($taxAfter, 2, ',', '.')); ?>" name="pajak_hasil[]">
+                                                <?php
+                                                    $taxMult    = $sales->tax_exempt_flag > 0 ? (1 + $sales->tax_exempt_flag / 100) : 1;
+                                                    $calcUnit   = ($row->ordered_quantity * $row->unit_selling_price) - ($row->disc ?? 0);
+                                                    $calcSutot  = $calcUnit / $taxMult;
+                                                    $taxAfter   = $calcUnit - $calcSutot;
+                                                    $subtotal   = $calcUnit;
+                                                ?>
+                                                <input type="hidden" readonly id="pajak_hasil_<?php echo e($key+1); ?>" class="form-control pajak_hasil" value="<?php echo e(number_format($taxAfter, 2, ',', '.')); ?>" name="pajak_hasil[]">
 
-                                                <?php $subtotal =($row->unit_selling_price * $row->ordered_quantity + $taxAfter); ?>
                                                 <td width="auto">
-                                                    <input type="text" readonly class="form-control search_sales" value="<?php echo e(number_format($row->unit_percent_base_price, 2, ',', '.')); ?>" name="unitprice[]" autocomplete="off">
+                                                    <input type="text" readonly class="form-control search_sales" value="<?php echo e(number_format($calcUnit, 2, ',', '.')); ?>" name="unitprice[]" autocomplete="off">
                                                 </td>
                                                 <td width="auto">
-                                                    <input type="text" style="text-align: right" readonly id="subtotal1_<?php echo e($key+1); ?>" class="form-control" name="subtotal[]" value="<?php echo e(number_format($row->unit_list_price, 2, ',', '.')); ?>">
-                                                    <input type="hidden" style="text-align: right" readonly id="subtotal_<?php echo e($key+1); ?>" class="form-control subtotal123" name="" value="<?php echo e($subtotal); ?>">
+                                                    <input type="text" style="text-align: right" readonly id="subtotal1_<?php echo e($key+1); ?>" class="form-control" name="subtotal[]" value="<?php echo e(number_format($calcSutot, 2, ',', '.')); ?>">
+                                                    <input type="hidden" readonly id="subtotal_<?php echo e($key+1); ?>" class="form-control subtotal123" name="" value="<?php echo e($calcUnit); ?>">
                                                 </td>
                                                 <!-- <td>
                                                     <?php if($row->flow_status_code==12 || $row->flow_status_code==11 ): ?>
@@ -414,13 +430,15 @@
                                             <?php $no++; ?>
                                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </tbody>
-                                        <!-- <tfoot>
+                                        <?php if(is_null($sales->inv_number)): ?>
+                                        <tfoot>
                                             <tr>
-                                                <td colspan="4">
+                                                <td colspan="9">
                                                     <button type="button" class="btn btn-light add_sales_order btn-sm" style="font-size: 12px;"><i data-feather='plus'></i> <?php echo e(trans('cruds.OrderManagement.field.addrow')); ?></button>
                                                 </td>
                                             </tr>
-                                        </tfoot> -->
+                                        </tfoot>
+                                        <?php endif; ?>
                                     </table>
                                 </div>
                             </div>
@@ -659,8 +677,80 @@
     // jQuery for opening the modal when the button is clicked
     $(document).ready(function () {
         $('#createInvoiceBtn').on('click', function () {
-            $('#invoiceModal').modal('show'); // Show the modal
+            $('#invoiceModal').modal('show');
         });
+    });
+
+    // Patch: tambahkan id_line[] kosong ke setiap baris baru agar array tetap sinkron
+    $(document).on('click', '.add_sales_order', function () {
+        setTimeout(function () {
+            var lastRow = $('.sales_order_container tr.tr_input:last');
+            if (lastRow.find('input[name="id_line[]"]').length === 0) {
+                lastRow.find('td:first').append('<input type="hidden" name="id_line[]" value="">');
+            }
+            // Update nomor baris
+            $('.sales_order_container tr.tr_input').each(function (i) {
+                $(this).find('.rownumber').text(i + 1);
+            });
+        }, 50);
+    });
+
+    // ── Auto-kalkulasi harga pada edit SO ──────────────────────────────────────
+    var taxRateSO      = <?php echo e((float)($sales->tax_exempt_flag ?? 0)); ?>;
+    var taxMultiplierSO = taxRateSO > 0 ? (1 + taxRateSO / 100) : 1;
+
+    function fmtID(num) {
+        return num.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function recalcSORow($tr) {
+        var qty   = parseFloat($tr.find('input[name="ordered_quantity[]"]').val())    || 0;
+        var price = parseFloat($tr.find('input[name="unit_selling_price[]"]').val())  || 0;
+        var disc  = parseFloat($tr.find('input[name="disc[]"]').val())                || 0;
+
+        var unitprice = (qty * price) - disc;           // total dengan pajak
+        var sutot     = unitprice / taxMultiplierSO;    // dasar tanpa pajak
+
+        // Existing rows pakai name="unitprice[]", baris baru pakai name="unitprice_[]"
+        $tr.find('input[name="unitprice[]"], input[name="unitprice_[]"]').val(fmtID(unitprice));
+        // Existing rows pakai name="subtotal[]", baris baru pakai name="sutot[]"
+        $tr.find('input[name="subtotal[]"], input[name="sutot[]"]').val(fmtID(sutot));
+        $tr.find('.subtotal123').val(unitprice);
+    }
+
+    function recalcSOFooter() {
+        var total     = 0;
+        var sutotSum  = 0;
+
+        $('.sales_order_container tr.tr_input').each(function () {
+            var $tr   = $(this);
+            var qty   = parseFloat($tr.find('input[name="ordered_quantity[]"]').val())   || 0;
+            var price = parseFloat($tr.find('input[name="unit_selling_price[]"]').val()) || 0;
+            var disc  = parseFloat($tr.find('input[name="disc[]"]').val())               || 0;
+
+            var unitprice = (qty * price) - disc;
+            var sutot     = unitprice / taxMultiplierSO;
+
+            total    += unitprice;
+            sutotSum += sutot;
+        });
+
+        var ppn = total - sutotSum;
+
+        $('#tax_amount').val(fmtID(sutotSum));
+        $('#ppn').val(fmtID(ppn));
+        $('#total').val(fmtID(total));
+        $('.purchase_total').val(fmtID(total));
+    }
+
+    // Trigger kalkulasi saat nilai berubah
+    $(document).on('input', [
+        '.sales_order_container input[name="ordered_quantity[]"]',
+        '.sales_order_container input[name="unit_selling_price[]"]',
+        '.sales_order_container input[name="disc[]"]'
+    ].join(','), function () {
+        recalcSORow($(this).closest('tr'));
+        recalcSOFooter();
     });
 
     $(document).ready(function() {

@@ -188,40 +188,28 @@
                                             </thead>
                                             <tbody>
                                                 @php
-                                                    $unitprice = 0; // Variabel untuk menyimpan total
-                                                    $total = 0; // Variabel untuk menyimpan total
-                                                    $tax = 0; // Variabel untuk menyimpan total
+                                                    $taxMult   = $sales->tax_exempt_flag > 0 ? (1 + $sales->tax_exempt_flag / 100) : 1;
+                                                    $unitprice = 0;
+                                                    $total     = 0;
+                                                    $tax       = 0;
                                                 @endphp
                                                 @foreach($so_detil as $row)
+                                                    @php
+                                                        $calcUnit  = ($row->ordered_quantity * $row->unit_selling_price) - ($row->disc ?? 0);
+                                                        $calcSutot = $calcUnit / $taxMult;
+                                                    @endphp
                                                     <tr>
-                                                        <td>
-
-                                                        </td>
-                                                        <td>
-                                                            {{ $row->user_description_item ?? '' }}
-                                                        </td>
-                                                        <td>
-                                                            {{ number_format($row->ordered_quantity ?? '') }}
-
-                                                        </td>
-                                                        <td>
-                                                            {{ number_format($row->unit_selling_price ?? '') }}
-
-                                                        </td>
-                                                        <td>
-                                                            {{ \Carbon\Carbon::parse($row->schedule_ship_date)->format('d-m-Y') ?? '' }}
-                                                        </td>
-                                                        <td>
-                                                            {{ number_format($row->unit_percent_base_price ?? '') }}
-                                                        </td>
-                                                        <td>
-                                                            {{ number_format($row->unit_list_price ?? '') }}
-                                                        </td>
+                                                        <td></td>
+                                                        <td>{{ $row->user_description_item ?? '' }}</td>
+                                                        <td>{{ number_format((float)($row->ordered_quantity ?? 0)) }}</td>
+                                                        <td>{{ number_format((float)($row->unit_selling_price ?? 0)) }}</td>
+                                                        <td>{{ \Carbon\Carbon::parse($row->schedule_ship_date)->format('d-m-Y') }}</td>
+                                                        <td>{{ number_format($calcUnit, 2, ',', '.') }}</td>
+                                                        <td>{{ number_format($calcSutot, 2, ',', '.') }}</td>
                                                         @php
-                                                            // Tambahkan hasil perkalian ke total
-                                                            $unitprice += $row->unit_percent_base_price ?? 0;
-                                                            $total += $row->unit_list_price ?? 0;
-                                                            $tax = $unitprice - $total;
+                                                            $unitprice += $calcUnit;
+                                                            $total     += $calcSutot;
+                                                            $tax        = $unitprice - $total;
                                                         @endphp
                                                     </tr>
                                                 @endforeach
@@ -273,8 +261,10 @@
                                             <tbody class="sales_order_shipment_container">
                                                 @foreach($so_detil as $row)
                                                     @php
-                                                        $drValue = 0; // Karena DR pada loop pertama selalu 0
-                                                        $crValue = $row->unit_list_price;
+                                                        $calcUnit2  = ($row->ordered_quantity * $row->unit_selling_price) - ($row->disc ?? 0);
+                                                        $calcSutot2 = $calcUnit2 / $taxMult;
+                                                        $drValue = 0;
+                                                        $crValue = $calcSutot2;
                                                         $totalDr += $drValue;
                                                         $totalCr += $crValue;
                                                     @endphp
@@ -389,7 +379,7 @@
 
                                                 @foreach($so_detil as $row)
                                                     @php
-                                                        $drValue = $row->unit_percent_base_price; // DR pada loop ketiga selalu 0
+                                                        $drValue = ($row->ordered_quantity * $row->unit_selling_price) - ($row->disc ?? 0);
                                                         $crValue = 0;
                                                         $totalDr += $drValue;
                                                         $totalCr += $crValue;

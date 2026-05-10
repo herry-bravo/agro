@@ -174,6 +174,12 @@ class SalesOrderController extends Controller
     {
         abort_if(Gate::denies('order_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
         $sales = SalesOrder::where('header_id',$id)->select('*')->first();
+
+        if (!is_null($sales->inv_number)) {
+            return redirect()->route('admin.salesorder.show', $sales->id)
+                ->with('message', 'Sales Order tidak dapat diedit karena sudah memiliki Invoice.');
+        }
+
         $sales_team = User::all();
         $customer = Customer::all();
         $salesDetail = SalesOrderDetail::where('header_id','=',$sales->header_id)->whereNull('deleted_at')->get();
@@ -204,98 +210,52 @@ class SalesOrderController extends Controller
                 // $header->deliver_to_org_id = $request->deliver_to_org_id;
                 // $header->freight_terms_code = $request->freight_terms_code;
                 $header->booked_flag = $request->flow_status_code;
-                // $header->attribute3 = $request->attribute3;
                 $header->save();
 
-                // try {
-                //     DB::beginTransaction();
-
-                //     foreach($request->inventory_item_id as $key =>$inventory_item_id){
-                //         //edit line status
-                //         $statusLine =$request->flow_status_code;
-                //         // dd($statusLine);
-                //         if( $statusLine == 1){
-                //             $statusLine = 6;
-                //         }elseif($statusLine == 14){
-                //             $statusLine = 5;
-                //         }
-                //         else{
-                //             $statusLine = $request->flow_status[$key];
-                //         }
-
-                //         //add new line
-                //         if(empty($request->line_id[$key])){
-                //             if($request->flow_status_code == 14 Or $request->flow_status_code== 6 or $request->flow_status_code== 5 or $request->flow_status_code== 1 ){
-                //                 $line_id = SalesOrderDetail::where(['header_id'=>$request->headerId,'line_id'=>$request->line_id])
-                //                                     ->latest()->first()->line_id+1;
-                //                 $data = array(
-                //                     'header_id'=>$request->headerId,
-                //                     'line_id'=>$key+1,
-                //                     'split_line_id'=>$key+1,
-                //                     'inventory_item_id'=>$request->inventory_item_id [$key],
-                //                     'user_description_item'=>$request->product_name [$key],
-                //                     'order_quantity_uom'=>'KG',
-                //                     'unit_selling_price'=>$request->unit_selling_price [$key],
-                //                     'packing_style'=>$request->packing_style[$key],
-                //                     'shipping_inventory'=>$request->shipping_inventory[$key],
-                //                     'attribute_number_gsm'=>$request->attribute_number_gsm[$key],
-                //                     'attribute_number_w'=>$request->attribute_number_w[$key],
-                //                     'attribute_number_l'=>$request->attribute_number_l[$key],
-                //                     'ordered_quantity'=>$request->ordered_quantity [$key],
-                //                     'price_list_id'=>$request->price_list_id [$key],
-                //                     'pricing_attribute1'=>$request->pricing_attribute1 [$key],
-                //                     'schedule_ship_date'=>$request->schedule_ship_date [$key],
-                //                     'line_number'=>$request->line_number [$key],
-                //                     'flow_status_code'=>$statusLine,
-                //                     'tax_code'=>\App\Tax::where('tax_rate',$request->tax_code[$key])->first()->tax_code,
-                //                     'org_id'=>Auth::user()->org_id,
-                //                 );
-                //                 $check=SalesOrderDetail::where([['header_id',$request->headerId],['line_id',$key+1],['split_line_id',$key+1]])->get();
-                //                 if(!$check){
-                //                 SalesOrderDetail::create($data);
-                //                 }else{
-                //                     SalesOrderDetail::updateOrCreate($data);
-                //                 }
-                //             }else{
-                //                 return back()->with('error', 'Not Allow to Add New Row');
-                //             }
-                //         }else{
-                //             $data=SalesOrderDetail::find($request->id_line[$key]);
-                //             $data->header_id = $request->headerId;
-                //             $data->line_id= $request->line_id [$key];
-                //             $data->split_line_id = $request->split_line_id [$key];
-                //             $data->inventory_item_id = $request->inventory_item_id [$key];
-                //             $data->user_description_item = $request->product_name [$key];
-                //             $data->order_quantity_uom ='KG';
-                //             $data->unit_selling_price =$request->unit_selling_price [$key];
-                //             $data->attribute_number_gsm =$request->attribute_number_gsm [$key];
-                //             $data->attribute_number_w =$request->attribute_number_w [$key];
-                //             $data->attribute_number_l =$request->attribute_number_l [$key];
-                //             $data->line_number =$request->line_number [$key];
-                //             $data->packing_style =$request->packing_style[$key];
-                //             $data->shipping_inventory =$request->shipping_inventory[$key];
-                //             $data->ordered_quantity =$request->ordered_quantity [$key];
-                //             $data->price_list_id =$request->price_list_id [$key];
-                //             $data->schedule_ship_date =$request->schedule_ship_date [$key];
-                //             $data->flow_status_code =$statusLine;
-                //             // $data->tax_code =$request->tax_code [$key];
-                //             $data->updated_at=date('Y-m-d H:i:s');
-                //             $data->save();
-                //         }
-
-                //     }
-
-                //     DB::commit();
-                // }catch (Throwable $e){
-                //     dd($e);
-                //     DB::rollback();
-                //     return back()->with('error','Data Cant be empty '.$e.'');
-                // }
+                // Update / tambah baris detail SO
+                if ($request->has('id_line')) {
+                    foreach ($request->id_line as $key => $id) {
+                        if (!empty($id)) {
+                            // Update baris existing
+                            $detail = SalesOrderDetail::find($id);
+                            if ($detail) {
+                                $detail->ordered_quantity   = $request->ordered_quantity[$key];
+                                $detail->unit_selling_price = (float) $request->unit_selling_price[$key];
+                                $detail->disc               = (float) ($request->disc[$key] ?? 0);
+                                $detail->schedule_ship_date = $request->schedule_ship_date[$key];
+                                $detail->save();
+                            }
+                        } elseif (!empty($request->inventory_item_id[$key])) {
+                            // Buat baris baru
+                            $nextLineId = (SalesOrderDetail::where('header_id', $header->header_id)->max('line_id') ?? 0) + 1;
+                            SalesOrderDetail::create([
+                                'header_id'            => $header->header_id,
+                                'line_id'              => $nextLineId,
+                                'split_line_id'        => $nextLineId,
+                                'inventory_item_id'    => $request->inventory_item_id[$key],
+                                'user_description_item'=> $request->item_sales[$key] ?? '',
+                                'ordered_quantity'     => $request->ordered_quantity[$key],
+                                'unit_selling_price'   => (float) $request->unit_selling_price[$key],
+                                'disc'                 => (float) ($request->disc[$key] ?? 0),
+                                'schedule_ship_date'   => $request->schedule_ship_date[$key],
+                                'order_quantity_uom'   => 'KG',
+                                'flow_status_code'     => 5,
+                                'org_id'               => Auth::user()->org_id,
+                                'created_by'           => Auth::user()->id,
+                            ]);
+                        }
+                    }
+                }
             break;
             case 'add_lines':
                 // add split line on edit
                 $new_split_lines = SalesOrderDetail::find($request->req_line_id);
                 $header = SalesOrder::find($request->header_id);
+
+                if (!is_null($header->inv_number)) {
+                    return back()->with('error', 'Tidak dapat menambah baris, SO sudah memiliki Invoice.');
+                }
+
                 $new_lines = array(
                      'header_id'=> $new_split_lines->header_id,
                      'line_id'=>  SalesOrderDetail::where(['header_id'=>$new_split_lines->header_id,'line_id'=>$new_split_lines->line_id])
@@ -457,6 +417,10 @@ class SalesOrderController extends Controller
 
                 $header = SalesOrder::find($request->header_id);
 
+                if (!is_null($header->inv_number)) {
+                    return back()->with('error', 'Tidak dapat split baris, SO sudah memiliki Invoice.');
+                }
+
                 if($header->open_flag == 14){
                     $nilaisplit=DB::table('bm_order_lines_all')->where('header_id',$request->headerId)->where('line_id',$request->linenya)->latest()->first();
                     $new_lines = array(
@@ -503,6 +467,11 @@ class SalesOrderController extends Controller
                 $idDelete = $request->item_ids;
                 if($idDelete==null){
                     return back()->with('error','Please select row');
+                }
+
+                $header = SalesOrder::find($request->header_id);
+                if (!is_null($header->inv_number)) {
+                    return back()->with('error', 'Tidak dapat menghapus baris, SO sudah memiliki Invoice.');
                 }
 
                 $deleteAll = SalesOrderDetail::whereIn('id',$idDelete)
