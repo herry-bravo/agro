@@ -729,6 +729,30 @@ class SearchController extends Controller
         ]);
 	}
 
+    public function warehouseByItem(Request $request)
+    {
+        $itemId = $request->inventory_item_id;
+
+        $rows = \App\Onhand::select('subinventory_code')
+            ->selectRaw('SUM(primary_transaction_quantity) as qty')
+            ->where('inventory_item_id', $itemId)
+            ->where('primary_transaction_quantity', '>', 0)
+            ->where('subinventory_code', '!=', '9STG')
+            ->groupBy('subinventory_code')
+            ->get();
+
+        $result = [];
+        foreach ($rows as $row) {
+            $sub = \App\Subinventories::where('sub_inventory_name', $row->subinventory_code)->first();
+            $result[] = [
+                'code'  => $row->subinventory_code,
+                'label' => $row->subinventory_code . ' - ' . ($sub->description ?? $row->subinventory_code) . ' (Stok: ' . number_format($row->qty, 0) . ')',
+            ];
+        }
+
+        return response()->json($result);
+    }
+
 	public function subinventory(Request $request){
 
         // dd('test');
@@ -4412,7 +4436,6 @@ class SearchController extends Controller
         foreach ($records as $record) {
             $qty = \App\DeliveryDetail::where('delivery_detail_id','=',$record->delivery_id)->sum('requested_quantity');
             $roll = \App\DeliveryDistrib::where('header_id','=',$record->delivery_id)->select(DB::raw('count(container_item_id) as roll, sum(attribute_number1) as qty'))->first();
-            dd($record);
 
             $data_arr[] = array(
                 "id" => $record->delivery_id,

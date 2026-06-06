@@ -52,7 +52,9 @@ class SalesOrderController extends Controller
         $terms = Terms::get();
         $tax = \App\Tax::get();
         $currency = CurrencyGlobal::get();
-        return view('admin.sales.create', compact('sales_team','price', 'customer', 'currency', 'terms','site','tax'))->with('no',1);
+        $subinventories = \App\Subinventories::select('sub_inventory_name', 'description')
+            ->whereNull('deleted_at')->orderBy('sub_inventory_name')->get();
+        return view('admin.sales.create', compact('sales_team','price', 'customer', 'currency', 'terms','site','tax','subinventories'))->with('no',1);
     }
 
     public function store(StoreSalesOrderRequest $request)
@@ -188,8 +190,9 @@ class SalesOrderController extends Controller
         $site = Site::all();
         $currency = CurrencyGlobal::where('currency_status', 1)->get();
         $tax = \App\Tax::get();
-        // dd($sales);
-        return view('admin.sales.edit', compact('sales_team','site','price','salesDetail','sales', 'customer', 'currency', 'terms','tax'));
+        $subinventories = \App\Subinventories::select('sub_inventory_name', 'description')
+            ->whereNull('deleted_at')->orderBy('sub_inventory_name')->get();
+        return view('admin.sales.edit', compact('sales_team','site','price','salesDetail','sales', 'customer', 'currency', 'terms','tax','subinventories'));
     }
 
     public function update(UpdateSalesOrderRequest $request)
@@ -223,6 +226,7 @@ class SalesOrderController extends Controller
                                 $detail->unit_selling_price = (float) $request->unit_selling_price[$key];
                                 $detail->disc               = (float) ($request->disc[$key] ?? 0);
                                 $detail->schedule_ship_date = $request->schedule_ship_date[$key];
+                                $detail->shipping_inventory = $request->shipping_inventory[$key] ?? $detail->shipping_inventory;
                                 $detail->save();
                             }
                         } elseif (!empty($request->inventory_item_id[$key])) {
@@ -239,6 +243,7 @@ class SalesOrderController extends Controller
                                 'disc'                 => (float) ($request->disc[$key] ?? 0),
                                 'schedule_ship_date'   => $request->schedule_ship_date[$key],
                                 'order_quantity_uom'   => 'KG',
+                                'shipping_inventory'   => $request->shipping_inventory[$key] ?? null,
                                 'flow_status_code'     => 5,
                                 'org_id'               => Auth::user()->org_id,
                                 'created_by'           => Auth::user()->id,
@@ -506,13 +511,134 @@ class SalesOrderController extends Controller
     {
         abort_if(Gate::denies('order_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        // $order->load('products');
         $sales = SalesOrder::find($id);
         $detail = SalesOrderDetail::where('header_id',$sales->header_id)->get();
-        // dd($detail);
 
         return view('admin.sales.view', compact('sales','detail'));
     }
+
+    public function konfirmasiKirim($id)
+    {
+        abort_if(Gate::denies('order_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $sales = SalesOrder::find($id);
+
+        if ($sales->open_flag == 12) {
+            return redirect()->route('admin.salesorder.show', $id)
+                ->with('error', 'Sales Order ini sudah selesai dikirim.');
+        }
+
+        $detail = SalesOrderDetail::where('header_id', $sales->header_id)
+            ->whereNull('deleted_at')
+            ->get();
+
+        $stock = [];
+        foreach ($detail as $line) {
+            $stock[$line->inventory_item_id] = Onhand::where('inventory_item_id', $line->inventory_item_id)
+                ->where('primary_transaction_quantity', '>', 0)
+                ->where('subinventory_code', '!=', '9STG')
+                ->get();
+        }
+
+        return view('admin.sales.konfirmasi-kirim', compact('sales', 'detail', 'stock'));
+    }
+
+    public function prosesKirim(Request $request)
+    {
+        $request->validate([
+            'sales_id'   => 'required',
+            'ship_date'  => 'required|date',
+            'line_id'    => 'required|array',
+            'warehouse'  => 'required|array',
+            'qty'        => 'required|array',
+        ]);
+
+        $sales = SalesOrder::find($request->sales_id);
+
+        if ($sales->open_flag == 12) {
+            return back()->with('error', 'Sales Order ini sudah selesai dikirim.');
+        }
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->line_id as $key => $line_id) {
+                $line      = SalesOrderDetail::find($line_id);
+                $warehouse = $request->warehouse[$key];
+                $qty       = $request->qty[$key];
+
+                $onhand = Onhand::where('inventory_item_id', $line->inventory_item_id)
+                    ->where('subinventory_code', $warehouse)
+                    ->first();
+
+                if (!$onhand || $onhand->primary_transaction_quantity < $qty) {
+                    DB::rollBack();
+                    return back()->with('error', 'Stock tidak cukup untuk item "' . $line->user_description_item . '" di gudang ' . $warehouse);
+                }
+
+                $onhand->primary_transaction_quantity -= $qty;
+                $onhand->save();
+
+                MaterialTxns::create([
+                    'inventory_item_id'          => $line->inventory_item_id,
+                    'subinventory_code'          => $warehouse,
+                    'transaction_type_id'        => 33,
+                    'transaction_quantity'        => -$qty,
+                    'primary_quantity'            => -$qty,
+                    'transaction_date'            => $request->ship_date,
+                    'transaction_uom'             => $line->order_quantity_uom,
+                    'transaction_source_id'       => $sales->header_id,
+                    'transaction_source_name'     => $sales->order_number,
+                    'created_by'                  => Auth::user()->id,
+                ]);
+
+                $line->flow_status_code   = 12;
+                $line->fulfilled_quantity = $qty;
+                $line->shipped_quantity   = $qty;
+                $line->fulfillment_date   = now();
+                $line->save();
+            }
+
+            $sales->open_flag = 12;
+            $sales->save();
+
+            if ($request->buat_sj) {
+                $delivery = DeliveryHeader::where('order_number', $sales->order_number)->first();
+                if ($delivery) {
+                    $delivery->status_code      = 12;
+                    $delivery->lvl              = 12;
+                    $delivery->actual_ship_date = $request->ship_date;
+                    $delivery->confirmed_by     = Auth::user()->id;
+                    $delivery->save();
+                }
+            }
+
+            DB::commit();
+
+            if ($request->buat_sj) {
+                return redirect()->route('admin.salesorder.surat-jalan', $sales->id)
+                    ->with('success', 'Pengiriman berhasil. Surat jalan siap dicetak.');
+            }
+
+            return redirect()->route('admin.salesorder.index')
+                ->with('success', 'Pengiriman berhasil diproses.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    public function suratJalan($id)
+    {
+        abort_if(Gate::denies('order_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $sales    = SalesOrder::find($id);
+        $detail   = SalesOrderDetail::where('header_id', $sales->header_id)->get();
+        $delivery = DeliveryHeader::where('order_number', $sales->order_number)->first();
+
+        return view('admin.sales.surat-jalan', compact('sales', 'detail', 'delivery'));
+    }
+
     public function delete(Request $request,$id){
         dd('masuk rana delete');
     }

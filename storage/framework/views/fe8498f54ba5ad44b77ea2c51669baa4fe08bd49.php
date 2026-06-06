@@ -211,6 +211,8 @@
                                 </li>
                                 <li data-menu=""><a class="dropdown-item d-flex align-items-center" href="<?php echo e(route('admin.customer.index')); ?>" data-bs-toggle="" data-i18n=""><i data-feather="check-circle"></i><span data-i18n="">Customer</span></a>
                                 </li>
+                                <li data-menu=""><a class="dropdown-item d-flex align-items-center" href="<?php echo e(route('admin.pos.index')); ?>" data-bs-toggle="" data-i18n=""><i data-feather="shopping-cart"></i><span data-i18n="">Point of Sale</span></a>
+                                </li>
                             </ul>
                         </li>
                         <?php endif; ?>
@@ -392,4 +394,74 @@
     </div>
 </div>
 <!-- END: Main Menu-->
+<style>
+/* Hover & active state fix for horizontal navbar */
+#main-menu-navigation > li > a.nav-link:hover,
+#main-menu-navigation > li > a.nav-link:focus {
+    background: rgba(255,255,255,.12) !important;
+    border-radius: 6px;
+}
+#main-menu-navigation > li.active > a.nav-link,
+#main-menu-navigation > li > a.nav-link.active {
+    background: rgba(255,255,255,.18) !important;
+    border-radius: 6px;
+    font-weight: 600;
+}
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+    background-color: #f1f5f9 !important;
+    color: #1e293b !important;
+}
+.dropdown-menu .dropdown-item.active {
+    background-color: #e8f0fe !important;
+    color: #1a56db !important;
+    font-weight: 600;
+}
+.dropdown-menu .dropdown-submenu > a.dropdown-item:hover {
+    background-color: #f1f5f9 !important;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var currentPath = window.location.pathname;
+
+    // Mark active dropdown-item links
+    document.querySelectorAll('#main-menu-navigation .dropdown-item').forEach(function (link) {
+        var href = link.getAttribute('href');
+        if (!href || href === '#') return;
+
+        try {
+            var linkPath = new URL(href, window.location.origin).pathname;
+            if (currentPath === linkPath || currentPath.startsWith(linkPath + '/')) {
+                link.classList.add('active');
+
+                // Propagate active up to parent dropdown toggles
+                var parent = link.closest('ul.dropdown-menu');
+                while (parent) {
+                    var toggle = parent.previousElementSibling;
+                    if (toggle && toggle.classList.contains('dropdown-toggle')) {
+                        toggle.classList.add('active');
+                    }
+                    // Move up one level
+                    var grandParent = parent.closest('li.dropdown');
+                    if (!grandParent) break;
+                    parent = grandParent.closest('ul.dropdown-menu');
+                }
+            }
+        } catch (e) {}
+    });
+
+    // Mark active top-level nav-link (Dashboard direct link)
+    document.querySelectorAll('#main-menu-navigation > li > a.nav-link').forEach(function (link) {
+        var href = link.getAttribute('href');
+        if (!href || href === '#') return;
+        try {
+            var linkPath = new URL(href, window.location.origin).pathname;
+            if (currentPath === linkPath) {
+                link.closest('li').classList.add('active');
+            }
+        } catch (e) {}
+    });
+});
+</script>
 <?php /**PATH C:\laragon\www\agro\resources\views/partials/sidebar.blade.php ENDPATH**/ ?>

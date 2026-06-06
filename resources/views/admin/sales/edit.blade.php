@@ -43,6 +43,15 @@
                                     </svg>
                                     Delivery Order
                                 </a>
+                                @if($sales->open_flag != 12)
+                                    <a class="btn btn-success" href="{{ route('admin.salesorder.konfirmasi-kirim', $sales->id) }}">
+                                        <i class="fa fa-truck"></i> Kirim
+                                    </a>
+                                @else
+                                    <a class="btn btn-info" href="{{ route('admin.salesorder.surat-jalan', $sales->id) }}">
+                                        <i class="fa fa-print"></i> Cetak Surat Jalan
+                                    </a>
+                                @endif
                                 @if (is_null($sales->inv_number))
                                     <a class="btn btn-primary" href="{{ route('admin.invoices.create', ['header_id' => $sales->header_id]) }}">
                                     <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -108,7 +117,7 @@
                                             @endif
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-2">
                                         <label class="form-label" for="customer_currency">{{ trans('cruds.order.fields.customer_currency') }}</label>
                                         <select name="customer_currency" id="customer_currency" class="form-control select2" required value="{{$sales->attribute1}}">
                                             <!-- {{-- @foreach($currency as $row)
@@ -215,14 +224,9 @@
                                         </em>
                                         @endif
                                     </div> -->
-                                    <div class="col-md-2">
+                                    <div class="col-md-2" style="display:none;">
                                         <label class="form-label" for="terms_start">{{ trans('cruds.order.fields.customer_po') }}</label>
-                                        <input readonly type="text" id="terms_start" name="cust_po_number" class="form-control" value="{{ old('cust_po_number', isset($sales) ? $sales->cust_po_number : '') }}" required>
-                                        @if($errors->has('terms_start'))
-                                        <em class="invalid-feedback">
-                                            {{ $errors->first('terms_start') }}
-                                        </em>
-                                        @endif
+                                        <input type="hidden" id="terms_start" name="cust_po_number" class="form-control" value="{{ old('cust_po_number', isset($sales) ? $sales->cust_po_number : '') }}">
                                     </div>
                                     @php
                                         $paymentMethodValue = old('attribute3', isset($sales) ? $sales->attribute3 : '');
@@ -236,7 +240,7 @@
                                         };
                                     @endphp
 
-                                    <div class="col-md-2">
+                                    <div class="col-md-4">
                                         <label class="form-label" for="paymentmethod">{{ trans('cruds.order.fields.paymentmethod') }}</label>
                                         <select id="paymentmethod" name="paymentmethod" class="form-control select2" required>
                                             @foreach($terms as $row)
@@ -317,7 +321,8 @@
 
                                                 <th scope="col" class="text-center">{{ trans('cruds.OrderManagement.field.price') }}</th>
                                                 <th scope="col" class="text-center">Disc</th>
-                                                <th width="auto" scope="col">{{ trans('cruds.OrderManagement.field.shipmentschedule') }}</th>
+                                                <th scope="col" class="text-center">Warehouse</th>
+                                                <th width="auto" scope="col" style="display:none;">{{ trans('cruds.OrderManagement.field.shipmentschedule') }}</th>
                                                 <th width="auto" scope="col">{{ trans('cruds.OrderManagement.field.up') }}</th>
 
                                                 <th scope="col" class="text-end">{{ trans('cruds.OrderManagement.field.subtotal') }}</th>
@@ -377,12 +382,14 @@
                                                     <input type="text" style="text-align: right" readonly class="form-control harga text-end" value="{{number_format($row->disc)}}" name="disc[]">
                                                     @endif
                                                 </td>
-                                                <td width="auto">
-                                                    @if(($row->flow_status_code) ==5 || ($row->flow_status_code)==6)
-                                                    <input type="date" {{ !is_null($sales->inv_number) ? 'readonly' : '' }} value="{{$row->schedule_ship_date->format ('Y-m-d')}}" name="schedule_ship_date[]" class="form-control text-end">
-                                                    @else
-                                                    <input type="date" {{ !is_null($sales->inv_number) ? 'readonly' : '' }} value="{{$row->schedule_ship_date->format ('Y-m-d')}}" name="schedule_ship_date[]" class="form-control text-end">
-                                                    @endif
+                                                <td width="15%">
+                                                    <select class="form-control" name="shipping_inventory[]"
+                                                        data-current="{{ $row->shipping_inventory }}">
+                                                        <option value="{{ $row->shipping_inventory }}">{{ $row->shipping_inventory ?? 'Loading...' }}</option>
+                                                    </select>
+                                                </td>
+                                                <td width="auto" style="display:none;">
+                                                    <input type="hidden" value="{{$row->schedule_ship_date->format('Y-m-d')}}" name="schedule_ship_date[]">
                                                 </td>
 
                                                 @php
@@ -665,6 +672,8 @@
 @endsection
 @push('script')
 <script>
+    var warehouseList = @json($subinventories);
+
     // jQuery for opening the modal when the button is clicked
     $(document).ready(function () {
         $('#createInvoiceBtn').on('click', function () {
@@ -806,6 +815,41 @@
 
 @section('scripts')
 <script>
+    // Load warehouse dropdown per baris berdasarkan stock onhand
+    $(document).ready(function () {
+        $('.sales_order_container tr.tr_input').each(function () {
+            var $row     = $(this);
+            var itemId   = $row.find('input[name="inventory_item_id[]"]').val();
+            var current  = $row.find('select[name="shipping_inventory[]"]').data('current') || '';
+            if (!itemId) return;
+            $.ajax({
+                url: '/search/warehouse-by-item',
+                type: 'GET',
+                data: { inventory_item_id: itemId },
+                dataType: 'json',
+                success: function (warehouses) {
+                    var $select = $row.find('select[name="shipping_inventory[]"]');
+                    $select.empty().append('<option value="">-- Pilih Warehouse --</option>');
+                    if (warehouses.length === 0) {
+                        // Tidak ada stok — tetap tampilkan nilai lama agar data tidak hilang
+                        if (current) {
+                            $select.append('<option value="' + current + '" selected>' + current + ' (no stock)</option>');
+                        }
+                    } else {
+                        warehouses.forEach(function (w) {
+                            var sel = (w.code === current) ? ' selected' : '';
+                            $select.append('<option value="' + w.code + '"' + sel + '>' + w.label + '</option>');
+                        });
+                        // Jika nilai lama tidak ada di daftar stok, tambahkan tetap terpilih
+                        if (current && $select.val() !== current) {
+                            $select.prepend('<option value="' + current + '" selected>' + current + ' (no stock)</option>');
+                        }
+                    }
+                }
+            });
+        });
+    });
+
     function deleteItem(id) {
         console.log(id);
         var check = confirm("Are you sure you want to Delete this row?");

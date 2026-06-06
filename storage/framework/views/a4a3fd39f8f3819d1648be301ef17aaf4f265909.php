@@ -154,17 +154,11 @@
                                         </em>
                                         <?php endif; ?>
                                     </div> -->
-                                    <div class="col-md-2">
+                                    <div class="col-md-2" style="display:none;">
                                         <label class="form-label" for="terms_start"><?php echo e(trans('cruds.order.fields.customer_po')); ?></label>
-                                        <input autocomplete="off" type="text" id="terms_start" name="cust_po_number" class="form-control" value="<?php echo e(old('terms_start', isset($order) ? $order->terms_start : '')); ?>" required>
-                                        <?php if($errors->has('terms_start')): ?>
-                                        <em class="invalid-feedback">
-                                            <?php echo e($errors->first('terms_start')); ?>
-
-                                        </em>
-                                        <?php endif; ?>
+                                        <input autocomplete="off" type="text" id="terms_start" name="cust_po_number" class="form-control" value="<?php echo e(old('terms_start', isset($order) ? $order->terms_start : '')); ?>">
                                     </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-4">
                                     <label class="form-label" for="payment_method"><?php echo e(trans('cruds.order.fields.paymentmethod')); ?></label>
                                         <select name="payment_method" id="payment_method" class="form-control select2">
                                                 <?php $__currentLoopData = $terms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
@@ -222,7 +216,8 @@
                                                 <th scope="col">Price</th>
                                                 
                                                 <th scope="col">Disc</th>
-                                                <th width="auto" scope="col">Shippement Date</th>
+                                                <th scope="col">Warehouse</th>
+                                                <th width="auto" scope="col" style="display:none;">Shippement Date</th>
                                                 <th scope="col" class="text-end">Unit Price</th>
                                                 <th scope="col" class="text-end">Sub. Total</th>
                                                 <th scope="col" class="text-center">#</th>
@@ -376,6 +371,7 @@
 <?php $__env->stopSection(); ?>
 <?php $__env->startPush('script'); ?>
 <script>
+    var warehouseList = <?php echo json_encode($subinventories, 15, 512) ?>;
 
     $(function() {
         $("#datepicker-1").datepicker({

@@ -1,29 +1,29 @@
-@extends('layouts.admin')
-@section('styles')
-@section('content')
-@section('breadcrumbs')
+
+<?php $__env->startSection('styles'); ?>
+<?php $__env->startSection('content'); ?>
+<?php $__env->startSection('breadcrumbs'); ?>
 <a href="#"class="breadcrumbs__item">Order Management</a>
 <a href="#"class="breadcrumbs__item">Sales Order</a>
-@endsection
-@section('content')
+<?php $__env->stopSection(); ?>
+<?php $__env->startSection('content'); ?>
 <div class="d-print-none mb-3 px-2 d-flex gap-2">
-    <a href="{{ route('admin.salesorder.index') }}" class="btn btn-sm btn-secondary">
+    <a href="<?php echo e(route('admin.salesorder.index')); ?>" class="btn btn-sm btn-secondary">
         <i class="fa fa-arrow-left"></i> Kembali
     </a>
-    @if($sales->open_flag != 12)
-    <a href="{{ route('admin.salesorder.konfirmasi-kirim', $sales->id) }}" class="btn btn-sm btn-success">
+    <?php if($sales->open_flag != 12): ?>
+    <a href="<?php echo e(route('admin.salesorder.konfirmasi-kirim', $sales->id)); ?>" class="btn btn-sm btn-success">
         <i class="fa fa-truck"></i> Kirim
     </a>
-    @else
-    <a href="{{ route('admin.salesorder.surat-jalan', $sales->id) }}" class="btn btn-sm btn-info">
+    <?php else: ?>
+    <a href="<?php echo e(route('admin.salesorder.surat-jalan', $sales->id)); ?>" class="btn btn-sm btn-info">
         <i class="fa fa-print"></i> Cetak Surat Jalan
     </a>
-    @endif
+    <?php endif; ?>
     <button onclick="window.print()" class="btn btn-sm btn-outline-secondary">
         <i class="fa fa-print"></i> Print SO
     </button>
 </div>
-{{-- @foreach($purchaseRequisition as $key => $raw) --}}
+
 <page size="A5">
     <section id="multiple-column-form">
         <div class="row">
@@ -32,7 +32,7 @@
                     <table>
                         <tr>
                             <td><br>
-                                <img style="width: 5%; float:left;margin-left:4%;" src="{{ asset('app-assets/images/logo/favicon.png') }}" alt="buana-megah">
+                                <img style="width: 5%; float:left;margin-left:4%;" src="<?php echo e(asset('app-assets/images/logo/favicon.png')); ?>" alt="buana-megah">
                                 <p style="font-size:12px;"><b style="color: green;"> &nbsp;&nbsp;NEXZO-APP</b><br>
                                     <b>&nbsp;&nbsp;Head Office : </b>Jl. Argopuro 42, Surabaya 60251, East Java, Indonesia<br>&nbsp;
                                     <b>Pasuruan Office : </b>Jalan Raya Cangkringmalang km. 40, Beji Pasuruan 67154 East Java, Indonesia<br>&nbsp;
@@ -59,9 +59,9 @@
                                                     <h6 class="mb-2" style="display:none;">Customer PO</h6>
                                                 </div>
                                                 <div class="col-sm-3">
-                                                    <p class="mb-2">: {{$sales->order_number}}</p>
-                                                    <p class="mb-2">: {{optional($sales->customer)->party_name ?? 'Walk-in Customer'}}</p>
-                                                    <p class="mb-2" style="display:none;">: {{$sales->cust_po_number}}</p>
+                                                    <p class="mb-2">: <?php echo e($sales->order_number); ?></p>
+                                                    <p class="mb-2">: <?php echo e(optional($sales->customer)->party_name ?? 'Walk-in Customer'); ?></p>
+                                                    <p class="mb-2" style="display:none;">: <?php echo e($sales->cust_po_number); ?></p>
                                                 </div>
                                                 <div class="col-sm-2">
                                                     <h6 class="mb-2">Date</h6>
@@ -69,9 +69,9 @@
                                                     <h6 class="mb-2">Term</h6>
                                                 </div>
                                                 <div class="col-sm-3">
-                                                    <p class="mb-2">: {{$sales->ordered_date}}</p>
-                                                    <p class="mb-2">: {{$sales->party_site->id ?? ''}}</p>
-                                                    <p class="mb-2">: {{is_numeric($sales->attribute3) ? (optional($sales->term)->terms_name ?? '-') : '-'}}</p>
+                                                    <p class="mb-2">: <?php echo e($sales->ordered_date); ?></p>
+                                                    <p class="mb-2">: <?php echo e($sales->party_site->id ?? ''); ?></p>
+                                                    <p class="mb-2">: <?php echo e(is_numeric($sales->attribute3) ? (optional($sales->term)->terms_name ?? '-') : '-'); ?></p>
                                                 </div>
                                             </div>
                                             <hr>
@@ -88,22 +88,22 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        @php $subtotal=0; $taxAmount = 0;@endphp
-                                                        @foreach($detail as $key => $row)
+                                                        <?php $subtotal=0; $taxAmount = 0;?>
+                                                        <?php $__currentLoopData = $detail; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                             <tr>
-                                                                <td class="center">{{ $key+1}} </td>
-                                                                <td>{{ $row->ItemMaster->item_code}} </td>
-                                                                <td >{{ $row->user_description_item}}</td>
-                                                                <td class="text-left">{{ $row->unit_selling_price}}</td>
-                                                                <td class="text-right">{{ $row->ordered_quantity}}</td>
-                                                                <td align="right">{{  number_format($row->unit_selling_price * $row->ordered_quantity, 2, ',', '.')}}</td>
+                                                                <td class="center"><?php echo e($key+1); ?> </td>
+                                                                <td><?php echo e($row->ItemMaster->item_code); ?> </td>
+                                                                <td ><?php echo e($row->user_description_item); ?></td>
+                                                                <td class="text-left"><?php echo e($row->unit_selling_price); ?></td>
+                                                                <td class="text-right"><?php echo e($row->ordered_quantity); ?></td>
+                                                                <td align="right"><?php echo e(number_format($row->unit_selling_price * $row->ordered_quantity, 2, ',', '.')); ?></td>
                                                             </tr>
 
-                                                            @php
+                                                            <?php
                                                                 $subtotal += $row->unit_selling_price * $row->ordered_quantity;
                                                                 $taxAmount += ($row->tax_code / 100) * ($row->unit_selling_price * $row->ordered_quantity)
-                                                            @endphp
-                                                        @endforeach
+                                                            ?>
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                                                     </tbody>
 
@@ -133,7 +133,7 @@
 
                                                                 </td>
                                                                 <td class="text-end">
-                                                                    <strong>{{ number_format($subtotal, 2, ',', '.') }}</strong>
+                                                                    <strong><?php echo e(number_format($subtotal, 2, ',', '.')); ?></strong>
                                                                 </td>
                                                             </tr>
                                                             <tr>
@@ -142,10 +142,10 @@
                                                                     <strong> Tax</strong>
                                                                 </td>
                                                                 <td class="text-end">
-                                                                    {{-- {{$detail->tax_code}} --}}
+                                                                    
                                                                 </td>
                                                                 <td class="text-end">
-                                                                    <strong>{{ number_format($taxAmount, 2, ',', '.') }}</strong>
+                                                                    <strong><?php echo e(number_format($taxAmount, 2, ',', '.')); ?></strong>
                                                                 </td>
                                                             </tr>
                                                             <tr>
@@ -157,7 +157,7 @@
 
                                                                 </td>
                                                                 <td class="text-end">
-                                                                    <strong>{{ number_format($subtotal, 2, ',', '.') }}</strong>
+                                                                    <strong><?php echo e(number_format($subtotal, 2, ',', '.')); ?></strong>
                                                                 </td>
                                                             </tr>
                                                         </tbody>
@@ -176,6 +176,8 @@
         </div>
 
     </section>
-    {{-- @endforeach --}}
+    
     <!-- /.content -->
-    @endsection
+    <?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\agro\resources\views/admin/sales/view.blade.php ENDPATH**/ ?>

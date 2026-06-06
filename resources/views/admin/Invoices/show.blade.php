@@ -58,7 +58,7 @@
                                 <div class="mb-1">
                                 <label class="form-label" for="bill_to">{{ trans('cruds.Invoice.field.cust') }}</label>
                                 <select name="bill_to" id="customer" class="form-control select2" required>
-                                    <option readonly value="{{$sales->customer->party_name}}" {{old('customer_name') ? 'selected' : '' }} selected> {{$sales->customer->party_name}} - {{$sales->customer->address1}}, {{$sales->customer->city}} </option>
+                                    <option readonly value="{{optional($sales->customer)->party_name}}" {{old('customer_name') ? 'selected' : '' }} selected> {{optional($sales->customer)->party_name ?? 'Walk-in Customer'}} - {{optional($sales->customer)->address1}}, {{optional($sales->customer)->city}} </option>
                                 </select>
                                 </div>
                             </div>
@@ -208,21 +208,21 @@
                                                             {{ $row->user_description_item ?? '' }}
                                                         </td>
                                                         <td>
-                                                            {{ number_format($row->ordered_quantity ?? '') }}
+                                                            {{ number_format((float)($row->ordered_quantity ?? 0)) }}
 
                                                         </td>
                                                         <td>
-                                                            {{ number_format($row->unit_selling_price ?? '') }}
+                                                            {{ number_format((float)($row->unit_selling_price ?? 0)) }}
 
                                                         </td>
                                                         <td>
                                                             {{ \Carbon\Carbon::parse($row->schedule_ship_date)->format('d-m-Y') ?? '' }}
                                                         </td>
                                                         <td>
-                                                            {{ number_format($row->unit_percent_base_price ?? '') }}
+                                                            {{ number_format((float)($row->unit_percent_base_price ?? 0)) }}
                                                         </td>
                                                         <td>
-                                                            {{ number_format($row->unit_list_price ?? '') }}
+                                                            {{ number_format((float)($row->unit_list_price ?? 0)) }}
                                                         </td>
                                                         @php
                                                             // Tambahkan hasil perkalian ke total
@@ -281,8 +281,8 @@
                                             <tbody class="sales_order_shipment_container">
                                                 @foreach($so_detil as $row)
                                                     @php
-                                                        $drValue = 0; // Karena DR pada loop pertama selalu 0
-                                                        $crValue = $row->unit_list_price;
+                                                        $drValue = 0;
+                                                        $crValue = (float)($row->unit_list_price ?? 0);
                                                         $totalDr += $drValue;
                                                         $totalCr += $crValue;
                                                     @endphp
@@ -310,8 +310,8 @@
 
                                                 @foreach($so_detil as $row)
                                                     @php
-                                                        $drValue = $row->products->item_cost*$row->ordered_quantity;
-                                                        $crValue = 0; // CR pada loop kedua selalu 0
+                                                        $drValue = (float)(($row->products->item_cost ?? 0) * ($row->ordered_quantity ?? 0));
+                                                        $crValue = 0;
                                                         $totalDr += $drValue;
                                                         $totalCr += $crValue;
                                                     @endphp
@@ -339,8 +339,8 @@
 
                                                 @foreach($so_detil as $row)
                                                     @php
-                                                        $drValue = 0; // DR pada loop ketiga selalu 0
-                                                        $crValue = $row->products->item_cost *$row->ordered_quantity;
+                                                        $drValue = 0;
+                                                        $crValue = (float)(($row->products->item_cost ?? 0) * ($row->ordered_quantity ?? 0));
                                                         $totalDr += $drValue;
                                                         $totalCr += $crValue;
                                                     @endphp
@@ -397,7 +397,7 @@
 
                                                 @foreach($so_detil as $row)
                                                     @php
-                                                        $drValue = $row->unit_percent_base_price; // DR pada loop ketiga selalu 0
+                                                        $drValue = (float)($row->unit_percent_base_price ?? 0);
                                                         $crValue = 0;
                                                         $totalDr += $drValue;
                                                         $totalCr += $crValue;
@@ -669,8 +669,8 @@
             const companyName = "CV SURYA AGRO PRADHANA";
             const companyAddress = "Jl. Peterongan-Sumobito, Jombang";
 
-            const customerName = `{!! $sales->customer->party_name ?? '' !!}`;
-            const customerAddress = `{!! $sales->customer->address1 ?? '' !!}, {!! $sales->customer->city ?? '' !!}`;
+            const customerName = `{!! optional($sales->customer)->party_name ?? 'Walk-in Customer' !!}`;
+            const customerAddress = `{!! optional($sales->customer)->address1 ?? '' !!}, {!! optional($sales->customer)->city ?? '' !!}`;
             const invoiceNumber = "{{ $sales->inv_number ?? '' }}";
             const invoiceDate = "{{ $sales->updated_at ?? '' }}";
             const paymentTerm = "{{ isset($sales->payment_due_date) ? date('d/m/Y', strtotime($sales->payment_due_date)) : '' }}";

@@ -1,3 +1,14 @@
+function buildWarehouseSelect(selectedVal) {
+    var opts = '<option value="">-- Warehouse --</option>';
+    if (typeof warehouseList !== 'undefined') {
+        warehouseList.forEach(function(s) {
+            var sel = (selectedVal && s.sub_inventory_name === selectedVal) ? ' selected' : '';
+            opts += '<option value="' + s.sub_inventory_name + '"' + sel + '>' + s.sub_inventory_name + ' - ' + s.description + '</option>';
+        });
+    }
+    return '<select class="form-control" name="shipping_inventory[]">' + opts + '</select>';
+}
+
 $(document).ready(function () {
 
     $(".search_supplier_name").on('keyup', function () {
@@ -806,7 +817,10 @@ $(document).ready(function () {
                <td width="auto">\
                     <input type="number" id="discount_'+ index + '" min="1" class="form-control recount text-end" oninput=validity.valid||(value="") min=1 name="disc[]">\
                 </td>\
-                <td width="auto"><input type="date" id=""  name="schedule_ship_date[]" class="form-control text-end" required></td>\
+                <td width="15%">\
+                    ' + buildWarehouseSelect('') + '\
+                </td>\
+                <td style="display:none;"><input type="hidden" name="schedule_ship_date[]" value="' + new Date().toISOString().split('T')[0] + '"></td>\
                 <td width="auto">\
                     <input type="text" readonly id="unitprice_'+ index + '" class="form-control text-end" name="unitprice_[]" >\
                 </td>\
@@ -1056,13 +1070,32 @@ $(document).ready(function () {
                             document.getElementById('disc_' + index).value = discount;
                             document.getElementById('effective_date_' + index).value = effective_date;
                             document.getElementById('price_list_name_' + index).value = price_list_name;
-                            document.getElementById('subinventoryfrom_' + index).value = shipping_inventory + " - " + subinventory;
-                            document.getElementById('subinvfrom_' + index).value = shipping_inventory;
                             document.getElementById('price_list_id_' + index).value = header_id;
                             document.getElementById('price_id_' + index).value = id;
                             document.getElementById('uom_' + index).value = uom;
-                            // $('#harga_' + index).val(unitprice);
-                            // console.log(unitprice)
+
+                            // Load warehouse berdasarkan stock item yang dipilih
+                            var inventoryItemId = document.getElementById('id_' + index).value;
+                            $.ajax({
+                                url: '/search/warehouse-by-item',
+                                type: 'GET',
+                                data: { inventory_item_id: inventoryItemId },
+                                dataType: 'json',
+                                success: function (warehouses) {
+                                    var $select = $('#rowTab1_' + index + ' select[name="shipping_inventory[]"]');
+                                    $select.empty().append('<option value="">-- Pilih Warehouse --</option>');
+                                    if (warehouses.length === 0) {
+                                        $select.append('<option value="" disabled>Tidak ada stok tersedia</option>');
+                                    } else {
+                                        warehouses.forEach(function (w) {
+                                            $select.append('<option value="' + w.code + '">' + w.label + '</option>');
+                                        });
+                                        if (warehouses.length === 1) {
+                                            $select.val(warehouses[0].code);
+                                        }
+                                    }
+                                }
+                            });
                         }
                     }
                 });

@@ -96,7 +96,23 @@ Route::delete('inventory/destroy', 'InventoryController@massDestroy')->name('inv
 
      //Sales Order
      Route::delete('salesorder/destroy', 'SalesOrderController@massDestroy')->name('sales-order.massDestroy');
+     Route::get('salesorder/{id}/konfirmasi-kirim', 'SalesOrderController@konfirmasiKirim')->name('salesorder.konfirmasi-kirim');
+     Route::post('salesorder/proses-kirim', 'SalesOrderController@prosesKirim')->name('salesorder.proses-kirim');
+     Route::get('salesorder/{id}/surat-jalan', 'SalesOrderController@suratJalan')->name('salesorder.surat-jalan');
      Route::resource('salesorder', 'SalesOrderController');
+
+     // Point of Sale
+     Route::get('pos/items', 'PosController@getItems')->name('pos.items');
+     Route::get('pos/customers', 'PosController@getCustomers')->name('pos.customers');
+     Route::post('pos/process', 'PosController@processOrder')->name('pos.process');
+     Route::post('pos/session', 'PosController@store')->name('pos.store');
+     Route::patch('pos/session/{id}/close', 'PosController@closeSession')->name('pos.close');
+     Route::patch('pos/session/{id}/warehouse', 'PosController@switchWarehouse')->name('pos.switch.warehouse');
+     Route::get('pos/session/{id}', 'PosController@show')->name('pos.show');
+     Route::get('pos/report/{id}', 'PosController@report')->name('pos.report');
+     Route::get('pos/report/{id}/pdf', 'PosController@exportPdf')->name('pos.export.pdf');
+     Route::get('pos/report/{id}/excel', 'PosController@exportExcel')->name('pos.export.excel');
+     Route::get('pos', 'PosController@index')->name('pos.index');
      //Vendor
      Route::delete('vendor/destroy', 'VendorController@massDestroy')->name('vendor.massDestroy');
      Route::resource('vendor', 'VendorController');
@@ -438,6 +454,7 @@ Route::group(['prefix' => 'search', 'as' => 'admin.', 'middleware' => ['auth']],
     //Add by Shindi 09-05-2022
     Route::any('data-return', 'SearchController@data_return');
     Route::any('subinventory', 'SearchController@subinventory');
+    Route::get('warehouse-by-item', 'SearchController@warehouseByItem');
     Route::any('search_coa', 'SearchController@search_coa');
 
     // 10-05-2022

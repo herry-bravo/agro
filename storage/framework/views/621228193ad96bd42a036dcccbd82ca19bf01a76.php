@@ -94,6 +94,7 @@
             </tfoot>
         </table>
     </div>
+    <!-- popup -->
     <div class="modal fade" id="salesOrderModal" tabindex="-1" aria-labelledby="salesOrderModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
