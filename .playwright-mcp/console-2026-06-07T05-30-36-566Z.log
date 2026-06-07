@@ -1,0 +1,6 @@
+[    3408ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8000/login:0
+[  109873ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: https://fonts.gstatic.com/s/montserrat/v31/JTUQjIg1_i6t8kCHKm459WxRyS7m.woff2 @ http://localhost:8000/admin/salesorder/42/edit:0
+[  109874ms] [INFO] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2 @ http://localhost:8000/admin/salesorder/42/edit:0
+[  112252ms] [LOG] [] @ http://localhost:8000/admin/salesorder/42/edit:1321
+[  436848ms] [LOG] [] @ http://localhost:8000/admin/salesorder/42/edit:1321
+[  634039ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ http://localhost:8000/login:0

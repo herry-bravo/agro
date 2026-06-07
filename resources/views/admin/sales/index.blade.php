@@ -58,6 +58,9 @@
                                 <th class="text-center">
                                     {{ trans('cruds.order.fields.status') }}
                                 </th>
+                                <th class="text-center">
+                                    Invoice
+                                </th>
                                 <th>
                                     Action
                                 </th>
@@ -105,7 +108,7 @@
                         d.status = $("#status").val();
                         d.min = $("#min").val();
                         d.max = $("#max").val();
-                        return d
+return d
                     }
                 },
                 responsive: false,
@@ -211,7 +214,7 @@
                         `;
                             return content;
                         },
-                        targets: [8]
+                        targets: [9]
                     }
                 ],
                 columns: [{
@@ -235,6 +238,9 @@
                         data: 'status',
                         class: 'text-center'
                     }, {
+                        data: 'invoice',
+                        class: 'text-center'
+                    }, {
                         data: 'action',
                         class: 'text-center'
                 }],
@@ -249,7 +255,7 @@
 
 
 
-            function chartDatas(table_sales) {
+function chartDatas(table_sales) {
                 var counts = {};
 
                 // Count the number of entries for each position

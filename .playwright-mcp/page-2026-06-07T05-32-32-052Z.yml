@@ -1,0 +1,262 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - list [ref=e5]:
+        - listitem [ref=e6]:
+          - link [ref=e7] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e8]
+      - list [ref=e9]:
+        - listitem [ref=e10]:
+          - link "Indonesia" [ref=e11] [cursor=pointer]:
+            - /url: "#"
+            - text: Indonesia
+        - listitem [ref=e13]:
+          - link "5" [ref=e14] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e15]
+            - generic [ref=e18]: "5"
+        - listitem [ref=e19]:
+          - link "5" [ref=e20] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e21]
+            - generic [ref=e24]: "5"
+        - listitem [ref=e25]:
+          - link "Admin avatar" [ref=e26] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e28]: Admin
+            - img "avatar" [ref=e30]
+  - navigation [ref=e32]:
+    - list [ref=e34]:
+      - listitem [ref=e35]:
+        - img "buana-megah" [ref=e36]
+        - img [ref=e38]
+    - list [ref=e42]:
+      - listitem [ref=e43]:
+        - link "Dashboards" [ref=e44] [cursor=pointer]:
+          - /url: http://localhost:8000/admin
+          - img [ref=e45]
+          - generic [ref=e48]: Dashboards
+      - listitem [ref=e49]:
+        - link "Production" [ref=e50] [cursor=pointer]:
+          - /url: "#"
+          - img [ref=e51]
+          - generic [ref=e55]: Production
+      - listitem [ref=e56]:
+        - link "Purchase & Sales" [ref=e57] [cursor=pointer]:
+          - /url: "#"
+          - img [ref=e58]
+          - generic [ref=e63]: Purchase & Sales
+      - listitem [ref=e64]:
+        - link "Accounting & GL" [ref=e65] [cursor=pointer]:
+          - /url: "#"
+          - img [ref=e66]
+          - generic [ref=e69]: Accounting & GL
+      - listitem [ref=e70]:
+        - link "Reports" [ref=e71] [cursor=pointer]:
+          - /url: "#"
+          - img [ref=e72]
+          - generic [ref=e73]: Reports
+      - listitem [ref=e74]:
+        - link "Permissions & Settings" [ref=e75] [cursor=pointer]:
+          - /url: "#"
+          - img [ref=e76]
+          - generic [ref=e79]: Permissions & Settings
+      - listitem [ref=e80]:
+        - link "Admin" [ref=e81] [cursor=pointer]:
+          - /url: "#"
+          - img [ref=e82]
+          - generic [ref=e86]: Admin
+  - generic [ref=e90]:
+    - generic [ref=e95]:
+      - generic [ref=e96]:
+        - heading "Order Management Sales Order Edit" [level=6] [ref=e97]:
+          - link "Order Management" [ref=e98] [cursor=pointer]:
+            - /url: http://localhost:8000/admin/salesorder
+          - link "Sales Order" [ref=e99] [cursor=pointer]:
+            - /url: http://localhost:8000/admin/salesorder
+          - link "Edit" [ref=e100] [cursor=pointer]:
+            - /url: ""
+        - generic [ref=e102]:
+          - link "Delivery Order" [ref=e103]:
+            - /url: http://localhost:8000/admin/sales/data_shipment?order_number=5000021
+            - img [ref=e104]
+            - text: Delivery Order
+          - link "Kirim" [ref=e109]:
+            - /url: http://localhost:8000/admin/salesorder/47/konfirmasi-kirim
+            - text: Kirim
+          - link "Create To Invoice" [ref=e110]:
+            - /url: http://localhost:8000/admin/invoices/create?header_id=42
+            - img [ref=e112]
+            - text: Create To Invoice
+      - separator [ref=e114]
+      - generic [ref=e117]:
+        - generic [ref=e118]:
+          - generic [ref=e119]:
+            - generic [ref=e120]: Order Number
+            - textbox "Order Number" [ref=e121]: "5000021"
+          - generic [ref=e122]:
+            - generic [ref=e123]: Type
+            - generic [ref=e124]:
+              - combobox [ref=e125]
+              - combobox "Local Sales" [ref=e128] [cursor=pointer]:
+                - textbox "Local Sales" [ref=e129]
+          - generic [ref=e130]:
+            - generic [ref=e131]: Customer Currency
+            - generic [ref=e132]:
+              - combobox [ref=e133]
+              - combobox "IDR - RUPIAH" [ref=e136] [cursor=pointer]:
+                - textbox "IDR - RUPIAH" [ref=e137]
+          - generic [ref=e138]:
+            - generic [ref=e139]: Faktur
+            - textbox [ref=e140]: "1"
+        - generic [ref=e141]:
+          - generic [ref=e142]:
+            - generic [ref=e143]: Bill To
+            - generic [ref=e144]:
+              - combobox [ref=e145]: )
+              - combobox "BIAN - JL PASAR BARU DAMPIT, MALANG" [ref=e148] [cursor=pointer]:
+                - textbox "BIAN - JL PASAR BARU DAMPIT, MALANG" [ref=e149]
+          - generic [ref=e150]:
+            - generic [ref=e151]: Sales Order Date
+            - textbox [ref=e152] [cursor=pointer]: 2026-06-06
+          - generic [ref=e153]:
+            - generic [ref=e154]: Selling Price Number
+            - generic [ref=e155]:
+              - combobox [ref=e156]: )
+              - combobox "-" [ref=e159] [cursor=pointer]:
+                - textbox "-" [ref=e160]
+        - generic [ref=e161]:
+          - generic [ref=e162]:
+            - generic [ref=e163]: Ship To
+            - combobox "Ship To" [ref=e165]:
+              - text: )
+              - option "PT SUMBER MAKMUR AGRIKULTUR INDONESIA, JL. PROF MOH YAMIN 12, MALANG" [selected]
+          - generic [ref=e166]:
+            - generic [ref=e167]: Payment Methode
+            - generic [ref=e168]:
+              - combobox [ref=e169]: )
+              - combobox "TEMPO 30 HARI" [ref=e172] [cursor=pointer]:
+                - textbox "TEMPO 30 HARI" [ref=e173]
+          - generic [ref=e174]:
+            - generic [ref=e175]: Taxes
+            - generic [ref=e176]:
+              - combobox [ref=e177]: )
+              - combobox "TAX 0%" [ref=e180] [cursor=pointer]:
+                - textbox "TAX 0%" [ref=e181]
+      - generic [ref=e182]:
+        - navigation [ref=e183]:
+          - tablist [ref=e184]:
+            - tab "Sales" [selected] [ref=e185] [cursor=pointer]:
+              - text: Sales
+              - img [ref=e187]
+        - button "Action" [ref=e191] [cursor=pointer]
+      - separator [ref=e192]
+      - generic [ref=e193]:
+        - tabpanel "Sales" [ref=e195]:
+          - table [ref=e197]:
+            - rowgroup [ref=e198]:
+              - row "Line Product Category Qty Price Disc Warehouse Unit Price Sub.Total" [ref=e199]:
+                - columnheader [ref=e200]
+                - columnheader "Line" [ref=e201]
+                - columnheader "Product Category" [ref=e202]
+                - columnheader "Qty" [ref=e203]
+                - columnheader "Price" [ref=e204]
+                - columnheader "Disc" [ref=e205]
+                - columnheader "Warehouse" [ref=e206]
+                - columnheader "Unit Price" [ref=e207]
+                - columnheader "Sub.Total" [ref=e208]
+            - rowgroup [ref=e209]:
+              - row "1 C001 C001 - Abacel 18 EC 100ml x 50 - 0 1 23500.0 Loading... 23.500,00 23.500,00" [ref=e210]:
+                - cell [ref=e211]:
+                  - checkbox [ref=e212]
+                - cell "1" [ref=e213]
+                - cell "C001 C001 - Abacel 18 EC 100ml x 50 - 0" [ref=e214]:
+                  - textbox [ref=e215]: C001 C001 - Abacel 18 EC 100ml x 50 - 0
+                - cell "1" [ref=e216]:
+                  - spinbutton [ref=e217]: "1"
+                - cell "23500.0" [ref=e218]:
+                  - spinbutton [ref=e219]: "23500.0"
+                - cell [ref=e220]:
+                  - spinbutton [ref=e221]
+                - cell "Loading..." [ref=e222]:
+                  - combobox [ref=e223]:
+                    - option "Loading..." [selected]
+                - cell "23.500,00" [ref=e224]:
+                  - textbox [ref=e225]: 23.500,00
+                - cell "23.500,00" [ref=e226]:
+                  - textbox [ref=e227]: 23.500,00
+            - rowgroup [ref=e228]:
+              - row "Add Row" [ref=e229]:
+                - cell "Add Row" [ref=e230]:
+                  - button "Add Row" [ref=e231] [cursor=pointer]:
+                    - img [ref=e232]
+                    - text: Add Row
+        - generic [ref=e233]:
+          - generic [ref=e235]:
+            - generic [ref=e236]: Level
+            - generic [ref=e237]:
+              - combobox [ref=e238]
+              - combobox "Open" [ref=e241] [cursor=pointer]:
+                - textbox "Open" [ref=e242]
+          - generic [ref=e244]:
+            - generic [ref=e245]: Untaxed Amount
+            - textbox [ref=e246]: 23.500,00
+          - generic [ref=e248]:
+            - generic [ref=e249]: PPN
+            - textbox [ref=e250]: 0,00
+          - generic [ref=e252]:
+            - generic [ref=e253]: Total
+            - textbox [ref=e254]: 23.500,00
+        - button "Save" [ref=e256] [cursor=pointer]:
+          - img [ref=e257]
+          - text: Save
+    - text: ;
+  - contentinfo [ref=e261]:
+    - paragraph [ref=e262]:
+      - generic [ref=e263]:
+        - text: Copyright © 2024
+        - link "NEXZO-APP" [ref=e264] [cursor=pointer]:
+          - /url: "#"
+        - generic [ref=e265]: ", All rights Reserved"
+  - generic [ref=e266]:
+    - generic [ref=e268]:
+      - generic [ref=e270]:
+        - generic [ref=e272] [cursor=pointer]: 
+        - generic [ref=e274] [cursor=pointer]: 
+        - generic [ref=e276] [cursor=pointer]: 
+        - generic [ref=e277] [cursor=pointer]:
+          - generic [ref=e278]: 
+          - text: "7"
+        - generic [ref=e280] [cursor=pointer]: 
+        - generic [ref=e281] [cursor=pointer]:
+          - generic [ref=e282]: 
+          - text: "17"
+        - generic [ref=e283] [cursor=pointer]:
+          - generic [ref=e284]: 
+          - text: "2500"
+        - generic [ref=e285] [cursor=pointer]:
+          - generic [ref=e286]: 
+          - text: "0"
+        - generic [ref=e288] [cursor=pointer]: 
+        - generic [ref=e289] [cursor=pointer]:
+          - generic [ref=e290]: 
+          - text: "34"
+        - generic [ref=e292] [cursor=pointer]: 
+        - generic [ref=e294] [cursor=pointer]: 
+      - generic [ref=e295]:
+        - generic [ref=e299]:
+          - generic [ref=e300]: 
+          - text: 8.1.10
+        - generic [ref=e301]:
+          - generic [ref=e302]: 
+          - text: 480ms
+        - generic [ref=e303]:
+          - generic [ref=e304]: 
+          - text: 32MB
+        - generic [ref=e305]:
+          - generic [ref=e306]: 
+          - text: "GET admin/salesorder/{salesorder}/edit"
+    - text:                                                                                                                                  
+  - text: 
+  - generic [ref=e310] [cursor=pointer]: "'Admin' Wellcome back"

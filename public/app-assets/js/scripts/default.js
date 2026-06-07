@@ -1207,8 +1207,8 @@ $(document).ready(function () {
     
     // Tutup dropdown jika klik di luar
     $(document).on('click', function (e) {
-        if (!$(e.target).closest('.search_taxesmaster, .dropdown-menu').length) {
-            $('.dropdown-menu').remove();
+        if (!$(e.target).closest('.search_taxesmaster, [id^="taxesmaster_dropdown_"]').length) {
+            $('[id^="taxesmaster_dropdown_"]').remove();
         }
     });
     

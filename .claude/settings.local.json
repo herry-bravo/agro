@@ -67,7 +67,14 @@
       "Bash(curl -s -c /tmp/agro_cookies_v3.txt http://127.0.0.1:8000/login)",
       "Bash(grep -r 'class Onhand\\\\|protected $table' /c/laragon/www/agro/app/Models/)",
       "Bash(xargs grep -l \"system_item\\\\|SystemItem\")",
-      "Bash(xargs grep -l \"subinventory_code\\\\|Subinventory\\\\|class.*Sub\")"
+      "Bash(xargs grep -l \"subinventory_code\\\\|Subinventory\\\\|class.*Sub\")",
+      "Bash(xargs grep -l \"purchase_order\\\\|po_header\\\\|po_lines\")",
+      "Bash(xargs grep -l \"bm_po_header_all\\\\|bm_po_lines_all\\\\|bm_po_agent\")",
+      "Bash(xargs grep -l \"po_head_id\\\\|bm_po_header\")",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_fill_form",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_evaluate"
     ]
   }
 }

@@ -2883,10 +2883,23 @@ class SearchController extends Controller
         $status = $request->input('status');
         $min = $request->input('min');
         $max = $request->input('max');
+        $quick_filter = $request->input('quick_filter');
 
+        // Quick filter tabs
+        if (!empty($quick_filter)) {
+            $query = \App\SalesOrder::orderBy('id', 'desc');
+            if ($quick_filter === 'aktif') {
+                $query->where('booked_flag', 1)->where('open_flag', '!=', 12);
+            } elseif ($quick_filter === 'selesai') {
+                $query->where('open_flag', 12);
+            } elseif ($quick_filter === 'belum_invoice') {
+                $query->whereNull('inv_number');
+            }
+            $records = $query->skip($start)->take($rowperpage)->get();
+        }
         // dd($min, $max);
         // Get records, also we have included search filter as well
-        if($cust == null && $status == null && $min == null && $max == null){
+        elseif($cust == null && $status == null && $min == null && $max == null){
             $records = \App\SalesOrder::orderBy('id','desc')
             ->where('order_number', 'like', '%' . $searchValue . '%')
             ->orWhere('cust_po_number', 'like', '%' . $searchValue . '%')
@@ -2954,18 +2967,18 @@ class SearchController extends Controller
         $data_arr = array();
         foreach ($records  as  $key => $row) {
             if($row->booked_flag==1 & $row->open_flag!=12){
-                $status='<a class="badge bg-primary text-white">Book</a>';
+                $status='<span class="badge bg-primary">Aktif</span>';
             }elseif($row->booked_flag==11)
             {
-                $status='<a class="badge bg-warning text-white">Cancel</a>';
+                $status='<span class="badge bg-warning">Dibatalkan</span>';
             }elseif($row->booked_flag==12)
             {
-                $status='<a class="badge bg-danger text-white">Close</a>';
+                $status='<span class="badge bg-success">Selesai</span>';
             }elseif($row->open_flag==12)
             {
-                $status='<a class="badge bg-danger text-white">Close</a>';
+                $status='<span class="badge bg-success">Selesai</span>';
             }else{
-                $status='<a class="badge bg-info text-white">Enter</a>';
+                $status='<span class="badge bg-secondary">Draft</span>';
             }
             $data_arr[] = array(
                 "id" => $key +1,
@@ -2978,6 +2991,9 @@ class SearchController extends Controller
                 "currency" =>   $row->attribute1,
                 "ordered_date" =>   $row->ordered_date->format('d-M-Y'),
                 "status" => $status,
+                "invoice" => $row->inv_number
+                    ? '<span class="badge bg-success">'.$row->inv_number.'</span>'
+                    : '<span class="badge bg-secondary">Belum</span>',
                 "action" =>"1",
             );
         }
