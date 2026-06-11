@@ -334,8 +334,16 @@ class SearchController extends Controller
         $term2 = $request['currsales'];
         $term3 = $request['sellingPrice'];
         $queries=\App\ItemMaster::select('bm_mtl_system_item.*')
-            ->where('bm_mtl_system_item.description','LIKE', '%'.$term1.'%')
-            ->orWhere('bm_mtl_system_item.item_code','LIKE', '%'.$term1.'%')
+            ->whereExists(function ($q) {
+                $q->selectRaw('1')
+                  ->from('bm_inv_onhand_quantities_detail')
+                  ->whereRaw('bm_inv_onhand_quantities_detail.inventory_item_id = bm_mtl_system_item.inventory_item_id')
+                  ->where('bm_inv_onhand_quantities_detail.primary_transaction_quantity', '>', 0);
+            })
+            ->where(function ($q) use ($term1) {
+                $q->where('bm_mtl_system_item.description', 'LIKE', '%'.$term1.'%')
+                  ->orWhere('bm_mtl_system_item.item_code', 'LIKE', '%'.$term1.'%');
+            })
             ->take(5)->get();
         // $queries=\App\ItemMaster::select('bm_mtl_system_item.*','head.id','head.currency','line.unit_price', 'head.price_list_name')
         // ->LeftJoin('bm_dc_price_list_lines as line','line.inventory_item_id','=','bm_mtl_system_item.inventory_item_id')
@@ -2994,6 +3002,7 @@ class SearchController extends Controller
                 "invoice" => $row->inv_number
                     ? '<span class="badge bg-success">'.$row->inv_number.'</span>'
                     : '<span class="badge bg-secondary">Belum</span>',
+                "booked_flag" => $row->booked_flag,
                 "action" =>"1",
             );
         }

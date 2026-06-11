@@ -11,7 +11,7 @@
             </div>
             <?php endif; ?>
 
-            <div class="card" style="border-left: 4px solid #28a745;">
+            <div class="card" style="border-left: 4px solid #0d6efd;">
                 <div class="card-header d-flex justify-content-between align-items-center py-2">
                     <h6 class="mb-0">Shipment Confirmation</h6>
                     <a href="<?php echo e(route('admin.salesorder.show', $sales->id)); ?>" class="btn btn-sm btn-secondary">
@@ -70,44 +70,68 @@
                                             <span class="fw-bold"><?php echo e(number_format($line->ordered_quantity, 0, ',', '.')); ?></span>
                                         </td>
                                         <td><?php echo e($line->order_quantity_uom); ?></td>
-                                        <td style="min-width:160px">
-                                            <?php if(isset($stock[$line->inventory_item_id]) && $stock[$line->inventory_item_id]->count() > 0): ?>
-                                            <select name="warehouse[<?php echo e($key); ?>]" class="form-select form-select-sm warehouse-select" data-key="<?php echo e($key); ?>" required>
-                                                <?php $__currentLoopData = $stock[$line->inventory_item_id]; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $oh): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                <option value="<?php echo e($oh->subinventory_code); ?>"
-                                                        data-qty="<?php echo e($oh->primary_transaction_quantity); ?>"
-                                                        <?php echo e($line->shipping_inventory == $oh->subinventory_code ? 'selected' : ''); ?>>
-                                                    <?php echo e($oh->subinventory_code); ?> (<?php echo e(number_format($oh->primary_transaction_quantity, 0, ',', '.')); ?>)
-                                                </option>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                            </select>
-                                            <?php else: ?>
-                                            <span class="text-danger small"><i class="fa fa-exclamation-triangle"></i> No stock available</span>
-                                            <input type="hidden" name="warehouse[<?php echo e($key); ?>]" value="">
+                                        <td style="min-width:140px">
+                                            <span class="fw-bold small"><?php echo e($line->shipping_inventory ?? '-'); ?></span>
+                                            <input type="hidden" name="warehouse[<?php echo e($key); ?>]" value="<?php echo e($line->shipping_inventory); ?>">
+                                            <?php if(!$line->shipping_inventory): ?>
+                                                <div class="text-danger" style="font-size:11px">
+                                                    <i class="fa fa-exclamation-triangle"></i> Warehouse belum di-set
+                                                </div>
                                             <?php endif; ?>
                                         </td>
-                                        <?php
-                                            $selectedStock = null;
-                                            if (isset($stock[$line->inventory_item_id])) {
-                                                $selectedStock = $stock[$line->inventory_item_id]
-                                                    ->firstWhere('subinventory_code', $line->shipping_inventory)
-                                                    ?? $stock[$line->inventory_item_id]->first();
-                                            }
-                                        ?>
-                                        <td class="text-center stok-display-<?php echo e($key); ?>" style="width:100px; font-size:12px; color:#555;">
-                                            <?php if($selectedStock): ?>
-                                                <?php echo e(number_format($selectedStock->primary_transaction_quantity, 0, ',', '.')); ?>
+                                        <?php $oh = $stock[$line->id] ?? null; ?>
+                                        <td class="text-center" style="width:100px; font-size:12px; color:#555;">
+                                            <?php if($oh): ?>
+                                                <?php echo e(number_format($oh->primary_transaction_quantity, 0, ',', '.')); ?>
 
                                                 <?php echo e($line->order_quantity_uom); ?>
 
+                                                <?php if($oh->primary_transaction_quantity < $line->ordered_quantity): ?>
+                                                    <div class="text-danger" style="font-size:11px; font-weight:bold;">Stok kurang!</div>
+                                                <?php endif; ?>
                                             <?php else: ?>
-                                                -
+                                                <span class="text-danger">-</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </tbody>
                             </table>
+                        </div>
+
+                        
+                        <div class="card mb-3" style="display:none; border-left: 4px solid #0d6efd; font-size:13px;">
+                            <div class="card-header py-2">
+                                <h6 class="mb-0 fw-bold">Invoice Details</h6>
+                            </div>
+                            <div class="card-body py-2">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Invoice Date</label>
+                                        <input type="date" name="tgl_invoice" class="form-control form-control-sm"
+                                               value="<?php echo e(date('Y-m-d')); ?>" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Faktur</label>
+                                        <select name="faktur_code" class="form-select form-select-sm">
+                                            <option value="">-- Pilih Faktur --</option>
+                                            <?php $__currentLoopData = $fakturs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $f): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <option value="<?php echo e($f->faktur_code); ?>" <?php if($loop->first): ?> selected <?php endif; ?>><?php echo e($f->faktur_code); ?></option>
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        </select>
+                                        <?php if($fakturs->isEmpty()): ?>
+                                            <div class="text-danger mt-1" style="font-size:11px">
+                                                <i class="fa fa-exclamation-triangle"></i> Tidak ada faktur tersedia
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Invoice Number</label>
+                                        <input type="text" class="form-control form-control-sm bg-light" readonly
+                                               value="INV-<?php echo e($sales->order_number); ?>">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         
@@ -127,8 +151,14 @@
                             </div>
                             <div class="col-md-5 text-end">
                                 <a href="<?php echo e(route('admin.salesorder.show', $sales->id)); ?>" class="btn btn-sm btn-secondary me-1">Cancel</a>
-                                <button type="submit" class="btn btn-sm btn-success">
-                                    <i class="fa fa-check"></i> Process Shipment
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="feather feather-send me-50">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg></span>
+                                    Process Shipment
                                 </button>
                             </div>
                         </div>
@@ -142,18 +172,5 @@
 </section>
 <?php $__env->stopSection(); ?>
 
-<?php $__env->startPush('script'); ?>
-<script>
-document.querySelectorAll('.warehouse-select').forEach(function(sel) {
-    sel.addEventListener('change', function() {
-        var key  = this.dataset.key;
-        var opt  = this.options[this.selectedIndex];
-        var qty  = opt ? opt.dataset.qty : '-';
-        var cell = document.querySelector('.stok-display-' + key);
-        if (cell) cell.textContent = qty ? Number(qty).toLocaleString('id') + ' ' + cell.dataset.uom : '-';
-    });
-});
-</script>
-<?php $__env->stopPush(); ?>
 
 <?php echo $__env->make('layouts.admin', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\agro\resources\views/admin/sales/konfirmasi-kirim.blade.php ENDPATH**/ ?>

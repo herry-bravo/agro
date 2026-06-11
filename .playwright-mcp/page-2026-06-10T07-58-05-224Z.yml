@@ -1,0 +1,232 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - list [ref=e5]:
+        - listitem [ref=e6]:
+          - link [ref=e7] [cursor=pointer]:
+            - /url: "#"
+      - list [ref=e9]:
+        - listitem [ref=e10]:
+          - link "Indonesia" [ref=e11] [cursor=pointer]:
+            - /url: "#"
+            - text: Indonesia
+        - listitem [ref=e13]:
+          - link "5" [ref=e14] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e16]: "5"
+        - listitem [ref=e17]:
+          - link "5" [ref=e18] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e20]: "5"
+        - listitem [ref=e21]:
+          - link "Admin avatar" [ref=e22] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e24]: Admin
+            - img "avatar" [ref=e26]
+  - generic [ref=e31]:
+    - generic [ref=e36]:
+      - generic [ref=e37]:
+        - heading "Order Management Sales Order Edit" [level=6] [ref=e38]:
+          - link "Order Management" [ref=e39] [cursor=pointer]:
+            - /url: https://fraser-presentation-jewel-dat.trycloudflare.com/admin/salesorder
+          - link "Sales Order" [ref=e40] [cursor=pointer]:
+            - /url: https://fraser-presentation-jewel-dat.trycloudflare.com/admin/salesorder
+          - link "Edit" [ref=e41] [cursor=pointer]:
+            - /url: ""
+        - generic [ref=e43]:
+          - link "Delivery Order" [ref=e44]:
+            - /url: https://fraser-presentation-jewel-dat.trycloudflare.com/admin/sales/data_shipment?order_number=5000023
+            - img [ref=e45]
+            - text: Delivery Order
+          - link "Kirim" [ref=e50]:
+            - /url: https://fraser-presentation-jewel-dat.trycloudflare.com/admin/salesorder/49/konfirmasi-kirim
+            - text: Kirim
+          - link "Create To Invoice" [ref=e51]:
+            - /url: https://fraser-presentation-jewel-dat.trycloudflare.com/admin/invoices/create?header_id=44
+            - img [ref=e53]
+            - text: Create To Invoice
+      - separator [ref=e55]
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]:
+            - generic [ref=e61]: Order Number
+            - textbox "Order Number" [ref=e62]: "5000023"
+          - generic [ref=e63]:
+            - generic [ref=e64]: Type
+            - generic [ref=e65]:
+              - combobox [ref=e66]
+              - combobox "Local Sales" [ref=e69] [cursor=pointer]:
+                - textbox "Local Sales" [ref=e70]
+          - generic [ref=e71]:
+            - generic [ref=e72]: Customer Currency
+            - generic [ref=e73]:
+              - combobox [ref=e74]
+              - combobox "IDR - RUPIAH" [ref=e77] [cursor=pointer]:
+                - textbox "IDR - RUPIAH" [ref=e78]
+          - generic [ref=e79]:
+            - generic [ref=e80]: Faktur
+            - textbox [ref=e81]: "1"
+        - generic [ref=e82]:
+          - generic [ref=e83]:
+            - generic [ref=e84]: Bill To
+            - generic [ref=e85]:
+              - combobox [ref=e86]: )
+              - combobox "BIAN - JL PASAR BARU DAMPIT, MALANG" [ref=e89] [cursor=pointer]:
+                - textbox "BIAN - JL PASAR BARU DAMPIT, MALANG" [ref=e90]
+          - generic [ref=e91]:
+            - generic [ref=e92]: Sales Order Date
+            - textbox [ref=e93] [cursor=pointer]: 2026-06-10
+          - generic [ref=e94]:
+            - generic [ref=e95]: Selling Price Number
+            - generic [ref=e96]:
+              - combobox [ref=e97]: )
+              - combobox "-" [ref=e100] [cursor=pointer]:
+                - textbox "-" [ref=e101]
+        - generic [ref=e102]:
+          - generic [ref=e103]:
+            - generic [ref=e104]: Ship To
+            - combobox "Ship To" [ref=e106]:
+              - text: )
+              - option "BIAN, JL PASAR BARU DAMPIT, MALANG"
+              - text: )
+              - option "KOMARUDIN, DSN SOBONTORO RT 002/ RW 002, NGANJUK" [selected]
+          - generic [ref=e107]:
+            - generic [ref=e108]: Payment Methode
+            - generic [ref=e109]:
+              - combobox [ref=e110]: )
+              - combobox "CASH" [ref=e113] [cursor=pointer]:
+                - textbox "CASH" [ref=e114]
+          - generic [ref=e115]:
+            - generic [ref=e116]: Taxes
+            - generic [ref=e117]:
+              - combobox [ref=e118]: )
+              - combobox "TAX 0%" [ref=e121] [cursor=pointer]:
+                - textbox "TAX 0%" [ref=e122]
+      - generic [ref=e123]:
+        - navigation [ref=e124]:
+          - tablist [ref=e125]:
+            - tab "Sales" [selected] [ref=e126] [cursor=pointer]: Sales
+        - button "Action" [ref=e130] [cursor=pointer]
+      - separator [ref=e131]
+      - generic [ref=e132]:
+        - tabpanel "Sales" [ref=e134]:
+          - table [ref=e136]:
+            - rowgroup [ref=e137]:
+              - row "Line Product Category Qty Price Disc Warehouse Unit Price Sub.Total" [ref=e138]:
+                - columnheader [ref=e139]
+                - columnheader "Line" [ref=e140]
+                - columnheader "Product Category" [ref=e141]
+                - columnheader "Qty" [ref=e142]
+                - columnheader "Price" [ref=e143]
+                - columnheader "Disc" [ref=e144]
+                - columnheader "Warehouse" [ref=e145]
+                - columnheader "Unit Price" [ref=e146]
+                - columnheader "Sub.Total" [ref=e147]
+            - rowgroup [ref=e148]:
+              - row "1 C001 C001 - Abacel 18 EC 100ml x 50 - 0 2 23500.0 WH-1000 47.000,00 47.000,00" [ref=e149]:
+                - cell [ref=e150]:
+                  - checkbox [ref=e151]
+                - cell "1" [ref=e152]
+                - cell "C001 C001 - Abacel 18 EC 100ml x 50 - 0" [ref=e153]:
+                  - textbox [ref=e154]: C001 C001 - Abacel 18 EC 100ml x 50 - 0
+                - cell "2" [ref=e155]:
+                  - spinbutton [ref=e156]: "2"
+                - cell "23500.0" [ref=e157]:
+                  - spinbutton [ref=e158]: "23500.0"
+                - cell [ref=e159]:
+                  - spinbutton [ref=e160]
+                - cell "WH-1000" [ref=e161]:
+                  - combobox [ref=e162]:
+                    - option "WH-1000" [selected]
+                - cell "47.000,00" [ref=e163]:
+                  - textbox [ref=e164]: 47.000,00
+                - cell "47.000,00" [ref=e165]:
+                  - textbox [ref=e166]: 47.000,00
+              - row "2 C002 C002 - Abacel 18 EC 250ml x 40 - 0 16 48000.0 WH-1001 768.000,00 768.000,00" [ref=e167]:
+                - cell [ref=e168]:
+                  - checkbox [ref=e169]
+                - cell "2" [ref=e170]
+                - cell "C002 C002 - Abacel 18 EC 250ml x 40 - 0" [ref=e171]:
+                  - textbox [ref=e172]: C002 C002 - Abacel 18 EC 250ml x 40 - 0
+                - cell "16" [ref=e173]:
+                  - spinbutton [ref=e174]: "16"
+                - cell "48000.0" [ref=e175]:
+                  - spinbutton [ref=e176]: "48000.0"
+                - cell [ref=e177]:
+                  - spinbutton [ref=e178]
+                - cell "WH-1001" [ref=e179]:
+                  - combobox [ref=e180]:
+                    - option "WH-1001" [selected]
+                - cell "768.000,00" [ref=e181]:
+                  - textbox [ref=e182]: 768.000,00
+                - cell "768.000,00" [ref=e183]:
+                  - textbox [ref=e184]: 768.000,00
+            - rowgroup [ref=e185]:
+              - row "Add Row" [ref=e186]:
+                - cell "Add Row" [ref=e187]:
+                  - button "Add Row" [ref=e188] [cursor=pointer]: Add Row
+        - generic [ref=e190]:
+          - generic [ref=e192]:
+            - generic [ref=e193]: Level
+            - generic [ref=e194]:
+              - combobox [ref=e195]
+              - combobox "Open" [ref=e198] [cursor=pointer]:
+                - textbox "Open" [ref=e199]
+          - generic [ref=e201]:
+            - generic [ref=e202]: Untaxed Amount
+            - textbox [ref=e203]: 815.000,00
+          - generic [ref=e205]:
+            - generic [ref=e206]: PPN
+            - textbox [ref=e207]: 0,00
+          - generic [ref=e209]:
+            - generic [ref=e210]: Total
+            - textbox [ref=e211]: 815.000,00
+        - button "Save" [ref=e213] [cursor=pointer]: Save
+    - text: ;
+  - contentinfo [ref=e215]:
+    - paragraph [ref=e216]:
+      - generic [ref=e217]:
+        - text: Copyright © 2024
+        - link "NEXZO-APP" [ref=e218] [cursor=pointer]:
+          - /url: "#"
+        - generic [ref=e219]: ", All rights Reserved"
+  - generic [ref=e220]:
+    - generic [ref=e222]:
+      - generic [ref=e224]:
+        - generic [ref=e226] [cursor=pointer]: 
+        - generic [ref=e228] [cursor=pointer]: 
+        - generic [ref=e230] [cursor=pointer]: 
+        - generic [ref=e231] [cursor=pointer]:
+          - generic [ref=e232]: 
+          - text: "7"
+        - generic [ref=e234] [cursor=pointer]: 
+        - generic [ref=e235] [cursor=pointer]:
+          - generic [ref=e236]: 
+          - text: "18"
+        - generic [ref=e237] [cursor=pointer]:
+          - generic [ref=e238]: 
+          - text: "2502"
+        - generic [ref=e239] [cursor=pointer]:
+          - generic [ref=e240]: 
+          - text: "0"
+        - generic [ref=e242] [cursor=pointer]: 
+        - generic [ref=e243] [cursor=pointer]:
+          - generic [ref=e244]: 
+          - text: "34"
+        - generic [ref=e246] [cursor=pointer]: 
+        - generic [ref=e248] [cursor=pointer]: 
+      - generic [ref=e249]:
+        - generic [ref=e253]:
+          - generic [ref=e254]: 
+          - text: 8.1.10
+        - generic [ref=e255]:
+          - generic [ref=e256]: 
+          - text: 463ms
+        - generic [ref=e257]:
+          - generic [ref=e258]: 
+          - text: 32MB
+        - generic [ref=e259]:
+          - generic [ref=e260]: 
+          - text: "GET admin/salesorder/{salesorder}/edit"
+    - text:                                                                                                                                       
+  - text: 

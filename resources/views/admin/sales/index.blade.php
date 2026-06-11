@@ -202,21 +202,54 @@ return d
                     },
                     {
                         render: function(data, type, row, index) {
+                            var deleteBtn = '';
+                            @can('order_delete')
+                            if (row.booked_flag == null || row.booked_flag === 'null' || row.booked_flag === '') {
+                                deleteBtn = `<button type="button" class="badge btn btn-delete btn-danger btn-sm ms-1" data-index="${row.header_id}">{{ trans('global.delete') }}</button>`;
+                            }
+                            @endcan
                             content = `
                         @can('price_list_edit')
-                        <a class=" badge btn  btn-sm btn-info" href="salesorder/${row.header_id}/edit">
+                        <a class="badge btn btn-sm btn-info" href="salesorder/${row.header_id}/edit">
                             {{ trans('global.open') }}
                         </a>
                         @endcan
-                        @can('order_delete')
-                        <button type="button" class=" badge btn btn-delete btn-accent btn-danger m-btn--pill btn-sm m-btn m-btn--custom" data-index="${row.header_id}">{{ trans('global.delete') }}</button>
-                        @endcan
-                        `;
+                        ` + deleteBtn;
                             return content;
                         },
                         targets: [9]
                     }
                 ],
+                drawCallback: function() {
+                    $(".btn-delete").off('click').on('click', function() {
+                        var index = $(this).data('index');
+                        Swal.fire({
+                            title: 'Hapus SO ini?',
+                            text: 'SO #' + index + ' akan dihapus permanen.',
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Ya, Hapus',
+                            cancelButtonText: 'Batal',
+                            confirmButtonColor: '#d33'
+                        }).then(function(result) {
+                            if (result.isConfirmed) {
+                                $.ajax({
+                                    url: '/admin/salesorder/' + index,
+                                    type: 'DELETE',
+                                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                                    success: function(res) {
+                                        Swal.fire('Dihapus!', res.success, 'success');
+                                        $('#salesindex').DataTable().ajax.reload();
+                                    },
+                                    error: function(xhr) {
+                                        var msg = xhr.responseJSON ? xhr.responseJSON.error : 'Gagal menghapus.';
+                                        Swal.fire('Gagal', msg, 'error');
+                                    }
+                                });
+                            }
+                        });
+                    });
+                },
                 columns: [{
                     data: 'id',
                     className: "text-center"

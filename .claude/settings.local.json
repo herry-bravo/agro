@@ -74,7 +74,9 @@
       "mcp__plugin_playwright_playwright__browser_snapshot",
       "mcp__plugin_playwright_playwright__browser_fill_form",
       "mcp__plugin_playwright_playwright__browser_click",
-      "mcp__plugin_playwright_playwright__browser_evaluate"
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "Bash(Find \"c:\\\\laragon\\\\www\\\\agro\\\\resources\\\\views\\\\admin\\\\sales\" -name \"create.blade.php\" -o -name \"*.blade.php\")"
     ]
   }
 }

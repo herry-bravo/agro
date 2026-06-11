@@ -97,6 +97,7 @@ Route::delete('inventory/destroy', 'InventoryController@massDestroy')->name('inv
      //Sales Order
      Route::delete('salesorder/destroy', 'SalesOrderController@massDestroy')->name('sales-order.massDestroy');
      Route::get('salesorder/{id}/konfirmasi-kirim', 'SalesOrderController@konfirmasiKirim')->name('salesorder.konfirmasi-kirim');
+     Route::get('salesorder/{id}/check-stock', 'SalesOrderController@checkStock')->name('salesorder.check-stock');
      Route::post('salesorder/proses-kirim', 'SalesOrderController@prosesKirim')->name('salesorder.proses-kirim');
      Route::get('salesorder/{id}/surat-jalan', 'SalesOrderController@suratJalan')->name('salesorder.surat-jalan');
      Route::resource('salesorder', 'SalesOrderController');

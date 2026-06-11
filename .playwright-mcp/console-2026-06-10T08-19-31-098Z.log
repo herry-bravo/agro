@@ -1,0 +1,6 @@
+[    5564ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://fraser-presentation-jewel-dat.trycloudflare.com/login:0
+[   34558ms] [LOG] [] @ https://fraser-presentation-jewel-dat.trycloudflare.com/admin/salesorder/44/edit:1391
+[   41880ms] [ERROR] Failed to load resource: net::ERR_HTTP2_PROTOCOL_ERROR @ https://fraser-presentation-jewel-dat.trycloudflare.com/app-assets/vendors/js/pickers/pickadate/picker.date.js:0
+[   50236ms] TypeError: $(...).pickadate is not a function
+    at https://fraser-presentation-jewel-dat.trycloudflare.com/app-assets/js/scripts/forms/pickers/form-pickers.js:91:19
+    at https://fraser-presentation-jewel-dat.trycloudflare.com/app-assets/js/scripts/forms/pickers/form-pickers.js:220:3

@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\AccountCode;
 use App\Currency;
 use App\CurrencyGlobal;
 use App\Customer;
+use App\Faktur;
+use App\GlHeader;
+use App\GlLines;
 use App\Onhand;
 use App\MaterialTxns;
 use Carbon\Carbon;
@@ -534,23 +538,66 @@ class SalesOrderController extends Controller
 
         $stock = [];
         foreach ($detail as $line) {
-            $stock[$line->inventory_item_id] = Onhand::where('inventory_item_id', $line->inventory_item_id)
-                ->where('primary_transaction_quantity', '>', 0)
-                ->where('subinventory_code', '!=', '9STG')
-                ->get();
+            $stock[$line->id] = Onhand::where('inventory_item_id', $line->inventory_item_id)
+                ->where('subinventory_code', $line->shipping_inventory)
+                ->first();
         }
 
-        return view('admin.sales.konfirmasi-kirim', compact('sales', 'detail', 'stock'));
+        $fakturs = Faktur::whereNull('deleted_at')->get();
+        return view('admin.sales.konfirmasi-kirim', compact('sales', 'detail', 'stock', 'fakturs'));
+    }
+
+    public function checkStock($id)
+    {
+        abort_if(Gate::denies('order_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $sales  = SalesOrder::find($id);
+        $detail = SalesOrderDetail::where('header_id', $sales->header_id)
+            ->whereNull('deleted_at')->get();
+
+        $unready = [];
+        foreach ($detail as $line) {
+            if (!$line->shipping_inventory) {
+                $unready[] = [
+                    'item'      => $line->user_description_item,
+                    'warehouse' => null,
+                    'required'  => $line->ordered_quantity,
+                    'available' => 0,
+                    'reason'    => 'Warehouse belum di-set',
+                ];
+                continue;
+            }
+            $onhand    = Onhand::where('inventory_item_id', $line->inventory_item_id)
+                ->where('subinventory_code', $line->shipping_inventory)
+                ->first();
+            $available = $onhand ? $onhand->primary_transaction_quantity : 0;
+            if ($available < $line->ordered_quantity) {
+                $unready[] = [
+                    'item'      => $line->user_description_item,
+                    'warehouse' => $line->shipping_inventory,
+                    'required'  => $line->ordered_quantity,
+                    'available' => $available,
+                    'reason'    => 'Stok kurang',
+                ];
+            }
+        }
+
+        return response()->json([
+            'ready'   => count($unready) === 0,
+            'unready' => $unready,
+        ]);
     }
 
     public function prosesKirim(Request $request)
     {
         $request->validate([
-            'sales_id'   => 'required',
-            'ship_date'  => 'required|date',
-            'line_id'    => 'required|array',
-            'warehouse'  => 'required|array',
-            'qty'        => 'required|array',
+            'sales_id'    => 'required',
+            'ship_date'   => 'required|date',
+            'tgl_invoice' => 'required|date',
+            'faktur_code' => 'nullable|string',
+            'line_id'     => 'required|array',
+            'warehouse'   => 'required|array',
+            'qty'         => 'required|array',
         ]);
 
         $sales = SalesOrder::find($request->sales_id);
@@ -601,6 +648,10 @@ class SalesOrderController extends Controller
             $sales->open_flag = 12;
             $sales->save();
 
+            if (is_null($sales->inv_number)) {
+                $this->createInvoiceAfterShipment($sales, $request);
+            }
+
             if ($request->buat_sj) {
                 $delivery = DeliveryHeader::where('order_number', $sales->order_number)->first();
                 if ($delivery) {
@@ -628,6 +679,116 @@ class SalesOrderController extends Controller
         }
     }
 
+    private function createInvoiceAfterShipment(SalesOrder $sales, Request $request): void
+    {
+        $soDetail   = SalesOrderDetail::where('header_id', $sales->header_id)->whereNull('deleted_at')->get();
+        $ppn        = AccountCode::where('account_code', '3202')->first();
+        $termMaster = Terms::where('id', $sales->attribute3)->first();
+        $trx        = MaterialTransaction::whereIn('trx_code', [4])->first();
+
+        $taxRate    = $sales->tax_exempt_flag ?? 0;
+        $taxMult    = $taxRate > 0 ? (1 + $taxRate / 100) : 1;
+        $invNumber  = 'INV-' . $sales->order_number;
+        $jeBatchId  = rand(0, 999999);
+        $jeCategory = $trx->trx_source_types ?? 'INVOICE';
+        $invDate    = $request->tgl_invoice;
+
+        $lines     = [];
+        $totalDr   = 0;
+        $totalCr   = 0;
+        $unitprice = 0;
+        $totalHp   = 0;
+
+        foreach ($soDetail as $row) {
+            $calcUnit  = ($row->ordered_quantity * $row->unit_selling_price) - ($row->disc ?? 0);
+            $crValue   = $calcUnit / $taxMult;
+            $unitprice += $calcUnit;
+            $totalHp   += $crValue;
+            $lines[]   = ['accDes' => $row->products->category->acc->account_code ?? '', 'desc' => $row->user_description_item ?? '', 'dr' => 0, 'cr' => $crValue];
+            $totalCr   += $crValue;
+        }
+
+        foreach ($soDetail as $row) {
+            $drValue = ($row->products->item_cost ?? 0) * $row->ordered_quantity;
+            $lines[] = ['accDes' => $row->products->category->cogs->account_code ?? '', 'desc' => $row->user_description_item ?? '', 'dr' => $drValue, 'cr' => 0];
+            $totalDr += $drValue;
+        }
+
+        foreach ($soDetail as $row) {
+            $crValue = ($row->products->item_cost ?? 0) * $row->ordered_quantity;
+            $lines[] = ['accDes' => $row->products->category->cogs->account_code ?? '', 'desc' => $row->user_description_item ?? '', 'dr' => 0, 'cr' => $crValue];
+            $totalCr += $crValue;
+        }
+
+        $taxAmount = $unitprice - $totalHp;
+        $lines[]   = ['accDes' => $ppn->account_code ?? '', 'desc' => $ppn->account_group ?? '', 'dr' => 0, 'cr' => $taxAmount];
+        $totalCr   += $taxAmount;
+
+        foreach ($soDetail as $row) {
+            $drValue = ($row->ordered_quantity * $row->unit_selling_price) - ($row->disc ?? 0);
+            $accDes  = $sales->attribute3 == 'cash'
+                ? ($row->products->category->cash->account_code ?? '')
+                : ($row->products->category->arTax->account_code ?? '');
+            $lines[] = ['accDes' => $accDes, 'desc' => $row->user_description_item ?? '', 'dr' => $drValue, 'cr' => 0];
+            $totalDr += $drValue;
+        }
+
+        $lastHeader = DB::table('bm_gl_je_headers')->orderBy('id', 'desc')->first();
+        $newId      = $lastHeader ? $lastHeader->id + 1 : 1;
+
+        $head                         = new GlHeader();
+        $head->je_source              = $jeCategory . $invNumber;
+        $head->default_effective_date = Carbon::parse($invDate)->format('Y-m-d');
+        $head->period_name            = Carbon::parse($invDate)->format('M y');
+        $head->external_reference     = $invNumber;
+        $head->je_category            = $jeCategory;
+        $head->currency_code          = $sales->attribute1;
+        $head->je_header_id           = $newId;
+        $head->name                   = $jeCategory . ' - ' . ($sales->customer->party_name ?? '');
+        $head->created_by             = Auth::user()->id;
+        $head->last_updated_by        = Auth::user()->id;
+        $head->status                 = 0;
+        $head->je_batch_id            = $jeBatchId;
+        $head->running_total_dr       = $totalDr;
+        $head->running_total_cr       = $totalCr;
+        $head->save();
+
+        foreach ($lines as $key => $line) {
+            GlLines::create([
+                'je_header_id'        => $newId,
+                'je_line_num'         => $key + 1,
+                'last_updated_by'     => Auth::user()->id,
+                'ledger_id'           => $jeBatchId,
+                'code_combination_id' => $line['accDes'],
+                'period_name'         => Carbon::parse($invDate)->format('M y'),
+                'effective_date'      => Carbon::parse($invDate)->format('Y-m-d'),
+                'status'              => 0,
+                'created_by'          => Auth::user()->id,
+                'entered_dr'          => (int) $line['dr'],
+                'entered_cr'          => (int) $line['cr'],
+                'description'         => $line['desc'],
+                'reference_1'         => $sales->customer->party_name ?? '',
+                'tax_code'            => (int) $taxRate,
+                'created_at'          => now(),
+                'updated_at'          => now(),
+            ]);
+        }
+
+        $dueDate = $termMaster
+            ? Carbon::now()->addDays($termMaster->term_code)->format('Y-m-d H:i:s')
+            : Carbon::now()->format('Y-m-d H:i:s');
+
+        SalesOrder::where('order_number', $sales->order_number)->update([
+            'inv_number'       => $invNumber,
+            'updated_by'       => Auth::user()->id,
+            'faktur'           => $request->faktur_code,
+            'updated_at'       => $invDate,
+            'payment_due_date' => $dueDate,
+        ]);
+
+        Faktur::where('faktur_code', $request->faktur_code)->update(['deleted_at' => now()]);
+    }
+
     public function suratJalan($id)
     {
         abort_if(Gate::denies('order_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
@@ -646,14 +807,15 @@ class SalesOrderController extends Controller
     {
         abort_if(Gate::denies('order_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $order = SalesOrder::find($id);
-        if($order->booked_flag == null ){
-            // dd("masuk");
-            $order->delete();
-        }else{
-            return back()->with('error', 'Not Allow to Delete');
+        $order = SalesOrder::where('header_id', $id)->first();
+        if (!$order) {
+            return response()->json(['error' => 'Data tidak ditemukan.'], 404);
         }
-        return back();
+        if ($order->booked_flag != null) {
+            return response()->json(['error' => 'Hanya SO berstatus Draft yang dapat dihapus.'], 422);
+        }
+        $order->delete();
+        return response()->json(['success' => 'Sales Order berhasil dihapus.']);
     }
 
     public function massDestroy(MassDestroyOrderRequest $request)

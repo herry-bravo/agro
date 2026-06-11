@@ -1,0 +1,138 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - list [ref=e5]:
+        - listitem [ref=e6]:
+          - link [ref=e7] [cursor=pointer]:
+            - /url: "#"
+      - list [ref=e9]:
+        - listitem [ref=e10]:
+          - link "Indonesia" [ref=e11] [cursor=pointer]:
+            - /url: "#"
+            - text: Indonesia
+        - listitem [ref=e13]:
+          - link "5" [ref=e14] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e16]: "5"
+        - listitem [ref=e17]:
+          - link "5" [ref=e18] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e20]: "5"
+        - listitem [ref=e21]:
+          - link "Admin avatar" [ref=e22] [cursor=pointer]:
+            - /url: "#"
+            - generic [ref=e24]: Admin
+            - img "avatar" [ref=e26]
+  - generic [ref=e35]:
+    - generic [ref=e36]:
+      - heading "Shipment Confirmation" [level=6] [ref=e37]
+      - link "Back" [ref=e38]:
+        - /url: https://fraser-presentation-jewel-dat.trycloudflare.com/admin/salesorder/49
+        - text: Back
+    - generic [ref=e39]:
+      - generic [ref=e40]:
+        - table [ref=e42]:
+          - rowgroup [ref=e43]:
+            - 'row "SO Number : 5000023" [ref=e44]':
+              - cell "SO Number" [ref=e45]
+              - 'cell ": 5000023" [ref=e46]'
+            - 'row "Customer : BIAN" [ref=e47]':
+              - cell "Customer" [ref=e48]
+              - 'cell ": BIAN" [ref=e49]'
+            - 'row "SO Date : 2026-06-10 00:00:00" [ref=e50]':
+              - cell "SO Date" [ref=e51]
+              - 'cell ": 2026-06-10 00:00:00" [ref=e52]'
+        - table [ref=e54]:
+          - rowgroup [ref=e55]:
+            - 'row "Ship To : 4" [ref=e56]':
+              - cell "Ship To" [ref=e57]
+              - 'cell ": 4" [ref=e58]'
+            - 'row "Payment Term : CASH" [ref=e59]':
+              - cell "Payment Term" [ref=e60]
+              - 'cell ": CASH" [ref=e61]'
+      - generic [ref=e62]:
+        - table [ref=e64]:
+          - rowgroup [ref=e65]:
+            - row "# Item Order Qty Ship Qty UOM Warehouse Available Stock" [ref=e66]:
+              - columnheader "#" [ref=e67]
+              - columnheader "Item" [ref=e68]
+              - columnheader "Order Qty" [ref=e69]
+              - columnheader "Ship Qty" [ref=e70]
+              - columnheader "UOM" [ref=e71]
+              - columnheader "Warehouse" [ref=e72]
+              - columnheader "Available Stock" [ref=e73]
+          - rowgroup [ref=e74]:
+            - row "1 C001 - Abacel 18 EC 100ml x 50 - 0 2 2 WH-1000 2" [ref=e75]:
+              - cell "1" [ref=e76]
+              - cell "C001 - Abacel 18 EC 100ml x 50 - 0" [ref=e77]
+              - cell "2" [ref=e78]
+              - cell "2" [ref=e79]
+              - cell [ref=e80]
+              - cell "WH-1000" [ref=e81]
+              - cell "2" [ref=e82]
+            - row "2 C002 - Abacel 18 EC 250ml x 40 - 0 16 16 WH-1001 16" [ref=e83]:
+              - cell "2" [ref=e84]
+              - cell "C002 - Abacel 18 EC 250ml x 40 - 0" [ref=e85]
+              - cell "16" [ref=e86]
+              - cell "16" [ref=e87]
+              - cell [ref=e88]
+              - cell "WH-1001" [ref=e89]
+              - cell "16" [ref=e90]
+        - generic [ref=e91]:
+          - generic [ref=e92]:
+            - generic [ref=e93]: Ship Date
+            - textbox [ref=e94]: 2026-06-10
+          - generic [ref=e96]:
+            - checkbox "Create Delivery Order" [ref=e97]
+            - generic [ref=e98] [cursor=pointer]: Create Delivery Order
+          - generic [ref=e99]:
+            - link "Cancel" [ref=e100]:
+              - /url: https://fraser-presentation-jewel-dat.trycloudflare.com/admin/salesorder/49
+            - button "Process Shipment" [ref=e101] [cursor=pointer]: Process Shipment
+  - contentinfo [ref=e102]:
+    - paragraph [ref=e103]:
+      - generic [ref=e104]:
+        - text: Copyright © 2024
+        - link "NEXZO-APP" [ref=e105] [cursor=pointer]:
+          - /url: "#"
+        - generic [ref=e106]: ", All rights Reserved"
+  - generic [ref=e107]:
+    - generic [ref=e109]:
+      - generic [ref=e111]:
+        - generic [ref=e113] [cursor=pointer]: 
+        - generic [ref=e115] [cursor=pointer]: 
+        - generic [ref=e117] [cursor=pointer]: 
+        - generic [ref=e118] [cursor=pointer]:
+          - generic [ref=e119]: 
+          - text: "6"
+        - generic [ref=e121] [cursor=pointer]: 
+        - generic [ref=e122] [cursor=pointer]:
+          - generic [ref=e123]: 
+          - text: "12"
+        - generic [ref=e124] [cursor=pointer]:
+          - generic [ref=e125]: 
+          - text: "2335"
+        - generic [ref=e126] [cursor=pointer]:
+          - generic [ref=e127]: 
+          - text: "0"
+        - generic [ref=e129] [cursor=pointer]: 
+        - generic [ref=e130] [cursor=pointer]:
+          - generic [ref=e131]: 
+          - text: "34"
+        - generic [ref=e133] [cursor=pointer]: 
+        - generic [ref=e135] [cursor=pointer]: 
+      - generic [ref=e136]:
+        - generic [ref=e140]:
+          - generic [ref=e141]: 
+          - text: 8.1.10
+        - generic [ref=e142]:
+          - generic [ref=e143]: 
+          - text: 605ms
+        - generic [ref=e144]:
+          - generic [ref=e145]: 
+          - text: 32MB
+        - generic [ref=e146]:
+          - generic [ref=e147]: 
+          - text: "GET admin/salesorder/{id}/konfirmasi-kirim"
+    - text:                                                                                                             
+  - text: 

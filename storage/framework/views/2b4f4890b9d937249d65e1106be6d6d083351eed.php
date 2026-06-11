@@ -12,7 +12,7 @@
     </a>
     <?php if($sales->open_flag != 12): ?>
     <a href="<?php echo e(route('admin.salesorder.konfirmasi-kirim', $sales->id)); ?>" class="btn btn-sm btn-success">
-        <i class="fa fa-truck"></i> Kirim
+        <i class="fa fa-truck"></i> Send
     </a>
     <?php else: ?>
     <a href="<?php echo e(route('admin.salesorder.surat-jalan', $sales->id)); ?>" class="btn btn-sm btn-info">
@@ -32,11 +32,13 @@
                     <table>
                         <tr>
                             <td><br>
-                                <img style="width: 5%; float:left;margin-left:4%;" src="<?php echo e(asset('app-assets/images/logo/favicon.png')); ?>" alt="buana-megah">
-                                <p style="font-size:12px;"><b style="color: green;"> &nbsp;&nbsp;NEXZO-APP</b><br>
-                                    <b>&nbsp;&nbsp;Head Office : </b>Jl. Argopuro 42, Surabaya 60251, East Java, Indonesia<br>&nbsp;
-                                    <b>Pasuruan Office : </b>Jalan Raya Cangkringmalang km. 40, Beji Pasuruan 67154 East Java, Indonesia<br>&nbsp;
-                                    <b>Tel. </b><a href="tel:+62343656288">656288</a>, <a href="tel:+62343656289">656289</a> Fax. <a href="fax:+62343655054">655054</a><br></p>
+                                <img style="width: 6%; float:left; margin-left:4%;" src="<?php echo e(asset('app-assets/images/logo/suryaagro.png')); ?>" alt="surya-agro">
+                                <p style="font-size:12px; padding-left:110px; line-height:1.6;">
+                                    <b style="color: green;">SURYA-AGRO</b><br>
+                                    <b>Head Office : </b>Jl. Peterongan-Sumobito, RT.6/RW.1, Klampisan, Segodorejo,<br>
+                                    Kec. Sumobito, Kabupaten Jombang, Jawa Timur 61483<br>
+                                    <b>Tel. </b><a href="tel:+6281615824494" style="color:inherit;text-decoration:none;">0816-1582-4494</a>, <a href="tel:+6285100256990" style="color:inherit;text-decoration:none;">0851-0025-6990</a>
+                                </p>
                             </td>
                         </tr>
                         <tr>

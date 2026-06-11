@@ -44,25 +44,21 @@
                                     Delivery Order
                                 </a>
                                 @if($sales->open_flag != 12)
-                                    <a class="btn btn-success" href="{{ route('admin.salesorder.konfirmasi-kirim', $sales->id) }}">
-                                        <i class="fa fa-truck"></i> Kirim
+                                    <a id="btn-kirim"
+                                       class="btn btn-primary"
+                                       href="{{ route('admin.salesorder.konfirmasi-kirim', $sales->id) }}"
+                                       data-check="{{ route('admin.salesorder.check-stock', $sales->id) }}">
+                                        <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" class="feather feather-send me-50 font-small-4">
+                                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                        </svg></span>
+                                        Send
                                     </a>
                                 @else
                                     <a class="btn btn-info" href="{{ route('admin.salesorder.surat-jalan', $sales->id) }}">
                                         <i class="fa fa-print"></i> Cetak Surat Jalan
-                                    </a>
-                                @endif
-                                @if (is_null($sales->inv_number))
-                                    <a class="btn btn-primary" href="{{ route('admin.invoices.create', ['header_id' => $sales->header_id]) }}">
-                                    <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round" class="feather feather-file-text me-50 font-small-4">
-                                            <path d="M6 2H18a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
-                                            <line x1="6" y1="8" x2="18" y2="8"></line>
-                                            <line x1="6" y1="12" x2="18" y2="12"></line>
-                                            <line x1="6" y1="16" x2="18" y2="16"></line>
-                                        </svg></span>
-                                        {{ trans('cruds.OrderManagement.invoice') }}
                                     </a>
                                 @endif
                             </div>
@@ -808,6 +804,66 @@
                 }
             }
         });
+    });
+
+    // Screening tombol Kirim — cek stok sebelum navigasi
+    $('#btn-kirim').on('click', function(e) {
+        e.preventDefault();
+        var $btn     = $(this);
+        var nextUrl  = $btn.attr('href');
+        var checkUrl = $btn.data('check');
+
+        $.get(checkUrl, function(res) {
+            if (res.ready) {
+                window.location.href = nextUrl;
+            } else {
+                var html = '<ul class="text-start mb-0">';
+                res.unready.forEach(function(item) {
+                    html += '<li><b>' + item.item + '</b>';
+                    if (item.warehouse) {
+                        html += ' [' + item.warehouse + ']: butuh ' + item.required + ', tersedia ' + item.available;
+                    } else {
+                        html += ': ' + item.reason;
+                    }
+                    html += '</li>';
+                });
+                html += '</ul>';
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Please check stock un-ready',
+                    html: html,
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+    });
+
+    // Screening tombol Save — cek warehouse belum dipilih
+    $('.btn-submit').on('click', function(e) {
+        var unset = [];
+        $('.sales_order_container tr.tr_input').each(function() {
+            var wh   = $(this).find('select[name="shipping_inventory[]"]').val();
+            if (!wh) {
+                var item = $(this).find('input[name="user_description_item[]"]').val() || 'Item';
+                unset.push(item);
+            }
+        });
+        if (unset.length > 0) {
+            e.preventDefault();
+            var $submitBtn = $(this);
+            Swal.fire({
+                icon: 'warning',
+                title: 'Please check stock un-ready',
+                html: 'Warehouse belum dipilih untuk:<br><b>' + unset.join('<br>') + '</b>',
+                showCancelButton: true,
+                confirmButtonText: 'Lanjut Simpan',
+                cancelButtonText: 'Batal'
+            }).then(function(result) {
+                if (result.isConfirmed) {
+                    $submitBtn.off('click').trigger('click');
+                }
+            });
+        }
     });
 
 </script>

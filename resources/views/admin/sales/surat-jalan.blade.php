@@ -17,15 +17,16 @@
                 <div class="card">
 
                     {{-- Header --}}
-                    <table style="width:100%">
+                    <table style="width:94%; margin-left:3%;">
                         <tr>
-                            <td>
-                                <img style="width:5%; float:left; margin-left:4%;"
-                                     src="{{ asset('app-assets/images/logo/favicon.png') }}" alt="logo">
-                                <p style="font-size:12px;">
-                                    <b style="color:green;">&nbsp;&nbsp;NEXZO-APP</b><br>
-                                    <b>&nbsp;&nbsp;Head Office : </b>Jl. Argopuro 42, Surabaya 60251, East Java, Indonesia<br>
-                                </p>
+                            <td style="width:70px; vertical-align:middle;">
+                                <img style="width:60px;" src="{{ asset('app-assets/images/logo/suryaagro.png') }}" alt="surya-agro">
+                            </td>
+                            <td style="vertical-align:middle; padding-left:10px; font-size:12px; line-height:1.6;">
+                                <b style="color:green;">SURYA-AGRO</b><br>
+                                <b>Head Office : </b>Jl. Peterongan-Sumobito, RT.6/RW.1, Klampisan, Segodorejo,
+                                Kec. Sumobito, Kabupaten Jombang, Jawa Timur 61483<br>
+                                <b>Tel. </b>0816-1582-4494, 0851-0025-6990
                             </td>
                         </tr>
                     </table>
@@ -60,30 +61,22 @@
                                         <th>Nama Barang</th>
                                         <th class="text-center" style="width:70px">Qty</th>
                                         <th class="text-center" style="width:50px">UOM</th>
-                                        <th class="text-right" style="width:90px">Harga</th>
-                                        <th class="text-right" style="width:90px">Jumlah</th>
+                                        <th style="width:120px">Keterangan</th>
+                                        <th class="text-center" style="width:90px">Expired</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @php $subtotal = 0; @endphp
                                     @foreach($detail as $key => $row)
                                     <tr>
                                         <td class="text-center">{{ $key + 1 }}</td>
                                         <td>{{ $row->user_description_item }}</td>
                                         <td class="text-center">{{ $row->fulfilled_quantity ?? $row->ordered_quantity }}</td>
                                         <td class="text-center">{{ $row->order_quantity_uom }}</td>
-                                        <td class="text-right">{{ number_format($row->unit_selling_price, 0, ',', '.') }}</td>
-                                        <td class="text-right">{{ number_format($row->unit_selling_price * ($row->fulfilled_quantity ?? $row->ordered_quantity), 0, ',', '.') }}</td>
+                                        <td></td>
+                                        <td></td>
                                     </tr>
-                                    @php $subtotal += $row->unit_selling_price * ($row->fulfilled_quantity ?? $row->ordered_quantity); @endphp
                                     @endforeach
                                 </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="5" class="text-right fw-bold">Total</td>
-                                        <td class="text-right fw-bold">{{ number_format($subtotal, 0, ',', '.') }}</td>
-                                    </tr>
-                                </tfoot>
                             </table>
                         </div>
 

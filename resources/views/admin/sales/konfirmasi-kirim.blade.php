@@ -11,7 +11,7 @@
             </div>
             @endif
 
-            <div class="card" style="border-left: 4px solid #28a745;">
+            <div class="card" style="border-left: 4px solid #0d6efd;">
                 <div class="card-header d-flex justify-content-between align-items-center py-2">
                     <h6 class="mb-0">Shipment Confirmation</h6>
                     <a href="{{ route('admin.salesorder.show', $sales->id) }}" class="btn btn-sm btn-secondary">
@@ -69,42 +69,66 @@
                                             <span class="fw-bold">{{ number_format($line->ordered_quantity, 0, ',', '.') }}</span>
                                         </td>
                                         <td>{{ $line->order_quantity_uom }}</td>
-                                        <td style="min-width:160px">
-                                            @if(isset($stock[$line->inventory_item_id]) && $stock[$line->inventory_item_id]->count() > 0)
-                                            <select name="warehouse[{{ $key }}]" class="form-select form-select-sm warehouse-select" data-key="{{ $key }}" required>
-                                                @foreach($stock[$line->inventory_item_id] as $oh)
-                                                <option value="{{ $oh->subinventory_code }}"
-                                                        data-qty="{{ $oh->primary_transaction_quantity }}"
-                                                        {{ $line->shipping_inventory == $oh->subinventory_code ? 'selected' : '' }}>
-                                                    {{ $oh->subinventory_code }} ({{ number_format($oh->primary_transaction_quantity, 0, ',', '.') }})
-                                                </option>
-                                                @endforeach
-                                            </select>
-                                            @else
-                                            <span class="text-danger small"><i class="fa fa-exclamation-triangle"></i> No stock available</span>
-                                            <input type="hidden" name="warehouse[{{ $key }}]" value="">
+                                        <td style="min-width:140px">
+                                            <span class="fw-bold small">{{ $line->shipping_inventory ?? '-' }}</span>
+                                            <input type="hidden" name="warehouse[{{ $key }}]" value="{{ $line->shipping_inventory }}">
+                                            @if(!$line->shipping_inventory)
+                                                <div class="text-danger" style="font-size:11px">
+                                                    <i class="fa fa-exclamation-triangle"></i> Warehouse belum di-set
+                                                </div>
                                             @endif
                                         </td>
-                                        @php
-                                            $selectedStock = null;
-                                            if (isset($stock[$line->inventory_item_id])) {
-                                                $selectedStock = $stock[$line->inventory_item_id]
-                                                    ->firstWhere('subinventory_code', $line->shipping_inventory)
-                                                    ?? $stock[$line->inventory_item_id]->first();
-                                            }
-                                        @endphp
-                                        <td class="text-center stok-display-{{ $key }}" style="width:100px; font-size:12px; color:#555;">
-                                            @if($selectedStock)
-                                                {{ number_format($selectedStock->primary_transaction_quantity, 0, ',', '.') }}
+                                        @php $oh = $stock[$line->id] ?? null; @endphp
+                                        <td class="text-center" style="width:100px; font-size:12px; color:#555;">
+                                            @if($oh)
+                                                {{ number_format($oh->primary_transaction_quantity, 0, ',', '.') }}
                                                 {{ $line->order_quantity_uom }}
+                                                @if($oh->primary_transaction_quantity < $line->ordered_quantity)
+                                                    <div class="text-danger" style="font-size:11px; font-weight:bold;">Stok kurang!</div>
+                                                @endif
                                             @else
-                                                -
+                                                <span class="text-danger">-</span>
                                             @endif
                                         </td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
+                        </div>
+
+                        {{-- Invoice Details --}}
+                        <div class="card mb-3" style="display:none; border-left: 4px solid #0d6efd; font-size:13px;">
+                            <div class="card-header py-2">
+                                <h6 class="mb-0 fw-bold">Invoice Details</h6>
+                            </div>
+                            <div class="card-body py-2">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Invoice Date</label>
+                                        <input type="date" name="tgl_invoice" class="form-control form-control-sm"
+                                               value="{{ date('Y-m-d') }}" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Faktur</label>
+                                        <select name="faktur_code" class="form-select form-select-sm">
+                                            <option value="">-- Pilih Faktur --</option>
+                                            @foreach($fakturs as $f)
+                                                <option value="{{ $f->faktur_code }}" @if($loop->first) selected @endif>{{ $f->faktur_code }}</option>
+                                            @endforeach
+                                        </select>
+                                        @if($fakturs->isEmpty())
+                                            <div class="text-danger mt-1" style="font-size:11px">
+                                                <i class="fa fa-exclamation-triangle"></i> Tidak ada faktur tersedia
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Invoice Number</label>
+                                        <input type="text" class="form-control form-control-sm bg-light" readonly
+                                               value="INV-{{ $sales->order_number }}">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Footer Form --}}
@@ -124,8 +148,14 @@
                             </div>
                             <div class="col-md-5 text-end">
                                 <a href="{{ route('admin.salesorder.show', $sales->id) }}" class="btn btn-sm btn-secondary me-1">Cancel</a>
-                                <button type="submit" class="btn btn-sm btn-success">
-                                    <i class="fa fa-check"></i> Process Shipment
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    <span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="feather feather-send me-50">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg></span>
+                                    Process Shipment
                                 </button>
                             </div>
                         </div>
@@ -139,16 +169,3 @@
 </section>
 @endsection
 
-@push('script')
-<script>
-document.querySelectorAll('.warehouse-select').forEach(function(sel) {
-    sel.addEventListener('change', function() {
-        var key  = this.dataset.key;
-        var opt  = this.options[this.selectedIndex];
-        var qty  = opt ? opt.dataset.qty : '-';
-        var cell = document.querySelector('.stok-display-' + key);
-        if (cell) cell.textContent = qty ? Number(qty).toLocaleString('id') + ' ' + cell.dataset.uom : '-';
-    });
-});
-</script>
-@endpush

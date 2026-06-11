@@ -1,0 +1,55 @@
+- generic [ref=e1]:
+  - generic [ref=e7]:
+    - link "svg3" [ref=e8] [cursor=pointer]:
+      - /url: index.html
+      - img "svg3" [ref=e9]
+    - img "svg3" [ref=e12]
+    - generic [ref=e14]:
+      - heading "NEXZO-APP" [level=1] [ref=e16]:
+        - img "NEXZO-APP" [ref=e17]
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - generic [ref=e21]: Email
+          - textbox "Username" [active] [ref=e22]
+        - generic [ref=e23]:
+          - generic [ref=e25]: Password
+          - textbox "Password" [ref=e27]
+        - button "SIGN IN" [ref=e29] [cursor=pointer]
+  - generic [ref=e30]:
+    - generic [ref=e32]:
+      - generic [ref=e34]:
+        - generic [ref=e36] [cursor=pointer]: 
+        - generic [ref=e38] [cursor=pointer]: 
+        - generic [ref=e40] [cursor=pointer]: 
+        - generic [ref=e41] [cursor=pointer]:
+          - generic [ref=e42]: 
+          - text: "2"
+        - generic [ref=e44] [cursor=pointer]: 
+        - generic [ref=e45] [cursor=pointer]:
+          - generic [ref=e46]: 
+          - text: "0"
+        - generic [ref=e47] [cursor=pointer]:
+          - generic [ref=e48]: 
+          - text: "0"
+        - generic [ref=e49] [cursor=pointer]:
+          - generic [ref=e50]: 
+          - text: "0"
+        - generic [ref=e52] [cursor=pointer]: 
+        - generic [ref=e54] [cursor=pointer]: 
+        - generic [ref=e56] [cursor=pointer]: 
+        - generic [ref=e58] [cursor=pointer]: 
+      - generic [ref=e59]:
+        - generic [ref=e63]:
+          - generic [ref=e64]: 
+          - text: 8.1.10
+        - generic [ref=e65]:
+          - generic [ref=e66]: 
+          - text: 208ms
+        - generic [ref=e67]:
+          - generic [ref=e68]: 
+          - text: 22MB
+        - generic [ref=e69]:
+          - generic [ref=e70]: 
+          - text: GET login
+    - text:         
+  - text: 
